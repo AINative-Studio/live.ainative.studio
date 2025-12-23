@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Video, Github, Twitter, Youtube } from 'lucide-react';
+import { Github, Twitter, Youtube } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -8,15 +8,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-neon-green rounded flex items-center justify-center">
-                <Video className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src="/ainative-icon.svg" alt="AINative Studio Live" className="h-8 w-auto" />
               <span className="font-mono text-lg font-bold">
-                VibeCode<span className="text-neon-blue">Live</span>
+                AINative<span className="text-primary">Live</span>
               </span>
             </Link>
             <p className="text-sm text-muted-foreground">
-              The premier livestreaming platform for Vibe Coders. Stream Your IDE. Build in Public.
+              Live coding streams for AI-native developers. Stream Your IDE. Build in Public.
             </p>
           </div>
 
@@ -24,22 +22,22 @@ export function Footer() {
             <h3 className="font-mono font-semibold mb-4">Platform</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/about" className="text-sm text-muted-foreground hover:text-neon-green transition-colors">
+                <Link href="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   About
                 </Link>
               </li>
               <li>
-                <Link href="/vibe-coding" className="text-sm text-muted-foreground hover:text-neon-green transition-colors">
-                  What is Vibe Coding?
+                <Link href="/ai-native-development" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  What is AI-Native Development?
                 </Link>
               </li>
               <li>
-                <Link href="/events" className="text-sm text-muted-foreground hover:text-neon-green transition-colors">
+                <Link href="/events" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Events
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-neon-green transition-colors">
+                <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Start Streaming
                 </Link>
               </li>
@@ -50,22 +48,22 @@ export function Footer() {
             <h3 className="font-mono font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/docs" className="text-sm text-muted-foreground hover:text-neon-green transition-colors">
+                <Link href="/docs" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Documentation
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="text-sm text-muted-foreground hover:text-neon-green transition-colors">
+                <Link href="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Help Center
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm text-muted-foreground hover:text-neon-green transition-colors">
+                <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-neon-green transition-colors">
+                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Privacy Policy
                 </Link>
               </li>
@@ -79,7 +77,7 @@ export function Footer() {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-neon-green hover:text-primary-foreground transition-colors"
+                className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
               >
                 <Github className="w-5 h-5" />
               </a>
@@ -87,7 +85,7 @@ export function Footer() {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-neon-blue hover:text-primary-foreground transition-colors"
+                className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-secondary hover:text-primary-foreground transition-colors"
               >
                 <Twitter className="w-5 h-5" />
               </a>
@@ -105,7 +103,7 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-border text-center">
           <p className="text-sm text-muted-foreground font-mono">
-            &copy; {new Date().getFullYear()} VibeCode Live by AINative Studio. All rights reserved.
+            &copy; {new Date().getFullYear()} AINative Studio Live. All rights reserved.
           </p>
         </div>
       </div>

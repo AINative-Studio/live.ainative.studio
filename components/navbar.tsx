@@ -30,12 +30,18 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-neon-green rounded flex items-center justify-center">
-                <Video className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-mono text-xl font-bold text-glow-green group-hover:text-neon-green transition-colors">
-                VibeCode<span className="text-neon-blue">Live</span>
+            <Link href="/" className="flex items-center gap-3">
+              <img src="/ainative-icon.svg" alt="AINative Studio Live" className="h-8 w-auto" />
+              <span className="text-xl font-bold tracking-tight uppercase flex items-center gap-1">
+                <span className="text-white">AI</span>
+                <span className="text-brand-primary">NATIVE</span>
+                <span className="text-muted-foreground text-sm ml-2 font-normal flex items-center gap-1.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                  </span>
+                  LIVE
+                </span>
               </span>
             </Link>
 
@@ -51,7 +57,7 @@ export function Navbar() {
                   <Link href="/category/ai-coding">AI Coding</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/category/vibe-coding">Vibe Coding</Link>
+                  <Link href="/category/ai-native-development">AI-Native Development</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/category/nextjs">Next.js</Link>
@@ -89,7 +95,7 @@ export function Navbar() {
           </form>
 
           <div className="flex items-center gap-3">
-            <Button asChild className="font-mono border-glow-green">
+            <Button asChild className="bg-brand-primary hover:bg-primary-dark text-white font-medium">
               <Link href="/dashboard">
                 <Video className="w-4 h-4 mr-2" />
                 Go Live

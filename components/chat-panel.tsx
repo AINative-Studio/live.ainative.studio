@@ -76,16 +76,16 @@ export function ChatPanel() {
   };
 
   return (
-    <Card className="flex flex-col h-full border-border">
-      <CardHeader className="border-b border-border">
-        <CardTitle className="font-mono text-lg flex items-center gap-2">
+    <Card className="flex flex-col h-full border-border bg-card">
+      <CardHeader className="border-b border-border/50 bg-card">
+        <CardTitle className="text-lg flex items-center gap-2 font-semibold">
           Live Chat
           <span className="text-xs font-normal text-muted-foreground">
             ({messages.length} messages)
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden bg-card">
         <ScrollArea className="flex-1" ref={scrollRef}>
           <div className="py-2">
             {messages.map((message) => (
@@ -93,18 +93,18 @@ export function ChatPanel() {
             ))}
           </div>
         </ScrollArea>
-        <form onSubmit={handleSend} className="p-3 border-t border-border">
+        <form onSubmit={handleSend} className="p-3 border-t border-border/50 bg-card">
           <div className="flex gap-2">
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Send a message..."
-              className="flex-1"
+              className="flex-1 bg-background border-border focus-visible:ring-primary"
             />
-            <Button size="icon" variant="ghost">
+            <Button size="icon" variant="ghost" className="hover:bg-accent/10 hover:text-accent">
               <Smile className="w-5 h-5" />
             </Button>
-            <Button size="icon" type="submit">
+            <Button size="icon" type="submit" className="bg-brand-primary hover:bg-primary-dark text-white">
               <Send className="w-4 h-4" />
             </Button>
           </div>

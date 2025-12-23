@@ -41,13 +41,13 @@ export function StreamPlayer({ title, viewers, username, thumbnail }: StreamPlay
         >
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 text-center">
-            <p className="text-neon-green font-mono text-xl mb-4">MOCK STREAM PLAYER</p>
+            <p className="text-brand-primary font-mono text-xl mb-4">MOCK STREAM PLAYER</p>
             <p className="text-white/80 text-sm">Live streaming would be integrated here</p>
           </div>
         </div>
 
         <div className="absolute top-4 left-4 flex items-center gap-2 z-20">
-          <div className="bg-red-600 text-white font-mono text-xs px-3 py-1 rounded flex items-center gap-2">
+          <div className="bg-success text-white px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
             <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
             LIVE
           </div>
@@ -69,7 +69,7 @@ export function StreamPlayer({ title, viewers, username, thumbnail }: StreamPlay
             <Button
               size="icon"
               variant="ghost"
-              className="text-white hover:text-neon-green"
+              className="text-white hover:text-brand-primary"
               onClick={() => setIsPlaying(!isPlaying)}
             >
               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
@@ -79,7 +79,7 @@ export function StreamPlayer({ title, viewers, username, thumbnail }: StreamPlay
               <Button
                 size="icon"
                 variant="ghost"
-                className="text-white hover:text-neon-green"
+                className="text-white hover:text-brand-primary"
                 onClick={() => setIsMuted(!isMuted)}
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
@@ -97,21 +97,21 @@ export function StreamPlayer({ title, viewers, username, thumbnail }: StreamPlay
               <Button
                 size="icon"
                 variant="ghost"
-                className="text-white hover:text-neon-green"
+                className="text-white hover:text-brand-primary"
               >
                 <Settings className="w-5 h-5" />
               </Button>
               <Button
                 size="icon"
                 variant="ghost"
-                className="text-white hover:text-neon-green"
+                className="text-white hover:text-brand-primary"
               >
                 <Minimize2 className="w-5 h-5" />
               </Button>
               <Button
                 size="icon"
                 variant="ghost"
-                className="text-white hover:text-neon-green"
+                className="text-white hover:text-brand-primary"
               >
                 <Maximize className="w-5 h-5" />
               </Button>

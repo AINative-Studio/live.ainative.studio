@@ -28,7 +28,7 @@ function SearchContent() {
     { id: 'all', label: 'All' },
     { id: 'live', label: 'Live Now' },
     { id: 'categories', label: 'Categories' },
-    { id: 'coders', label: 'Vibe Coders' },
+    { id: 'coders', label: 'Developers' },
   ];
 
   const toggleFilter = (filterId: string) => {
@@ -82,24 +82,28 @@ function SearchContent() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search streams, categories, or coders..."
+                placeholder="Search streams, categories, or developers..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="pl-12 h-12 text-lg"
+                className="pl-12 h-12 text-lg focus-visible:ring-brand-primary"
               />
             </div>
           </div>
         </div>
 
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-2 mb-8">
+          <div className="flex items-center gap-2 mb-8 flex-wrap">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Filters:</span>
             {filters.map((filter) => (
               <Badge
                 key={filter.id}
                 variant={activeFilters.includes(filter.id) ? 'default' : 'outline'}
-                className="cursor-pointer font-mono"
+                className={`cursor-pointer transition-all ${
+                  activeFilters.includes(filter.id)
+                    ? 'bg-brand-primary hover:bg-brand-primary/90'
+                    : 'hover:border-brand-primary/50'
+                }`}
                 onClick={() => toggleFilter(filter.id)}
               >
                 {filter.label}
@@ -112,7 +116,7 @@ function SearchContent() {
               <p className="text-muted-foreground">
                 Found {filteredStreams.length} streams
                 {showCategories && `, ${filteredCategories.length} categories`}
-                {showUsers && `, ${filteredUsers.length} coders`}
+                {showUsers && `, ${filteredUsers.length} developers`}
               </p>
             </div>
           )}
@@ -136,7 +140,7 @@ function SearchContent() {
                   <Button
                     key={category.id}
                     variant="outline"
-                    className="justify-start font-mono"
+                    className="justify-start hover:border-brand-primary hover:text-brand-primary transition-colors"
                     asChild
                   >
                     <a href={`/category/${category.slug}`}>{category.name}</a>
@@ -148,13 +152,13 @@ function SearchContent() {
 
           {showUsers && (
             <div className="mb-12">
-              <h2 className="text-2xl font-bold mb-4">Vibe Coders</h2>
+              <h2 className="text-2xl font-bold mb-4">AI-Native Developers</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {filteredUsers.map((user) => (
                   <Button
                     key={user.username}
                     variant="outline"
-                    className="justify-start"
+                    className="justify-start hover:border-brand-primary hover:text-brand-primary transition-colors"
                     asChild
                   >
                     <a href={`/user/${user.username}`}>{user.displayName}</a>
@@ -169,7 +173,7 @@ function SearchContent() {
               <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">Start searching</h3>
               <p className="text-muted-foreground">
-                Find streams, categories, and Vibe Coders
+                Find streams, categories, and AI-native developers
               </p>
             </div>
           )}

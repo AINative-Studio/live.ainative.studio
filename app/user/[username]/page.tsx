@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${user.displayName} (@${user.username}) | VibeCode Live`,
+    title: `${user.displayName} (@${user.username}) | AINative Studio Live`,
     description: user.bio,
   };
 }
@@ -63,7 +63,7 @@ export default function UserPage({ params }: PageProps) {
         <div className="border-b border-border bg-gradient-to-b from-card/50 to-background">
           <div className="container mx-auto px-4 py-12">
             <div className="flex flex-col md:flex-row items-start gap-8">
-              <Avatar className="w-32 h-32 border-4 border-neon-green">
+              <Avatar className="w-32 h-32 border-4 border-brand-primary">
                 <AvatarImage src={user.avatar} alt={user.displayName} />
                 <AvatarFallback className="text-4xl">{user.displayName[0]}</AvatarFallback>
               </Avatar>
@@ -116,7 +116,7 @@ export default function UserPage({ params }: PageProps) {
                       href={`https://twitter.com/${user.socials.twitter}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-neon-blue hover:text-primary-foreground transition-colors"
+                      className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-secondary hover:text-primary-foreground transition-colors"
                     >
                       <Twitter className="w-5 h-5" />
                     </a>
@@ -146,7 +146,7 @@ export default function UserPage({ params }: PageProps) {
                       href={user.socials.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-neon-green hover:text-primary-foreground transition-colors"
+                      className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-brand-primary hover:text-primary-foreground transition-colors"
                     >
                       <Globe className="w-5 h-5" />
                     </a>

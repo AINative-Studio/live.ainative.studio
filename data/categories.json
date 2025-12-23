@@ -5,16 +5,16 @@
     "slug": "ai-coding",
     "description": "Explore AI-powered development workflows, LLMs, and intelligent coding assistants",
     "icon": "brain",
-    "color": "neon-green",
+    "color": "brand-primary",
     "viewerCount": 3123
   },
   {
     "id": "2",
-    "name": "Vibe Coding",
-    "slug": "vibe-coding",
+    "name": "AI-Native Development",
+    "slug": "ai-native-development",
     "description": "Watch developers in flow state building with AI agents and cutting-edge tools",
     "icon": "zap",
-    "color": "neon-blue",
+    "color": "brand-primary",
     "viewerCount": 892
   },
   {
@@ -23,7 +23,7 @@
     "slug": "nextjs",
     "description": "React framework with server-side rendering, routing, and modern web development",
     "icon": "layout",
-    "color": "foreground",
+    "color": "brand-primary",
     "viewerCount": 2341
   },
   {
@@ -32,7 +32,7 @@
     "slug": "python",
     "description": "Backend development, data science, ML, and general-purpose programming",
     "icon": "code",
-    "color": "neon-cyan",
+    "color": "brand-primary",
     "viewerCount": 654
   },
   {
@@ -41,7 +41,7 @@
     "slug": "rust",
     "description": "Systems programming, performance, and memory safety",
     "icon": "cpu",
-    "color": "destructive",
+    "color": "brand-primary",
     "viewerCount": 445
   },
   {
@@ -50,7 +50,7 @@
     "slug": "devops",
     "description": "Infrastructure, CI/CD, containerization, and cloud deployment",
     "icon": "server",
-    "color": "muted",
+    "color": "brand-primary",
     "viewerCount": 0
   },
   {
@@ -59,7 +59,7 @@
     "slug": "web3",
     "description": "Blockchain development, smart contracts, and decentralized applications",
     "icon": "link",
-    "color": "accent",
+    "color": "brand-primary",
     "viewerCount": 0
   },
   {
@@ -68,7 +68,7 @@
     "slug": "game-dev",
     "description": "Game development, Unity, Unreal, and indie game creation",
     "icon": "gamepad-2",
-    "color": "secondary",
+    "color": "brand-primary",
     "viewerCount": 0
   }
 ]

@@ -23,9 +23,9 @@ export function ViewerCountBadge({ count, size = 'md', live = false }: ViewerCou
   return (
     <Badge
       variant="secondary"
-      className={`${sizeClasses[size]} bg-black/80 text-white font-mono flex items-center gap-1.5`}
+      className={`${sizeClasses[size]} bg-dark-2/90 text-white font-medium flex items-center gap-1.5`}
     >
-      {live && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+      {live && <span className="w-2 h-2 bg-success rounded-full animate-live-pulse" />}
       <Eye className={iconSizes[size]} />
       <span>{count.toLocaleString()}</span>
     </Badge>

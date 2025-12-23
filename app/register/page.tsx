@@ -24,12 +24,12 @@ export default function RegisterPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-card">
       <div className="container mx-auto px-4 py-8">
-        <Link href="/" className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 bg-neon-green rounded flex items-center justify-center">
-            <Video className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="font-mono text-xl font-bold text-glow-green">
-            VibeCode<span className="text-neon-blue">Live</span>
+        <Link href="/" className="flex items-center gap-3 mb-8">
+          <img src="/ainative-icon.svg" alt="AINative Studio Live" className="h-10 w-auto" />
+          <span className="text-xl font-bold tracking-tight uppercase flex items-center gap-1">
+            <span className="text-white">AI</span>
+            <span className="text-brand-primary">NATIVE</span>
+            <span className="text-muted-foreground text-sm ml-2 font-normal">LIVE</span>
           </span>
         </Link>
       </div>
@@ -40,9 +40,9 @@ export default function RegisterPage() {
             <div className="text-center">
               <TerminalHeader text="> create_account" typingSpeed={80} />
             </div>
-            <CardTitle className="text-2xl font-bold text-center">Join VibeCode Live</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Join AINative Studio Live</CardTitle>
             <CardDescription className="text-center">
-              Start streaming your IDE sessions today
+              Start streaming your AI-native development sessions today
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -72,7 +72,7 @@ export default function RegisterPage() {
                 <Input
                   id="username"
                   type="text"
-                  placeholder="vibecoder"
+                  placeholder="yourusername"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -87,7 +87,7 @@ export default function RegisterPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="vibe@coder.dev"
+                  placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -119,11 +119,11 @@ export default function RegisterPage() {
                   className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   I agree to the{' '}
-                  <Link href="/terms" className="text-neon-green hover:underline">
+                  <Link href="/terms" className="text-brand-primary hover:underline">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link href="/privacy" className="text-neon-green hover:underline">
+                  <Link href="/privacy" className="text-brand-primary hover:underline">
                     Privacy Policy
                   </Link>
                 </label>
@@ -131,7 +131,7 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                className="w-full font-mono"
+                className="w-full bg-brand-primary hover:bg-primary-dark text-white font-medium"
                 disabled={!agreeToTerms}
               >
                 Create Account
@@ -140,7 +140,7 @@ export default function RegisterPage() {
 
             <div className="text-center text-sm">
               <span className="text-muted-foreground">Already have an account? </span>
-              <Link href="/login" className="text-neon-green hover:underline font-medium">
+              <Link href="/login" className="text-brand-primary hover:underline font-medium">
                 Sign in
               </Link>
             </div>

@@ -107,7 +107,7 @@ export default function DashboardPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="thumbnail">Stream Thumbnail</Label>
-                    <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-neon-green transition-colors cursor-pointer">
+                    <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-brand-primary transition-colors cursor-pointer">
                       <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-muted-foreground">
                         Click to upload or drag and drop
@@ -120,7 +120,7 @@ export default function DashboardPage() {
 
                   <Button
                     size="lg"
-                    className="w-full font-mono text-lg"
+                    className="w-full text-lg font-medium"
                     variant={isLive ? 'destructive' : 'default'}
                     onClick={handleGoLive}
                   >
@@ -138,7 +138,7 @@ export default function DashboardPage() {
                   </Button>
 
                   {isLive && (
-                    <Badge variant="destructive" className="w-full justify-center py-2 font-mono">
+                    <Badge variant="destructive" className="w-full justify-center py-2 font-medium">
                       <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-2" />
                       YOU ARE LIVE
                     </Badge>
@@ -158,7 +158,7 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <Label className="text-sm">Bitrate</Label>
-                      <span className="text-sm font-mono text-neon-green">6000 kbps</span>
+                      <span className="text-sm font-mono text-brand-primary font-semibold">6000 kbps</span>
                     </div>
                     <SimpleProgress value={85} />
                   </div>
@@ -166,7 +166,7 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <Label className="text-sm">Resolution</Label>
-                      <span className="text-sm font-mono text-neon-green">1920x1080</span>
+                      <span className="text-sm font-mono text-brand-primary font-semibold">1920x1080</span>
                     </div>
                     <SimpleProgress value={100} />
                   </div>
@@ -223,29 +223,29 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border border-neon-green/30">
+              <Card className="border-border border-brand-primary/30">
                 <CardHeader>
                   <CardTitle className="text-lg">Quick Tips</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div className="flex gap-2">
-                    <span className="text-neon-green">→</span>
+                    <span className="text-brand-primary">→</span>
                     <p>Use a clear, descriptive title</p>
                   </div>
                   <div className="flex gap-2">
-                    <span className="text-neon-green">→</span>
+                    <span className="text-brand-primary">→</span>
                     <p>Select the right category for visibility</p>
                   </div>
                   <div className="flex gap-2">
-                    <span className="text-neon-green">→</span>
+                    <span className="text-brand-primary">→</span>
                     <p>Add relevant tags to reach your audience</p>
                   </div>
                   <div className="flex gap-2">
-                    <span className="text-neon-green">→</span>
+                    <span className="text-brand-primary">→</span>
                     <p>Upload a custom thumbnail</p>
                   </div>
                   <div className="flex gap-2">
-                    <span className="text-neon-green">→</span>
+                    <span className="text-brand-primary">→</span>
                     <p>Interact with chat regularly</p>
                   </div>
                 </CardContent>

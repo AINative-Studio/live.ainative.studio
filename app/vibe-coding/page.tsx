@@ -8,9 +8,9 @@ import { ArrowRight, Zap, Brain, Users, Sparkles } from 'lucide-react';
 import { TerminalHeader } from '@/components/terminal-header';
 
 export const metadata: Metadata = {
-  title: 'What is Vibe Coding? | VibeCode Live',
+  title: 'What is AI-Native Development? | AINative Studio Live',
   description:
-    'Discover Vibe Coding - the future of AI-assisted development. Watch developers enter flow state with AI agents, real-time collaboration, and cutting-edge tooling.',
+    'Discover AI-native development - the future of building software with AI. Watch developers work with AI agents, multi-agent systems, and cutting-edge AI-powered tooling in real-time.',
 };
 
 export default function VibeCodingPage() {
@@ -22,13 +22,13 @@ export default function VibeCodingPage() {
         <section className="py-20 px-4 bg-gradient-to-b from-background to-card">
           <div className="container mx-auto text-center max-w-4xl">
             <div className="mb-6 inline-block">
-              <TerminalHeader text="> what_is_vibe_coding" typingSpeed={60} />
+              <TerminalHeader text="> what_is_ai_native_development" typingSpeed={60} />
             </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              The Future of <span className="text-neon-blue">Development</span>
+              The Future of <span className="text-brand-primary">Development</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Vibe Coding is a revolutionary approach to software development that combines AI-native
+              AI-Native Development is a revolutionary approach to software development that combines AI-powered
               workflows, multi-agent systems, and real-time collaboration to unlock unprecedented
               developer productivity and creativity.
             </p>
@@ -41,8 +41,8 @@ export default function VibeCodingPage() {
               <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="p-2 bg-neon-green/10 rounded-lg">
-                      <Zap className="w-6 h-6 text-neon-green" />
+                    <div className="p-2 bg-success/10 rounded-lg">
+                      <Zap className="w-6 h-6 text-success" />
                     </div>
                     Flow State Development
                   </CardTitle>
@@ -59,8 +59,8 @@ export default function VibeCodingPage() {
               <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="p-2 bg-neon-blue/10 rounded-lg">
-                      <Brain className="w-6 h-6 text-neon-blue" />
+                    <div className="p-2 bg-brand-primary/10 rounded-lg">
+                      <Brain className="w-6 h-6 text-brand-primary" />
                     </div>
                     AI-Native Workflows
                   </CardTitle>
@@ -76,8 +76,8 @@ export default function VibeCodingPage() {
               <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="p-2 bg-neon-cyan/10 rounded-lg">
-                      <Users className="w-6 h-6 text-neon-cyan" />
+                    <div className="p-2 bg-secondary/10 rounded-lg">
+                      <Users className="w-6 h-6 text-secondary" />
                     </div>
                     Multi-Agent Collaboration
                   </CardTitle>
@@ -101,8 +101,8 @@ export default function VibeCodingPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Stream your development sessions, share your workflow, and learn from other Vibe
-                    Coders. Transparency and community drive innovation forward.
+                    Stream your development sessions, share your workflow, and learn from other AI-native
+                    developers. Transparency and community drive innovation forward.
                   </p>
                 </CardContent>
               </Card>
@@ -114,7 +114,7 @@ export default function VibeCodingPage() {
           <div className="container mx-auto max-w-4xl">
             <h2 className="text-3xl font-bold mb-8 text-center">Core Principles</h2>
             <div className="space-y-6">
-              <div className="border-l-4 border-neon-green pl-6 py-2">
+              <div className="border-l-4 border-success pl-6 py-2">
                 <h3 className="text-xl font-semibold mb-2">AI Augmentation, Not Replacement</h3>
                 <p className="text-muted-foreground">
                   AI enhances human creativity and decision-making rather than replacing developers.
@@ -122,7 +122,7 @@ export default function VibeCodingPage() {
                 </p>
               </div>
 
-              <div className="border-l-4 border-neon-blue pl-6 py-2">
+              <div className="border-l-4 border-brand-primary pl-6 py-2">
                 <h3 className="text-xl font-semibold mb-2">Real-Time Feedback Loops</h3>
                 <p className="text-muted-foreground">
                   Instant feedback from AI assistants, automated tests, and community members creates
@@ -130,7 +130,7 @@ export default function VibeCodingPage() {
                 </p>
               </div>
 
-              <div className="border-l-4 border-neon-cyan pl-6 py-2">
+              <div className="border-l-4 border-secondary pl-6 py-2">
                 <h3 className="text-xl font-semibold mb-2">Context-Aware Intelligence</h3>
                 <p className="text-muted-foreground">
                   Modern AI understands your entire codebase, project requirements, and coding
@@ -151,18 +151,18 @@ export default function VibeCodingPage() {
 
         <section className="py-20 px-4">
           <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-4xl font-bold mb-6">Ready to Experience Vibe Coding?</h2>
+            <h2 className="text-4xl font-bold mb-6">Ready to Experience AI-Native Development?</h2>
             <p className="text-xl text-muted-foreground mb-8">
               Join thousands of developers already streaming their IDE sessions and building the
               future of software development.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Button size="lg" className="font-mono border-glow-green" asChild>
+              <Button size="lg" className="bg-brand-primary hover:bg-primary-dark text-white font-medium" asChild>
                 <Link href="/dashboard">
                   Start Streaming <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="font-mono" asChild>
+              <Button size="lg" variant="outline" className="font-medium" asChild>
                 <Link href="/search">Watch Live Streams</Link>
               </Button>
             </div>

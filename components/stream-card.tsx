@@ -13,7 +13,7 @@ interface StreamCardProps {
 export function StreamCard({ stream }: StreamCardProps) {
   return (
     <Link href={`/stream/${stream.username}`}>
-      <Card className="group overflow-hidden border-border hover:border-neon-green transition-all duration-300 cursor-pointer">
+      <Card className="group overflow-hidden border-border hover:border-brand-primary transition-all duration-300 cursor-pointer">
         <div className="relative aspect-video overflow-hidden bg-muted">
           <Image
             src={stream.thumbnail}
@@ -24,7 +24,7 @@ export function StreamCard({ stream }: StreamCardProps) {
           />
           {stream.live && (
             <div className="absolute top-2 left-2 flex items-center gap-2">
-              <Badge variant="destructive" className="bg-red-600 text-white font-mono text-xs">
+              <Badge variant="destructive" className="bg-success text-white font-medium text-xs">
                 <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-1.5" />
                 LIVE
               </Badge>
@@ -37,12 +37,12 @@ export function StreamCard({ stream }: StreamCardProps) {
         </div>
         <div className="p-3">
           <div className="flex gap-3">
-            <Avatar className="w-10 h-10 border-2 border-neon-green/50">
+            <Avatar className="w-10 h-10 border-2 border-primary/50">
               <AvatarImage src={stream.avatar} alt={stream.displayName} />
               <AvatarFallback>{stream.displayName[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-neon-green transition-colors">
+              <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
                 {stream.title}
               </h3>
               <p className="text-xs text-muted-foreground mt-1">{stream.displayName}</p>

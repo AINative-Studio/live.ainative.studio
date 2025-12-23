@@ -1,10 +1,11 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter, Fira_Code } from 'next/font/google';
+import { Poppins, Fira_Code } from 'next/font/google';
 
-const inter = Inter({
+const poppins = Poppins({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
   display: 'swap',
 });
 
@@ -15,29 +16,35 @@ const firaCode = Fira_Code({
 });
 
 export const metadata: Metadata = {
-  title: 'VibeCode Live - Stream Your IDE. Build in Public.',
-  description: 'The premier livestreaming platform for Vibe Coders. Watch developers build with AI, collaborate in real-time, and showcase cutting-edge development workflows.',
-  keywords: ['livestreaming', 'coding', 'vibe coding', 'AI development', 'developer streams', 'IDE streaming'],
+  metadataBase: new URL('https://live.ainative.studio'),
+  title: 'AINative Studio Live - Developer Streaming Platform',
+  description: 'The premier livestreaming platform for developers. Watch developers build in real-time, collaborate, and showcase cutting-edge development workflows.',
+  keywords: ['livestreaming', 'coding', 'developer streams', 'IDE streaming', 'programming', 'live coding'],
   authors: [{ name: 'AINative Studio' }],
+  icons: {
+    icon: '/ainative-icon.svg',
+    apple: '/ainative-icon.svg',
+  },
   openGraph: {
-    title: 'VibeCode Live - Stream Your IDE. Build in Public.',
-    description: 'Watch developers build with AI, collaborate in real-time, and showcase cutting-edge development workflows.',
+    title: 'AINative Studio Live - Developer Streaming Platform',
+    description: 'Watch developers build in real-time, collaborate, and showcase cutting-edge development workflows.',
     type: 'website',
+    url: 'https://live.ainative.studio',
+    siteName: 'AINative Studio Live',
     images: [
       {
-        url: 'https://bolt.new/static/og_default.png',
+        url: '/ainative-icon.svg',
+        width: 100,
+        height: 85,
+        alt: 'AINative Studio Live Logo',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'VibeCode Live - Stream Your IDE. Build in Public.',
-    description: 'Watch developers build with AI, collaborate in real-time, and showcase cutting-edge development workflows.',
-    images: [
-      {
-        url: 'https://bolt.new/static/og_default.png',
-      },
-    ],
+    title: 'AINative Studio Live - Developer Streaming Platform',
+    description: 'Watch developers build in real-time, collaborate, and showcase cutting-edge development workflows.',
+    images: ['/ainative-icon.svg'],
   },
 };
 
@@ -48,7 +55,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${firaCode.variable} antialiased`}>{children}</body>
+      <body className={`${poppins.variable} ${firaCode.variable} antialiased`}>{children}</body>
     </html>
   );
 }

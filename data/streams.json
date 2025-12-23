@@ -17,14 +17,14 @@
     "id": "2",
     "username": "quantumcoder",
     "displayName": "QuantumCoder",
-    "title": "Real-time Vibe Coding: Multi-Agent RAG System",
-    "category": "Vibe Coding",
-    "categorySlug": "vibe-coding",
+    "title": "Real-time AI-Native Development: Multi-Agent RAG System",
+    "category": "AI-Native Development",
+    "categorySlug": "ai-native-development",
     "live": true,
     "viewers": 892,
     "thumbnail": "https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg?auto=compress&cs=tinysrgb&w=800",
     "avatar": "https://images.pexels.com/photos/1840608/pexels-photo-1840608.jpeg?auto=compress&cs=tinysrgb&w=200",
-    "tags": ["Vibe", "RAG", "AI", "LangChain"],
+    "tags": ["AI-Native", "RAG", "AI", "LangChain"],
     "startedAt": "2025-12-22T11:30:00Z"
   },
   {

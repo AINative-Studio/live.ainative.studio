@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${category.name} Streams | VibeCode Live`,
+    title: `${category.name} Streams | AINative Studio Live`,
     description: category.description,
   };
 }
@@ -76,8 +76,8 @@ export default function CategoryPage({ params }: PageProps) {
         <div className="border-b border-border bg-card/50">
           <div className="container mx-auto px-4 py-8">
             <div className="flex items-start gap-6">
-              <div className={`p-4 rounded-lg bg-${category.color}/10 border border-${category.color}/20`}>
-                <Icon className={`w-12 h-12 text-${category.color}`} />
+              <div className="p-4 rounded-lg bg-brand-primary/10 border border-brand-primary/20">
+                <Icon className="w-12 h-12 text-brand-primary" />
               </div>
               <div className="flex-1">
                 <h1 className="text-4xl font-bold mb-2">{category.name}</h1>

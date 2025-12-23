@@ -21,12 +21,12 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-card">
       <div className="container mx-auto px-4 py-8">
-        <Link href="/" className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 bg-neon-green rounded flex items-center justify-center">
-            <Video className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="font-mono text-xl font-bold text-glow-green">
-            VibeCode<span className="text-neon-blue">Live</span>
+        <Link href="/" className="flex items-center gap-3 mb-8">
+          <img src="/ainative-icon.svg" alt="AINative Studio Live" className="h-10 w-auto" />
+          <span className="text-xl font-bold tracking-tight uppercase flex items-center gap-1">
+            <span className="text-white">AI</span>
+            <span className="text-brand-primary">NATIVE</span>
+            <span className="text-muted-foreground text-sm ml-2 font-normal">LIVE</span>
           </span>
         </Link>
       </div>
@@ -39,7 +39,7 @@ export default function LoginPage() {
             </div>
             <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
             <CardDescription className="text-center">
-              Sign in to your Vibe Coder account
+              Sign in to your AINative account
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -69,7 +69,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="vibe@coder.dev"
+                  placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -81,7 +81,7 @@ export default function LoginPage() {
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="/forgot-password"
-                    className="text-sm text-neon-green hover:underline"
+                    className="text-sm text-brand-primary hover:underline"
                   >
                     Forgot password?
                   </Link>
@@ -95,14 +95,14 @@ export default function LoginPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full font-mono">
+              <Button type="submit" className="w-full bg-brand-primary hover:bg-primary-dark text-white font-medium">
                 Sign In
               </Button>
             </form>
 
             <div className="text-center text-sm">
               <span className="text-muted-foreground">Don't have an account? </span>
-              <Link href="/register" className="text-neon-green hover:underline font-medium">
+              <Link href="/register" className="text-brand-primary hover:underline font-medium">
                 Sign up
               </Link>
             </div>

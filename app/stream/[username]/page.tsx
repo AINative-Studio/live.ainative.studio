@@ -34,11 +34,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${stream.title} - ${user.displayName} | VibeCode Live`,
-    description: `Watch ${user.displayName} live on VibeCode Live: ${stream.title}`,
+    title: `${stream.title} - ${user.displayName} | AINative Studio Live`,
+    description: `Watch ${user.displayName} live on AINative Studio Live: ${stream.title}. Experience AI-native development workflows in real-time.`,
     openGraph: {
       title: `${stream.title} - ${user.displayName}`,
-      description: `Watch ${user.displayName} live on VibeCode Live: ${stream.title}`,
+      description: `Watch ${user.displayName} live on AINative Studio Live: ${stream.title}`,
       type: 'video.other',
       images: [{ url: stream.thumbnail }],
     },
@@ -77,7 +77,7 @@ export default function StreamPage({ params }: PageProps) {
               <Card className="border-border">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4 mb-4">
-                    <Avatar className="w-16 h-16 border-2 border-neon-green">
+                    <Avatar className="w-16 h-16 border-2 border-brand-primary">
                       <AvatarImage src={user.avatar} alt={user.displayName} />
                       <AvatarFallback>{user.displayName[0]}</AvatarFallback>
                     </Avatar>
@@ -87,7 +87,7 @@ export default function StreamPage({ params }: PageProps) {
                           <h1 className="text-2xl font-bold mb-1">{stream.title}</h1>
                           <Link
                             href={`/user/${user.username}`}
-                            className="text-lg text-muted-foreground hover:text-neon-green transition-colors"
+                            className="text-lg text-muted-foreground hover:text-brand-primary transition-colors"
                           >
                             {user.displayName}
                           </Link>
@@ -104,7 +104,7 @@ export default function StreamPage({ params }: PageProps) {
                         <span>•</span>
                         <Link
                           href={`/category/${stream.categorySlug}`}
-                          className="hover:text-neon-blue transition-colors"
+                          className="hover:text-brand-primary transition-colors"
                         >
                           {stream.category}
                         </Link>
@@ -137,7 +137,7 @@ export default function StreamPage({ params }: PageProps) {
                           href={`https://twitter.com/${user.socials.twitter}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-8 h-8 bg-muted rounded flex items-center justify-center hover:bg-neon-blue hover:text-primary-foreground transition-colors"
+                          className="w-8 h-8 bg-muted rounded flex items-center justify-center hover:bg-secondary hover:text-primary-foreground transition-colors"
                         >
                           <Twitter className="w-4 h-4" />
                         </a>
@@ -157,7 +157,7 @@ export default function StreamPage({ params }: PageProps) {
                           href={user.socials.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-8 h-8 bg-muted rounded flex items-center justify-center hover:bg-neon-green hover:text-primary-foreground transition-colors"
+                          className="w-8 h-8 bg-muted rounded flex items-center justify-center hover:bg-brand-primary hover:text-primary-foreground transition-colors"
                         >
                           <Globe className="w-4 h-4" />
                         </a>

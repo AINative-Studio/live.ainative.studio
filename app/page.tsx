@@ -24,23 +24,23 @@ export default function Home() {
         <section className="py-20 px-4 bg-gradient-to-b from-background to-card">
           <div className="container mx-auto text-center">
             <div className="mb-6 inline-block">
-              <TerminalHeader text="> VibeCoders Live" typingSpeed={100} />
+              <TerminalHeader text="> AINative Live" typingSpeed={100} />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Stream Your IDE. <span className="text-neon-blue">Build in Public.</span>
+              Stream Your IDE. <span className="text-primary">Build in Public.</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Watch the future of development unfold in real-time. Vibe Coders streaming AI-native workflows,
+              Watch the future of development unfold in real-time. AI-native developers streaming AI-native workflows,
               multi-agent systems, and cutting-edge IDE sessions.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Button size="lg" className="font-mono border-glow-green" asChild>
+              <Button size="lg" className="font-mono" asChild>
                 <Link href="/dashboard">
                   Start Streaming <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="font-mono" asChild>
-                <Link href="/vibe-coding">What is Vibe Coding?</Link>
+                <Link href="/ai-native-development">What is AI-Native Development?</Link>
               </Button>
             </div>
           </div>
@@ -50,7 +50,7 @@ export default function Home() {
           <div className="container mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-3xl font-bold flex items-center gap-2">
-                <TrendingUp className="w-8 h-8 text-neon-green" />
+                <TrendingUp className="w-8 h-8 text-primary" />
                 Featured Live Now
               </h2>
               <Button variant="ghost" className="font-mono" asChild>
@@ -85,7 +85,7 @@ export default function Home() {
               <div>
                 <h2 className="text-3xl font-bold mb-2">Live Channels</h2>
                 <p className="text-muted-foreground">
-                  {liveStreams.length} Vibe Coders streaming now
+                  {liveStreams.length} AI-native developers streaming now
                 </p>
               </div>
             </div>
@@ -101,12 +101,12 @@ export default function Home() {
           <div className="container mx-auto text-center">
             <h2 className="text-4xl font-bold mb-4">Ready to Go Live?</h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join the community of Vibe Coders streaming their development sessions.
+              Join the community of AI-native developers streaming their development sessions.
               Share your workflow, collaborate in real-time, and inspire others.
             </p>
-            <Button size="lg" className="font-mono text-lg border-glow-blue" asChild>
+            <Button size="lg" className="font-mono text-lg" asChild>
               <Link href="/dashboard">
-                Become a Vibe Coder <ArrowRight className="ml-2 w-5 h-5" />
+                Start Streaming Now <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
           </div>

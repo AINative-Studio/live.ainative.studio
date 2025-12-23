@@ -32,8 +32,8 @@ export function TerminalHeader({ text, typingSpeed = 50 }: TerminalHeaderProps) 
   }, []);
 
   return (
-    <div className="font-mono text-neon-green">
-      <span className="text-glow-green">{displayedText}</span>
+    <div className="font-mono text-brand-primary">
+      <span>{displayedText}</span>
       {showCursor && <span className="animate-terminal-blink">▊</span>}
     </div>
   );
