@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 5%;
+    --foreground: 180 100% 90%;
+    --card: 215 35% 8%;
+    --card-foreground: 180 100% 90%;
+    --popover: 215 35% 10%;
+    --popover-foreground: 180 100% 90%;
+    --primary: 158 64% 52%;
+    --primary-foreground: 215 30% 10%;
+    --secondary: 195 100% 50%;
+    --secondary-foreground: 215 30% 10%;
+    --muted: 215 30% 15%;
+    --muted-foreground: 180 20% 60%;
+    --accent: 158 64% 52%;
+    --accent-foreground: 215 30% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 30% 20%;
+    --input: 215 30% 20%;
+    --ring: 158 64% 52%;
+    --neon-green: 158 64% 52%;
+    --neon-blue: 195 100% 50%;
+    --neon-cyan: 180 100% 50%;
+    --chart-1: 158 64% 52%;
+    --chart-2: 195 100% 50%;
+    --chart-3: 180 100% 50%;
+    --chart-4: 265 89% 58%;
+    --chart-5: 285 89% 58%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 210 40% 5%;
+    --foreground: 180 100% 90%;
+    --card: 215 35% 8%;
+    --card-foreground: 180 100% 90%;
+    --popover: 215 35% 10%;
+    --popover-foreground: 180 100% 90%;
+    --primary: 158 64% 52%;
+    --primary-foreground: 215 30% 10%;
+    --secondary: 195 100% 50%;
+    --secondary-foreground: 215 30% 10%;
+    --muted: 215 30% 15%;
+    --muted-foreground: 180 20% 60%;
+    --accent: 158 64% 52%;
+    --accent-foreground: 215 30% 10%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 30% 20%;
+    --input: 215 30% 20%;
+    --ring: 158 64% 52%;
+    --neon-green: 158 64% 52%;
+    --neon-blue: 195 100% 50%;
+    --neon-cyan: 180 100% 50%;
+    --chart-1: 158 64% 52%;
+    --chart-2: 195 100% 50%;
+    --chart-3: 180 100% 50%;
+    --chart-4: 265 89% 58%;
+    --chart-5: 285 89% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-mono;
+  }
+}
+
+@layer utilities {
+  .text-glow-green {
+    text-shadow: 0 0 10px hsl(var(--neon-green)), 0 0 20px hsl(var(--neon-green));
+  }
+  .text-glow-blue {
+    text-shadow: 0 0 10px hsl(var(--neon-blue)), 0 0 20px hsl(var(--neon-blue));
+  }
+  .border-glow-green {
+    box-shadow: 0 0 10px hsl(var(--neon-green)), 0 0 20px hsl(var(--neon-green) / 0.5);
+  }
+  .border-glow-blue {
+    box-shadow: 0 0 10px hsl(var(--neon-blue)), 0 0 20px hsl(var(--neon-blue) / 0.5);
+  }
+}
