@@ -26,7 +26,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
               {badge}
             </Badge>
           ))}
-          <span className="text-xs text-neutral-muted ml-auto">
+          <span className="text-xs text-neutral-muted ml-auto" suppressHydrationWarning>
             {new Date(message.timestamp).toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit'
