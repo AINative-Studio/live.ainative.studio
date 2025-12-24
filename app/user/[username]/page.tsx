@@ -50,9 +50,9 @@ export default function UserPage({ params }: PageProps) {
     notFound();
   }
 
-  const userStream = streams.find((s) => s.username === params.username);
+  const userStream = streams.find((s) => s.user.username === params.username);
   const pastStreams = streams.filter(
-    (s) => s.username === params.username && !s.live
+    (s) => s.user.username === params.username && s.status !== 'live'
   );
 
   return (
@@ -64,14 +64,14 @@ export default function UserPage({ params }: PageProps) {
           <div className="container mx-auto px-4 py-12">
             <div className="flex flex-col md:flex-row items-start gap-8">
               <Avatar className="w-32 h-32 border-4 border-brand-primary">
-                <AvatarImage src={user.avatar} alt={user.displayName} />
-                <AvatarFallback className="text-4xl">{user.displayName[0]}</AvatarFallback>
+                <AvatarImage src={user.avatar || undefined} alt={user.displayName || user.username || 'User'} />
+                <AvatarFallback className="text-4xl">{(user.displayName || user.username || 'U')[0]}</AvatarFallback>
               </Avatar>
 
               <div className="flex-1">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                   <div>
-                    <h1 className="text-4xl font-bold mb-2">{user.displayName}</h1>
+                    <h1 className="text-4xl font-bold mb-2">{user.displayName || user.username}</h1>
                     <p className="text-muted-foreground font-mono">@{user.username}</p>
                   </div>
                   <div className="flex gap-2">
@@ -94,7 +94,7 @@ export default function UserPage({ params }: PageProps) {
 
                 <div className="flex flex-wrap items-center gap-4 mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-xl">{user.followers.toLocaleString()}</span>
+                    <span className="font-bold text-xl">{user.followerCount.toLocaleString()}</span>
                     <span className="text-muted-foreground">followers</span>
                   </div>
                   {user.isLive && (
@@ -105,13 +105,8 @@ export default function UserPage({ params }: PageProps) {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span>Schedule: {user.schedule}</span>
-                </div>
-
                 <div className="flex gap-2">
-                  {user.socials.twitter && (
+                  {user.socials?.twitter && (
                     <a
                       href={`https://twitter.com/${user.socials.twitter}`}
                       target="_blank"
@@ -121,7 +116,7 @@ export default function UserPage({ params }: PageProps) {
                       <Twitter className="w-5 h-5" />
                     </a>
                   )}
-                  {user.socials.github && (
+                  {user.socials?.github && (
                     <a
                       href={`https://github.com/${user.socials.github}`}
                       target="_blank"
@@ -131,7 +126,7 @@ export default function UserPage({ params }: PageProps) {
                       <Github className="w-5 h-5" />
                     </a>
                   )}
-                  {user.socials.youtube && (
+                  {user.socials?.youtube && (
                     <a
                       href={`https://youtube.com/@${user.socials.youtube}`}
                       target="_blank"
@@ -141,7 +136,7 @@ export default function UserPage({ params }: PageProps) {
                       <Youtube className="w-5 h-5" />
                     </a>
                   )}
-                  {user.socials.website && (
+                  {user.socials?.website && (
                     <a
                       href={user.socials.website}
                       target="_blank"
@@ -167,13 +162,8 @@ export default function UserPage({ params }: PageProps) {
             <TabsContent value="about" className="mt-6">
               <Card className="border-border">
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-4">About {user.displayName}</h3>
+                  <h3 className="text-xl font-bold mb-4">About {user.displayName || user.username}</h3>
                   <p className="text-muted-foreground leading-relaxed">{user.bio}</p>
-
-                  <div className="mt-6 pt-6 border-t border-border">
-                    <h4 className="font-semibold mb-3">Streaming Schedule</h4>
-                    <p className="text-muted-foreground">{user.schedule}</p>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -185,14 +175,14 @@ export default function UserPage({ params }: PageProps) {
                     <Card key={stream.id} className="overflow-hidden border-border">
                       <div className="relative aspect-video bg-muted">
                         <img
-                          src={stream.thumbnail}
+                          src={stream.thumbnailUrl || '/placeholder-stream.jpg'}
                           alt={stream.title}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <CardContent className="p-4">
                         <h4 className="font-semibold line-clamp-2 mb-1">{stream.title}</h4>
-                        <p className="text-sm text-muted-foreground">{stream.category}</p>
+                        <p className="text-sm text-muted-foreground">{stream.category?.name || 'Uncategorized'}</p>
                       </CardContent>
                     </Card>
                   ))}
