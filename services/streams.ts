@@ -68,7 +68,10 @@ export const streamsService = {
 
   /** Get popular categories */
   async getPopularCategories(limit: number = 10): Promise<Category[]> {
-    return apiClient.get(`/streams/categories/popular?limit=${limit}`);
+    const response = await apiClient.get<{ categories: Category[]; total: number }>(
+      `/streams/categories/popular?limit=${limit}`
+    );
+    return response.categories || [];
   },
 
   /** Get category tree */
