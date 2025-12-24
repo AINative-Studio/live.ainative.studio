@@ -12,17 +12,17 @@ interface StreamCardProps {
 
 export function StreamCard({ stream }: StreamCardProps) {
   return (
-    <Link href={`/stream/${stream.username}`}>
+    <Link href={`/stream/${stream.user.username}`}>
       <Card className="group overflow-hidden border-border hover:border-brand-primary transition-all duration-300 cursor-pointer">
         <div className="relative aspect-video overflow-hidden bg-muted">
           <Image
-            src={stream.thumbnail}
+            src={stream.thumbnailUrl || '/placeholder-stream.jpg'}
             alt={stream.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          {stream.live && (
+          {stream.status === 'live' && (
             <div className="absolute top-2 left-2 flex items-center gap-2">
               <Badge variant="destructive" className="bg-success text-white font-medium text-xs">
                 <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-1.5" />
@@ -30,7 +30,7 @@ export function StreamCard({ stream }: StreamCardProps) {
               </Badge>
               <Badge variant="secondary" className="bg-black/80 text-white font-mono text-xs flex items-center gap-1">
                 <Eye className="w-3 h-3" />
-                {stream.viewers.toLocaleString()}
+                {stream.viewerCount.toLocaleString()}
               </Badge>
             </div>
           )}
@@ -38,22 +38,22 @@ export function StreamCard({ stream }: StreamCardProps) {
         <div className="p-3">
           <div className="flex gap-3">
             <Avatar className="w-10 h-10 border-2 border-primary/50">
-              <AvatarImage src={stream.avatar} alt={stream.displayName} />
-              <AvatarFallback>{stream.displayName[0]}</AvatarFallback>
+              <AvatarImage src={stream.user.avatar || undefined} alt={stream.user.displayName || stream.user.username} />
+              <AvatarFallback>{(stream.user.displayName || stream.user.username)[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
                 {stream.title}
               </h3>
-              <p className="text-xs text-muted-foreground mt-1">{stream.displayName}</p>
-              <p className="text-xs text-muted-foreground">{stream.category}</p>
+              <p className="text-xs text-muted-foreground mt-1">{stream.user.displayName || stream.user.username}</p>
+              <p className="text-xs text-muted-foreground">{stream.category?.name}</p>
             </div>
           </div>
           {stream.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {stream.tags.slice(0, 3).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0">
-                  {tag}
+                <Badge key={tag.id} variant="outline" className="text-[10px] px-1.5 py-0">
+                  {tag.name}
                 </Badge>
               ))}
             </div>
