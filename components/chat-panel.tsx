@@ -7,107 +7,122 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Smile } from 'lucide-react';
 import { ChatMessage } from './chat-message';
-import type { ChatMessage as ChatMessageType } from '@/types';
+import type { ChatMessage as ChatMessageType, User } from '@/types';
 
-const mockMessages: ChatMessageType[] = [
-  {
-    id: '1',
-    username: 'devmaster',
-    avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
-    message: 'This is amazing! What IDE are you using?',
-    timestamp: new Date(Date.now() - 300000).toISOString(),
-    badges: ['Subscriber'],
-  },
-  {
-    id: '2',
-    username: 'codewizard',
-    avatar: 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=100',
-    message: 'Cursor with Claude API integration',
-    timestamp: new Date(Date.now() - 240000).toISOString(),
-  },
-  {
-    id: '3',
-    username: 'aibuilder',
-    avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=100',
-    message: 'Can you show the RAG setup?',
-    timestamp: new Date(Date.now() - 180000).toISOString(),
-    badges: ['Moderator'],
-  },
-  {
-    id: '4',
-    username: 'pythonista',
-    avatar: 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg?auto=compress&cs=tinysrgb&w=100',
-    message: 'The code completion is so smooth!',
-    timestamp: new Date(Date.now() - 120000).toISOString(),
-  },
-  {
-    id: '5',
-    username: 'frontend_dev',
-    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
-    message: 'What model are you using for this?',
-    timestamp: new Date(Date.now() - 60000).toISOString(),
-  },
-];
+interface ChatPanelProps {
+  messages: ChatMessageType[];
+  onSendMessage: (content: string) => void;
+  isConnected: boolean;
+  isAuthenticated: boolean;
+  currentUser: User | null;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
+}
 
-export function ChatPanel() {
-  const [messages, setMessages] = useState<ChatMessageType[]>(mockMessages);
+export function ChatPanel({
+  messages,
+  onSendMessage,
+  isConnected,
+  isAuthenticated,
+  currentUser,
+  onLoadMore,
+  isLoadingMore = false,
+}: ChatPanelProps) {
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      const message: ChatMessageType = {
-        id: Date.now().toString(),
-        username: 'You',
-        avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100',
-        message: newMessage,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages([...messages, message]);
-      setNewMessage('');
-    }
+    if (!newMessage.trim() || !isAuthenticated || !isConnected) return;
+
+    onSendMessage(newMessage.trim());
+    setNewMessage('');
   };
+
+  const isInputDisabled = !isConnected || !isAuthenticated;
 
   return (
     <Card className="flex flex-col h-full border-border bg-card">
       <CardHeader className="border-b border-border/50 bg-card">
-        <CardTitle className="text-lg flex items-center gap-2 font-semibold">
-          Live Chat
-          <span className="text-xs font-normal text-muted-foreground">
-            ({messages.length} messages)
+        <CardTitle className="text-lg flex items-center justify-between font-semibold">
+          <span className="flex items-center gap-2">
+            Live Chat
+            <span className="text-xs font-normal text-muted-foreground">
+              ({messages.length} messages)
+            </span>
+          </span>
+          <span className={`flex items-center gap-1.5 text-sm font-normal ${isConnected ? 'text-green-500' : 'text-red-500'}`}>
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            {isConnected ? 'Connected' : 'Disconnected'}
           </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden bg-card">
         <ScrollArea className="flex-1" ref={scrollRef}>
           <div className="py-2">
+            {onLoadMore && (
+              <div className="text-center py-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onLoadMore}
+                  disabled={isLoadingMore}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {isLoadingMore ? 'Loading...' : 'Load more messages'}
+                </Button>
+              </div>
+            )}
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
         <form onSubmit={handleSend} className="p-3 border-t border-border/50 bg-card">
-          <div className="flex gap-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Send a message..."
-              className="flex-1 bg-background border-border focus-visible:ring-primary"
-            />
-            <Button size="icon" variant="ghost" className="hover:bg-accent/10 hover:text-accent">
-              <Smile className="w-5 h-5" />
-            </Button>
-            <Button size="icon" type="submit" className="bg-brand-primary hover:bg-primary-dark text-white">
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
+          {isAuthenticated ? (
+            <div className="flex gap-2">
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder={isConnected ? "Send a message..." : "Connecting to chat..."}
+                disabled={isInputDisabled}
+                className="flex-1 bg-background border-border focus-visible:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                maxLength={500}
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                type="button"
+                disabled={isInputDisabled}
+                className="hover:bg-accent/10 hover:text-accent disabled:opacity-50"
+              >
+                <Smile className="w-5 h-5" />
+              </Button>
+              <Button
+                size="icon"
+                type="submit"
+                disabled={isInputDisabled || !newMessage.trim()}
+                className="bg-brand-primary hover:bg-primary-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center py-2">
+              <a href="/login" className="text-brand-primary hover:underline font-medium">
+                Log in to chat
+              </a>
+            </div>
+          )}
         </form>
       </CardContent>
     </Card>
