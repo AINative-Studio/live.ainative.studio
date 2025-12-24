@@ -14,15 +14,20 @@ import {
 } from 'lucide-react';
 import type { Category } from '@/types';
 
+// Map category slugs to icons (fallback for categories without iconUrl)
 const iconMap: Record<string, LucideIcon> = {
-  brain: Brain,
-  zap: Zap,
-  layout: Layout,
-  code: Code,
-  cpu: Cpu,
-  server: Server,
-  link: LinkIcon,
-  'gamepad-2': Gamepad2,
+  'ai-ml': Brain,
+  'machine-learning': Brain,
+  'deep-learning': Brain,
+  'web-dev': Layout,
+  'web-development': Layout,
+  'frontend': Code,
+  'backend': Server,
+  'devops': Cpu,
+  'cloud': Zap,
+  'blockchain': LinkIcon,
+  'game-dev': Gamepad2,
+  'gaming': Gamepad2,
 };
 
 interface CategoryCardProps {
@@ -30,15 +35,20 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category }: CategoryCardProps) {
-  const Icon = iconMap[category.icon] || Code;
+  // Use iconUrl if available, otherwise fall back to slug-based icon mapping
+  const Icon = iconMap[category.slug] || Code;
 
   return (
     <Link href={`/category/${category.slug}`}>
       <Card className="group overflow-hidden border-border hover:border-primary transition-all duration-300 cursor-pointer h-full">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
-            <div className={`p-3 rounded-lg bg-${category.color}/10 border border-${category.color}/20 group-hover:border-primary transition-colors`}>
-              <Icon className={`w-6 h-6 text-${category.color}`} />
+            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 group-hover:border-primary transition-colors">
+              {category.iconUrl ? (
+                <img src={category.iconUrl} alt={category.name} className="w-6 h-6" />
+              ) : (
+                <Icon className="w-6 h-6 text-primary" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
