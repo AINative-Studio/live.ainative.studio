@@ -104,9 +104,13 @@ export function NotificationDropdown() {
     setIsLoading(true);
     try {
       const response = await dashboardService.getNotifications(1);
-      const recentNotifications = response.notifications.slice(0, 5);
+      // Safely handle response - ensure notifications is an array
+      const notificationsArray = Array.isArray(response?.notifications)
+        ? response.notifications
+        : [];
+      const recentNotifications = notificationsArray.slice(0, 5);
       setNotifications(recentNotifications);
-      setUnreadCount(response.unreadCount);
+      setUnreadCount(response?.unreadCount ?? recentNotifications.filter((n: FollowNotification) => !n.isRead).length);
     } catch (error) {
       console.error('Failed to load notifications, using mock data:', error);
       setNotifications(mockNotifications);

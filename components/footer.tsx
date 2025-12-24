@@ -27,7 +27,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/ai-native-development" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link href="/vibe-coding" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   What is AI-Native Development?
                 </Link>
               </li>

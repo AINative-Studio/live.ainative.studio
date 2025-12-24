@@ -87,7 +87,7 @@ export default function Home() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="font-mono" asChild>
-                <Link href="/ai-native-development">What is AI-Native Development?</Link>
+                <Link href="/vibe-coding">What is AI-Native Development?</Link>
               </Button>
             </div>
           </div>
