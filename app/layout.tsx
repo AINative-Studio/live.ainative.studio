@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Poppins, Fira_Code } from 'next/font/google';
 import { AuthProvider } from '@/contexts/auth-context';
+import { StreamsProvider } from '@/contexts/streams-context';
 import { Toaster } from '@/components/ui/sonner';
 
 const poppins = Poppins({
@@ -59,7 +60,9 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${poppins.variable} ${firaCode.variable} antialiased`}>
         <AuthProvider>
-          {children}
+          <StreamsProvider>
+            {children}
+          </StreamsProvider>
         </AuthProvider>
         <Toaster />
       </body>
