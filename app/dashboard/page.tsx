@@ -19,9 +19,9 @@ import {
 } from '@/components/ui/select';
 import { Video, Upload, Settings, Activity, Radio } from 'lucide-react';
 import categoriesData from '@/data/categories.json';
-import type { Category } from '@/types';
 
-const categories = categoriesData as Category[];
+// TODO: Remove type assertions when API integration is complete
+const categories = categoriesData as any;
 
 function SimpleProgress({ value }: { value: number }) {
   return (
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((cat) => (
+                        {categories.map((cat: any) => (
                           <SelectItem key={cat.id} value={cat.slug}>
                             {cat.name}
                           </SelectItem>
