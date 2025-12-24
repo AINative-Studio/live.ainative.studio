@@ -1,24 +1,94 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Video, Github, Mail } from 'lucide-react';
+import { Video, Github, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { TerminalHeader } from '@/components/terminal-header';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { register, isAuthenticated } = useAuth();
+
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
+
+  // Validate password match
+  useEffect(() => {
+    if (confirmPassword && password !== confirmPassword) {
+      setPasswordError('Passwords do not match');
+    } else {
+      setPasswordError(null);
+    }
+  }, [password, confirmPassword]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    // Validate password length
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    // Validate terms agreement
+    if (!agreeToTerms) {
+      setError('You must agree to the Terms of Service and Privacy Policy');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await register({
+        email,
+        username,
+        password,
+      });
+
+      // Redirect to dashboard on success
+      router.push('/dashboard');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+
+      // Handle specific error messages from API
+      if (errorMessage.includes('email')) {
+        setError('This email is already registered. Please use a different email or sign in.');
+      } else if (errorMessage.includes('username')) {
+        setError('This username is already taken. Please choose a different username.');
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -66,6 +136,13 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {error && (
+              <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
@@ -75,6 +152,7 @@ export default function RegisterPage() {
                   placeholder="yourusername"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  disabled={isLoading}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
@@ -90,6 +168,7 @@ export default function RegisterPage() {
                   placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -99,8 +178,10 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type="password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
@@ -108,11 +189,28 @@ export default function RegisterPage() {
                 </p>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isLoading}
+                  required
+                />
+                {passwordError && (
+                  <p className="text-xs text-red-500">{passwordError}</p>
+                )}
+              </div>
+
               <div className="flex items-start space-x-2">
                 <Checkbox
                   id="terms"
                   checked={agreeToTerms}
                   onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
+                  disabled={isLoading}
                 />
                 <label
                   htmlFor="terms"
@@ -132,9 +230,16 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 className="w-full bg-brand-primary hover:bg-primary-dark text-white font-medium"
-                disabled={!agreeToTerms}
+                disabled={!agreeToTerms || isLoading || !!passwordError}
               >
-                Create Account
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
               </Button>
             </form>
 
