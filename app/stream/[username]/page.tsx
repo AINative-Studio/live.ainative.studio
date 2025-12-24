@@ -132,7 +132,7 @@ export default function StreamPage({ params }: PageProps) {
                       Share
                     </Button>
                     <div className="flex gap-2 ml-auto">
-                      {user.socials.twitter && (
+                      {user.socials?.twitter && (
                         <a
                           href={`https://twitter.com/${user.socials.twitter}`}
                           target="_blank"
@@ -142,7 +142,7 @@ export default function StreamPage({ params }: PageProps) {
                           <Twitter className="w-4 h-4" />
                         </a>
                       )}
-                      {user.socials.github && (
+                      {user.socials?.github && (
                         <a
                           href={`https://github.com/${user.socials.github}`}
                           target="_blank"
@@ -152,7 +152,7 @@ export default function StreamPage({ params }: PageProps) {
                           <Github className="w-4 h-4" />
                         </a>
                       )}
-                      {user.socials.website && (
+                      {user.socials?.website && (
                         <a
                           href={user.socials.website}
                           target="_blank"
@@ -169,7 +169,13 @@ export default function StreamPage({ params }: PageProps) {
             </div>
 
             <div className="lg:sticky lg:top-20 h-[calc(100vh-7rem)]">
-              <ChatPanel />
+              <ChatPanel
+                messages={[]}
+                onSendMessage={() => {}}
+                isConnected={false}
+                isAuthenticated={false}
+                currentUser={null}
+              />
             </div>
           </div>
         </div>
