@@ -7,14 +7,22 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Smile } from 'lucide-react';
 import { ChatMessage } from './chat-message';
-import type { ChatMessage as ChatMessageType, User } from '@/types';
+import type { ChatMessage as ChatMessageType } from '@/types';
+
+// Minimal user type for auth context compatibility
+interface AuthUser {
+  id: string;
+  username: string | null;
+  displayName: string | null;
+  avatar: string | null;
+}
 
 interface ChatPanelProps {
   messages: ChatMessageType[];
   onSendMessage: (content: string) => void;
   isConnected: boolean;
   isAuthenticated: boolean;
-  currentUser: User | null;
+  currentUser: AuthUser | null;
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
 }
