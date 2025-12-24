@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, Menu, Video, User, LogOut, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { NotificationDropdown } from '@/components/notification-dropdown';
 
 export function Navbar() {
   const router = useRouter();
@@ -101,6 +102,8 @@ export function Navbar() {
                 Go Live
               </Link>
             </Button>
+
+            <NotificationDropdown />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
