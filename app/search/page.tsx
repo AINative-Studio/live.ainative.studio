@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
@@ -8,21 +8,29 @@ import { StreamCard } from '@/components/stream-card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Loader2 } from 'lucide-react';
+import { streamsService } from '@/services/streams';
+import type { Stream, Category } from '@/types';
 import streamsData from '@/data/streams.json';
 import categoriesData from '@/data/categories.json';
 import usersData from '@/data/users.json';
 
-// TODO: Remove type assertions when API integration is complete
-const streams = streamsData as any;
-const categories = categoriesData as any;
-const users = usersData as any;
+// Fallback mock data
+const mockStreams = streamsData as any;
+const mockCategories = categoriesData as any;
+const mockUsers = usersData as any;
 
 function SearchContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const [query, setQuery] = useState(initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
+  const [streams, setStreams] = useState<Stream[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
 
   const filters = [
     { id: 'all', label: 'All' },
@@ -42,26 +50,97 @@ function SearchContent() {
     }
   };
 
-  const searchQuery = query.toLowerCase();
-  const filteredStreams = streams.filter((stream: any) => {
-    const matchesQuery =
-      stream.title.toLowerCase().includes(searchQuery) ||
-      stream.displayName.toLowerCase().includes(searchQuery) ||
-      stream.category.toLowerCase().includes(searchQuery) ||
-      stream.tags.some((tag: any) => tag.toLowerCase().includes(searchQuery));
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
 
-    if (activeFilters.includes('all')) return matchesQuery;
-    if (activeFilters.includes('live')) return matchesQuery && stream.live;
-    return matchesQuery;
-  });
+    return () => clearTimeout(timer);
+  }, [query]);
 
-  const filteredCategories = categories.filter((category: any) =>
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const result = await streamsService.getCategories();
+        setCategories(result);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        setCategories(mockCategories);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Perform search when debounced query changes
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!debouncedQuery) {
+        setStreams([]);
+        setUsers([]);
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        // Determine status filter
+        let statusFilter: 'live' | 'ended' | 'all' | undefined;
+        if (activeFilters.includes('live')) {
+          statusFilter = 'live';
+        } else if (activeFilters.includes('all')) {
+          statusFilter = 'all';
+        }
+
+        // Call API
+        const result = await streamsService.search({
+          query: debouncedQuery,
+          status: statusFilter,
+        });
+
+        setStreams(result.streams);
+        setUseFallback(false);
+      } catch (error) {
+        console.error('Search failed, using fallback data:', error);
+        // Fallback to mock data filtering
+        setUseFallback(true);
+        const searchQuery = debouncedQuery.toLowerCase();
+        const filteredStreams = mockStreams.filter((stream: any) => {
+          const matchesQuery =
+            stream.title.toLowerCase().includes(searchQuery) ||
+            stream.displayName.toLowerCase().includes(searchQuery) ||
+            stream.category.toLowerCase().includes(searchQuery) ||
+            stream.tags.some((tag: any) => tag.toLowerCase().includes(searchQuery));
+
+          if (activeFilters.includes('all')) return matchesQuery;
+          if (activeFilters.includes('live')) return matchesQuery && stream.live;
+          return matchesQuery;
+        });
+        setStreams(filteredStreams);
+        setUsers(mockUsers.filter((user: any) =>
+          user.displayName.toLowerCase().includes(searchQuery)
+        ));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    performSearch();
+  }, [debouncedQuery, activeFilters]);
+
+  const searchQuery = debouncedQuery.toLowerCase();
+  const filteredCategories = categories.filter((category: Category) =>
     category.name.toLowerCase().includes(searchQuery)
   );
 
-  const filteredUsers = users.filter((user: any) =>
-    user.displayName.toLowerCase().includes(searchQuery)
-  );
+  // Filter users from mock data when using fallback
+  const filteredUsers = useFallback
+    ? users
+    : mockUsers.filter((user: any) =>
+        user.displayName.toLowerCase().includes(searchQuery)
+      );
 
   const showCategories =
     (activeFilters.includes('all') || activeFilters.includes('categories')) &&
@@ -111,21 +190,28 @@ function SearchContent() {
             ))}
           </div>
 
-          {query && (
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
+              <span className="ml-3 text-muted-foreground">Searching...</span>
+            </div>
+          )}
+
+          {!isLoading && query && (
             <div className="mb-4">
               <p className="text-muted-foreground">
-                Found {filteredStreams.length} streams
+                Found {streams.length} streams
                 {showCategories && `, ${filteredCategories.length} categories`}
                 {showUsers && `, ${filteredUsers.length} developers`}
               </p>
             </div>
           )}
 
-          {filteredStreams.length > 0 && (
+          {!isLoading && streams.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold mb-4">Streams</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {filteredStreams.map((stream: any) => (
+                {streams.map((stream: any) => (
                   <StreamCard key={stream.id} stream={stream} />
                 ))}
               </div>
@@ -178,8 +264,9 @@ function SearchContent() {
             </div>
           )}
 
-          {query &&
-            filteredStreams.length === 0 &&
+          {!isLoading &&
+            query &&
+            streams.length === 0 &&
             filteredCategories.length === 0 &&
             filteredUsers.length === 0 && (
               <div className="text-center py-20">
