@@ -17,16 +17,30 @@ import { ViewerCountBadge } from './viewer-count-badge';
 
 interface StreamPlayerProps {
   title: string;
-  viewers: number;
+  viewers?: number;
+  viewerCount?: number;
   username: string;
   thumbnail: string;
+  isLive?: boolean;
+  streamId?: string;
 }
 
-export function StreamPlayer({ title, viewers, username, thumbnail }: StreamPlayerProps) {
+export function StreamPlayer({
+  title,
+  viewers,
+  viewerCount,
+  username,
+  thumbnail,
+  isLive = true,
+  streamId
+}: StreamPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState([75]);
   const [showControls, setShowControls] = useState(false);
+
+  // Use viewerCount if provided (real-time from WebSocket), otherwise fall back to viewers
+  const currentViewerCount = viewerCount !== undefined ? viewerCount : (viewers || 0);
 
   return (
     <Card className="overflow-hidden border-border bg-black">
@@ -47,11 +61,17 @@ export function StreamPlayer({ title, viewers, username, thumbnail }: StreamPlay
         </div>
 
         <div className="absolute top-4 left-4 flex items-center gap-2 z-20">
-          <div className="bg-success text-white px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
-            <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-            LIVE
-          </div>
-          <ViewerCountBadge count={viewers} live />
+          {isLive && (
+            <div className="bg-success text-white px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+              LIVE
+            </div>
+          )}
+          <ViewerCountBadge
+            count={currentViewerCount}
+            isLive={isLive}
+            animated={viewerCount !== undefined}
+          />
         </div>
 
         <div className="absolute top-4 right-4 z-20">
