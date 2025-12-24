@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/navbar';
@@ -5,17 +8,61 @@ import { Footer } from '@/components/footer';
 import { TerminalHeader } from '@/components/terminal-header';
 import { StreamCard } from '@/components/stream-card';
 import { CategoryCard } from '@/components/category-card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 import { ArrowRight, TrendingUp } from 'lucide-react';
+import { streamsService } from '@/services/streams';
+import type { Stream, Category } from '@/types';
 import streamsData from '@/data/streams.json';
 import categoriesData from '@/data/categories.json';
 
-// TODO: Remove type assertions when API integration is complete
-const streams = streamsData as any;
-const categories = categoriesData as any;
-const liveStreams = streams.filter((s: any) => s.live);
-const featuredStreams = liveStreams.slice(0, 3);
-
 export default function Home() {
+  const [trendingStreams, setTrendingStreams] = useState<Stream[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingStreams, setIsLoadingStreams] = useState(true);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchTrendingStreams() {
+      try {
+        setIsLoadingStreams(true);
+        const response = await streamsService.getTrending(12);
+        setTrendingStreams(response.streams);
+        setError(null);
+      } catch (err) {
+        console.warn('Failed to fetch trending streams from API, falling back to mock data:', err);
+        // Fallback to mock data
+        const mockStreams = streamsData as any[];
+        const liveStreams = mockStreams.filter((s: any) => s.live);
+        setTrendingStreams(liveStreams as any);
+      } finally {
+        setIsLoadingStreams(false);
+      }
+    }
+
+    async function fetchCategories() {
+      try {
+        setIsLoadingCategories(true);
+        const popularCategories = await streamsService.getPopularCategories(8);
+        setCategories(popularCategories);
+        setError(null);
+      } catch (err) {
+        console.warn('Failed to fetch categories from API, falling back to mock data:', err);
+        // Fallback to mock data
+        setCategories(categoriesData as any);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    }
+
+    fetchTrendingStreams();
+    fetchCategories();
+  }, []);
+
+  const featuredStreams = trendingStreams.slice(0, 3);
+  const liveStreams = trendingStreams;
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -57,11 +104,19 @@ export default function Home() {
                 <Link href="/search">View All</Link>
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredStreams.map((stream: any) => (
-                <StreamCard key={stream.id} stream={stream} />
-              ))}
-            </div>
+            {isLoadingStreams ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(3)].map((_, i) => (
+                  <StreamCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredStreams.map((stream) => (
+                  <StreamCard key={stream.id} stream={stream} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -71,11 +126,19 @@ export default function Home() {
               <h2 className="text-3xl font-bold mb-2">Browse Categories</h2>
               <p className="text-muted-foreground">Explore streams by development focus</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {categories.map((category: any) => (
-                <CategoryCard key={category.id} category={category} />
-              ))}
-            </div>
+            {isLoadingCategories ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[...Array(8)].map((_, i) => (
+                  <CategoryCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {categories.map((category) => (
+                  <CategoryCard key={category.id} category={category} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -84,16 +147,28 @@ export default function Home() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl font-bold mb-2">Live Channels</h2>
-                <p className="text-muted-foreground">
-                  {liveStreams.length} AI-native developers streaming now
-                </p>
+                {isLoadingStreams ? (
+                  <Skeleton className="h-5 w-48" />
+                ) : (
+                  <p className="text-muted-foreground">
+                    {liveStreams.length} AI-native developers streaming now
+                  </p>
+                )}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {liveStreams.map((stream: any) => (
-                <StreamCard key={stream.id} stream={stream} />
-              ))}
-            </div>
+            {isLoadingStreams ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <StreamCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {liveStreams.map((stream) => (
+                  <StreamCard key={stream.id} stream={stream} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -115,5 +190,35 @@ export default function Home() {
 
       <Footer />
     </div>
+  );
+}
+
+function StreamCardSkeleton() {
+  return (
+    <Card className="overflow-hidden border-border">
+      <Skeleton className="aspect-video w-full" />
+      <div className="p-4 space-y-3">
+        <div className="flex items-start gap-3">
+          <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+        <Skeleton className="h-4 w-32" />
+      </div>
+    </Card>
+  );
+}
+
+function CategoryCardSkeleton() {
+  return (
+    <Card className="p-6 border-border">
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-8 rounded" />
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+    </Card>
   );
 }
