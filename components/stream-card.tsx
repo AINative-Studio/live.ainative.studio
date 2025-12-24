@@ -7,9 +7,10 @@ import { Eye } from 'lucide-react';
 
 interface StreamCardProps {
   stream: any; // Support both mock data and API data
+  priority?: boolean;
 }
 
-export function StreamCard({ stream }: StreamCardProps) {
+export function StreamCard({ stream, priority = false }: StreamCardProps) {
   // Support both mock data (stream.username) and API data (stream.user.username)
   const username = stream.user?.username || stream.username || 'unknown';
   const displayName = stream.user?.displayName || stream.displayName || username;
@@ -30,6 +31,7 @@ export function StreamCard({ stream }: StreamCardProps) {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={priority}
           />
           {isLive && (
             <div className="absolute top-2 left-2 flex items-center gap-2">

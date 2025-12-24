@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { StreamPlayer } from '@/components/stream-player';
-import { ChatPanel } from '@/components/chat-panel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,6 +18,11 @@ import { useStreamChat } from '@/hooks/use-stream-chat';
 import type { User, Stream } from '@/types';
 import streamsData from '@/data/streams.json';
 import usersData from '@/data/users.json';
+
+const ChatPanel = dynamic(() => import('@/components/chat-panel').then(mod => ({ default: mod.ChatPanel })), {
+  ssr: false,
+  loading: () => <div className="h-full bg-card animate-pulse rounded-lg" />
+});
 
 // Mock data fallback
 const streams = streamsData as any;
