@@ -1,47 +1,144 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/auth-context';
+import { dashboardService } from '@/services/dashboard';
+import type { DashboardOverview, DashboardQuickStats } from '@/types';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Video, Upload, Settings, Activity, Radio } from 'lucide-react';
-import categoriesData from '@/data/categories.json';
+  Video,
+  Activity,
+  Users,
+  Eye,
+  TrendingUp,
+  Radio,
+  Clock,
+  Calendar,
+  Bell,
+  AlertCircle,
+} from 'lucide-react';
 
-// TODO: Remove type assertions when API integration is complete
-const categories = categoriesData as any;
+// Mock data for fallback
+const mockOverview: DashboardOverview = {
+  currentStream: null,
+  recentStreams: [],
+  followerCount: 0,
+  totalViews: 0,
+  upcomingSchedule: [],
+  notifications: [],
+};
 
-function SimpleProgress({ value }: { value: number }) {
+const mockQuickStats: DashboardQuickStats = {
+  todayViewers: 0,
+  weeklyViewers: 0,
+  monthlyViewers: 0,
+  avgStreamDuration: 0,
+  newFollowersToday: 0,
+  newFollowersWeek: 0,
+};
+
+function StatCardSkeleton() {
   return (
-    <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
-      <div
-        className="h-full bg-primary transition-all"
-        style={{ width: `${value}%` }}
-      />
+    <Card className="border-border">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <Skeleton className="h-12 w-12 rounded-full" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StreamCardSkeleton() {
+  return (
+    <div className="flex gap-4 p-4 border border-border rounded-lg">
+      <Skeleton className="w-32 h-20 rounded" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-6 w-20" />
+        </div>
+      </div>
     </div>
   );
 }
 
 export default function DashboardPage() {
-  const [streamTitle, setStreamTitle] = useState('');
-  const [category, setCategory] = useState('');
-  const [tags, setTags] = useState('');
-  const [isLive, setIsLive] = useState(false);
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [overview, setOverview] = useState<DashboardOverview | null>(null);
+  const [quickStats, setQuickStats] = useState<DashboardQuickStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [useMockData, setUseMockData] = useState(false);
 
-  const handleGoLive = () => {
-    setIsLive(!isLive);
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login?redirect=/dashboard');
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadDashboardData();
+    }
+  }, [isAuthenticated]);
+
+  const loadDashboardData = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const [overviewData, statsData] = await Promise.all([
+        dashboardService.getOverview(),
+        dashboardService.getQuickStats(),
+      ]);
+
+      setOverview(overviewData);
+      setQuickStats(statsData);
+      setUseMockData(false);
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      setOverview(mockOverview);
+      setQuickStats(mockQuickStats);
+      setUseMockData(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (authLoading || !isAuthenticated) {
+    return null;
+  }
+
+  const formatDuration = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatTime = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -51,203 +148,357 @@ export default function DashboardPage() {
       <main className="flex-1 bg-gradient-to-b from-background to-card/30">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Streamer Dashboard</h1>
-            <p className="text-muted-foreground">Manage your stream settings and go live</p>
+            <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome back, {user?.displayName || user?.username || 'Streamer'}
+            </p>
+          </div>
+
+          {error && useMockData && (
+            <Card className="border-yellow-500/50 bg-yellow-500/10 mb-6">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium text-yellow-500">Using Mock Data</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Failed to load dashboard data from API. Displaying placeholder data instead.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      onClick={loadDashboardData}
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {isLoading ? (
+              <>
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+              </>
+            ) : (
+              <>
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Today's Viewers</p>
+                        <p className="text-3xl font-bold mt-1">
+                          {quickStats?.todayViewers.toLocaleString() || 0}
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center">
+                        <Eye className="w-6 h-6 text-brand-primary" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Weekly Viewers</p>
+                        <p className="text-3xl font-bold mt-1">
+                          {quickStats?.weeklyViewers.toLocaleString() || 0}
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-accent" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">New Followers</p>
+                        <p className="text-3xl font-bold mt-1">
+                          +{quickStats?.newFollowersWeek.toLocaleString() || 0}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">This week</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-secondary" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Video className="w-5 h-5" />
-                    Stream Settings
-                  </CardTitle>
-                  <CardDescription>Configure your stream details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Stream Title</Label>
-                    <Input
-                      id="title"
-                      placeholder="Building an AI Native IDE with Cursor & Claude"
-                      value={streamTitle}
-                      onChange={(e) => setStreamTitle(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat: any) => (
-                          <SelectItem key={cat.id} value={cat.slug}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="tags">Tags</Label>
-                    <Input
-                      id="tags"
-                      placeholder="AI, Cursor, Claude, IDE (comma separated)"
-                      value={tags}
-                      onChange={(e) => setTags(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Add tags to help viewers find your stream
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="thumbnail">Stream Thumbnail</Label>
-                    <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-brand-primary transition-colors cursor-pointer">
-                      <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Click to upload or drag and drop
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        PNG, JPG up to 10MB
-                      </p>
+              {/* Current Stream Status */}
+              {isLoading ? (
+                <Card className="border-border">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-32" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-40 w-full" />
+                  </CardContent>
+                </Card>
+              ) : overview?.currentStream ? (
+                <Card className="border-border border-brand-primary/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Radio className="w-5 h-5 text-red-500 animate-pulse" />
+                      You Are Live
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold text-lg">{overview.currentStream.title}</h3>
+                      {overview.currentStream.category && (
+                        <Badge variant="secondary" className="mt-2">
+                          {overview.currentStream.category.name}
+                        </Badge>
+                      )}
                     </div>
-                  </div>
+                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Current Viewers</p>
+                        <p className="text-2xl font-bold">{overview.currentStream.viewerCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Peak Viewers</p>
+                        <p className="text-2xl font-bold">{overview.currentStream.peakViewers}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Started</p>
+                        <p className="text-sm font-mono">
+                          {overview.currentStream.startedAt && formatTime(overview.currentStream.startedAt)}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="destructive" className="w-full" asChild>
+                      <Link href="/dashboard/stream">End Stream</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Video className="w-5 h-5" />
+                      Stream Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-center py-8">
+                      <Video className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground mb-4">You are not currently streaming</p>
+                      <Button asChild>
+                        <Link href="/dashboard/go-live">
+                          <Radio className="w-4 h-4 mr-2" />
+                          Go Live
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-                  <Button
-                    size="lg"
-                    className="w-full text-lg font-medium"
-                    variant={isLive ? 'destructive' : 'default'}
-                    onClick={handleGoLive}
-                  >
-                    {isLive ? (
-                      <>
-                        <Radio className="w-5 h-5 mr-2 animate-pulse" />
-                        End Stream
-                      </>
-                    ) : (
-                      <>
-                        <Video className="w-5 h-5 mr-2" />
-                        Go Live
-                      </>
-                    )}
-                  </Button>
-
-                  {isLive && (
-                    <Badge variant="destructive" className="w-full justify-center py-2 font-medium">
-                      <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-2" />
-                      YOU ARE LIVE
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
-
+              {/* Recent Streams */}
               <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="w-5 h-5" />
-                    Stream Health
+                    Recent Streams
                   </CardTitle>
-                  <CardDescription>Monitor your stream performance</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm">Bitrate</Label>
-                      <span className="text-sm font-mono text-brand-primary font-semibold">6000 kbps</span>
-                    </div>
-                    <SimpleProgress value={85} />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm">Resolution</Label>
-                      <span className="text-sm font-mono text-brand-primary font-semibold">1920x1080</span>
-                    </div>
-                    <SimpleProgress value={100} />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm">Dropped Frames</Label>
-                      <span className="text-sm font-mono text-yellow-500">0.2%</span>
-                    </div>
-                    <SimpleProgress value={5} />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm">CPU Usage</Label>
-                      <span className="text-sm font-mono">45%</span>
-                    </div>
-                    <SimpleProgress value={45} />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="space-y-6">
-              <Card className="border-border">
-                <CardHeader>
-                  <CardTitle className="text-xl">Stream Preview</CardTitle>
+                  <CardDescription>Your latest streaming sessions</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
-                    <div className="text-center">
-                      <Video className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        {isLive ? 'Stream Active' : 'No Active Stream'}
-                      </p>
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      <StreamCardSkeleton />
+                      <StreamCardSkeleton />
+                      <StreamCardSkeleton />
                     </div>
-                  </div>
-                  {isLive && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Current Viewers</span>
-                        <span className="font-mono font-semibold">127</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Stream Duration</span>
-                        <span className="font-mono">1:23:45</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Peak Viewers</span>
-                        <span className="font-mono">156</span>
-                      </div>
+                  ) : overview?.recentStreams && overview.recentStreams.length > 0 ? (
+                    <div className="space-y-4">
+                      {overview.recentStreams.slice(0, 5).map((stream) => (
+                        <div
+                          key={stream.id}
+                          className="flex gap-4 p-4 border border-border rounded-lg hover:border-brand-primary/50 transition-colors"
+                        >
+                          <div className="w-32 h-20 bg-muted rounded flex items-center justify-center flex-shrink-0">
+                            {stream.thumbnailUrl ? (
+                              <img
+                                src={stream.thumbnailUrl}
+                                alt={stream.title}
+                                className="w-full h-full object-cover rounded"
+                              />
+                            ) : (
+                              <Video className="w-8 h-8 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold truncate">{stream.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {stream.startedAt && formatDate(stream.startedAt)}
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              <Badge variant="secondary" className="text-xs">
+                                <Eye className="w-3 h-3 mr-1" />
+                                {stream.peakViewers} peak
+                              </Badge>
+                              {stream.category && (
+                                <Badge variant="outline" className="text-xs">
+                                  {stream.category.name}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Activity className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>No recent streams</p>
+                      <p className="text-sm mt-1">Start streaming to see your history here</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
+            </div>
 
-              <Card className="border-border border-brand-primary/30">
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Channel Stats */}
+              {isLoading ? (
+                <Card className="border-border">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-32" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-32 w-full" />
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-border">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Channel Stats</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Total Followers</span>
+                      <span className="font-semibold">{overview?.followerCount.toLocaleString() || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Total Views</span>
+                      <span className="font-semibold">{overview?.totalViews.toLocaleString() || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Avg Duration</span>
+                      <span className="font-semibold">
+                        {quickStats?.avgStreamDuration ? formatDuration(quickStats.avgStreamDuration) : '0h 0m'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Upcoming Schedule */}
+              <Card className="border-border">
                 <CardHeader>
-                  <CardTitle className="text-lg">Quick Tips</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Calendar className="w-5 h-5" />
+                    Upcoming Schedule
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="flex gap-2">
-                    <span className="text-brand-primary">→</span>
-                    <p>Use a clear, descriptive title</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-brand-primary">→</span>
-                    <p>Select the right category for visibility</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-brand-primary">→</span>
-                    <p>Add relevant tags to reach your audience</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-brand-primary">→</span>
-                    <p>Upload a custom thumbnail</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-brand-primary">→</span>
-                    <p>Interact with chat regularly</p>
-                  </div>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-16 w-full" />
+                      <Skeleton className="h-16 w-full" />
+                    </div>
+                  ) : overview?.upcomingSchedule && overview.upcomingSchedule.length > 0 ? (
+                    <div className="space-y-3">
+                      {overview.upcomingSchedule.slice(0, 3).map((schedule) => (
+                        <div key={schedule.scheduleId} className="p-3 bg-muted rounded-lg">
+                          <p className="font-medium text-sm">{schedule.title}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {schedule.dayName}, {schedule.startTime} - {schedule.endTime}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-sm text-muted-foreground">
+                      <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>No scheduled streams</p>
+                    </div>
+                  )}
+                  <Button variant="outline" className="w-full mt-4" asChild>
+                    <Link href="/dashboard/schedule">Manage Schedule</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Recent Notifications */}
+              <Card className="border-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Bell className="w-5 h-5" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  ) : overview?.notifications && overview.notifications.length > 0 ? (
+                    <div className="space-y-3">
+                      {overview.notifications.slice(0, 5).map((notification) => (
+                        <div key={notification.id} className="flex items-start gap-3 text-sm">
+                          <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+                            {notification.followerAvatar ? (
+                              <img
+                                src={notification.followerAvatar}
+                                alt={notification.followerUsername}
+                                className="w-full h-full rounded-full object-cover"
+                              />
+                            ) : (
+                              <Users className="w-4 h-4 text-brand-primary" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm">
+                              <span className="font-medium">{notification.followerUsername}</span>{' '}
+                              {notification.type === 'new_follower' ? 'followed you' : 'is live'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(notification.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-sm text-muted-foreground">
+                      <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>No recent activity</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
