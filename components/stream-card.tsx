@@ -4,25 +4,34 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Eye } from 'lucide-react';
-import type { Stream } from '@/types';
 
 interface StreamCardProps {
-  stream: Stream;
+  stream: any; // Support both mock data and API data
 }
 
 export function StreamCard({ stream }: StreamCardProps) {
+  // Support both mock data (stream.username) and API data (stream.user.username)
+  const username = stream.user?.username || stream.username || 'unknown';
+  const displayName = stream.user?.displayName || stream.displayName || username;
+  const avatar = stream.user?.avatar || stream.avatar;
+  const thumbnail = stream.thumbnailUrl || stream.thumbnail || '/placeholder-stream.jpg';
+  const isLive = stream.status === 'live' || stream.live === true;
+  const viewerCount = stream.viewerCount || stream.viewers || 0;
+  const categoryName = stream.category?.name || stream.category || '';
+  const tags = stream.tags || [];
+
   return (
-    <Link href={`/stream/${stream.user.username}`}>
+    <Link href={`/stream/${username}`}>
       <Card className="group overflow-hidden border-border hover:border-brand-primary transition-all duration-300 cursor-pointer">
         <div className="relative aspect-video overflow-hidden bg-muted">
           <Image
-            src={stream.thumbnailUrl || '/placeholder-stream.jpg'}
+            src={thumbnail}
             alt={stream.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          {stream.status === 'live' && (
+          {isLive && (
             <div className="absolute top-2 left-2 flex items-center gap-2">
               <Badge variant="destructive" className="bg-success text-white font-medium text-xs">
                 <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-1.5" />
@@ -30,7 +39,7 @@ export function StreamCard({ stream }: StreamCardProps) {
               </Badge>
               <Badge variant="secondary" className="bg-black/80 text-white font-mono text-xs flex items-center gap-1">
                 <Eye className="w-3 h-3" />
-                {stream.viewerCount.toLocaleString()}
+                {viewerCount.toLocaleString()}
               </Badge>
             </div>
           )}
@@ -38,22 +47,22 @@ export function StreamCard({ stream }: StreamCardProps) {
         <div className="p-3">
           <div className="flex gap-3">
             <Avatar className="w-10 h-10 border-2 border-primary/50">
-              <AvatarImage src={stream.user.avatar || undefined} alt={stream.user.displayName || stream.user.username} />
-              <AvatarFallback>{(stream.user.displayName || stream.user.username)[0]}</AvatarFallback>
+              <AvatarImage src={avatar || undefined} alt={displayName} />
+              <AvatarFallback>{displayName[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
                 {stream.title}
               </h3>
-              <p className="text-xs text-muted-foreground mt-1">{stream.user.displayName || stream.user.username}</p>
-              <p className="text-xs text-muted-foreground">{stream.category?.name}</p>
+              <p className="text-xs text-muted-foreground mt-1">{displayName}</p>
+              <p className="text-xs text-muted-foreground">{categoryName}</p>
             </div>
           </div>
-          {stream.tags.length > 0 && (
+          {tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
-              {stream.tags.slice(0, 3).map((tag) => (
-                <Badge key={tag.id} variant="outline" className="text-[10px] px-1.5 py-0">
-                  {tag.name}
+              {tags.slice(0, 3).map((tag: any, index: number) => (
+                <Badge key={tag.id || tag || index} variant="outline" className="text-[10px] px-1.5 py-0">
+                  {tag.name || tag}
                 </Badge>
               ))}
             </div>

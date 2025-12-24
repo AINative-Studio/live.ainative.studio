@@ -1,6 +1,7 @@
+'use client';
+
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import type { Metadata } from 'next';
+import { useParams } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserPlus, Video, Calendar, Twitter, Github, Globe, Youtube } from 'lucide-react';
+import { UserPlus, Video, Twitter, Github, Globe, Youtube } from 'lucide-react';
 import usersData from '@/data/users.json';
 import streamsData from '@/data/streams.json';
 
@@ -16,44 +17,34 @@ import streamsData from '@/data/streams.json';
 const users = usersData as any;
 const streams = streamsData as any;
 
-interface PageProps {
-  params: {
-    username: string;
-  };
-}
+export default function UserPage() {
+  const params = useParams();
+  const username = params.username as string;
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const user = users.find((u: any) => u.username === params.username);
+  const user = users.find((u: any) => u.username === username);
 
   if (!user) {
-    return {
-      title: 'User Not Found',
-    };
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">User Not Found</h1>
+            <p className="text-muted-foreground">This user does not exist.</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
-  return {
-    title: `${user.displayName} (@${user.username}) | AINative Studio Live`,
-    description: user.bio,
-  };
-}
-
-export async function generateStaticParams() {
-  return users.map((user: any) => ({
-    username: user.username,
-  }));
-}
-
-export default function UserPage({ params }: PageProps) {
-  const user = users.find((u: any) => u.username === params.username);
-
-  if (!user) {
-    notFound();
-  }
-
-  const userStream = streams.find((s: any) => s.user?.username === params.username || s.username === params.username);
+  const userStream = streams.find((s: any) => s.user?.username === username || s.username === username);
   const pastStreams = streams.filter(
-    (s: any) => (s.user?.username === params.username || s.username === params.username) && s.status !== 'live'
+    (s: any) => (s.user?.username === username || s.username === username) && s.status !== 'live' && !s.live
   );
+
+  // Support both mock data (followers) and API data (followerCount)
+  const followerCount = user.followerCount || user.followers || 0;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -94,7 +85,7 @@ export default function UserPage({ params }: PageProps) {
 
                 <div className="flex flex-wrap items-center gap-4 mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-xl">{user.followerCount.toLocaleString()}</span>
+                    <span className="font-bold text-xl">{followerCount.toLocaleString()}</span>
                     <span className="text-muted-foreground">followers</span>
                   </div>
                   {user.isLive && (
@@ -175,14 +166,14 @@ export default function UserPage({ params }: PageProps) {
                     <Card key={stream.id} className="overflow-hidden border-border">
                       <div className="relative aspect-video bg-muted">
                         <img
-                          src={stream.thumbnailUrl || '/placeholder-stream.jpg'}
+                          src={stream.thumbnailUrl || stream.thumbnail || '/placeholder-stream.jpg'}
                           alt={stream.title}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <CardContent className="p-4">
                         <h4 className="font-semibold line-clamp-2 mb-1">{stream.title}</h4>
-                        <p className="text-sm text-muted-foreground">{stream.category?.name || 'Uncategorized'}</p>
+                        <p className="text-sm text-muted-foreground">{stream.category?.name || stream.category || 'Uncategorized'}</p>
                       </CardContent>
                     </Card>
                   ))}

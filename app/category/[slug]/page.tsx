@@ -1,5 +1,6 @@
-import { notFound } from 'next/navigation';
-import type { Metadata } from 'next';
+'use client';
+
+import { useParams } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { StreamCard } from '@/components/stream-card';
@@ -30,43 +31,36 @@ const iconMap: Record<string, LucideIcon> = {
   'gamepad-2': Gamepad2,
 };
 
-interface PageProps {
-  params: {
-    slug: string;
-  };
-}
+export default function CategoryPage() {
+  const params = useParams();
+  const slug = params.slug as string;
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const category = categories.find((c: any) => c.slug === params.slug);
+  const category = categories.find((c: any) => c.slug === slug);
 
   if (!category) {
-    return {
-      title: 'Category Not Found',
-    };
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">Category Not Found</h1>
+            <p className="text-muted-foreground">This category does not exist.</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
-  return {
-    title: `${category.name} Streams | AINative Studio Live`,
-    description: category.description,
-  };
-}
-
-export async function generateStaticParams() {
-  return categories.map((category: any) => ({
-    slug: category.slug,
-  }));
-}
-
-export default function CategoryPage({ params }: PageProps) {
-  const category = categories.find((c: any) => c.slug === params.slug);
-
-  if (!category) {
-    notFound();
-  }
-
-  const categoryStreams = streams.filter((s: any) => s.categorySlug === params.slug);
-  const liveStreams = categoryStreams.filter((s: any) => s.live);
+  // Support both mock data (categorySlug, live) and API data (category.slug, status)
+  const categoryStreams = streams.filter((s: any) =>
+    s.categorySlug === slug || s.category?.slug === slug
+  );
+  const liveStreams = categoryStreams.filter((s: any) =>
+    s.live === true || s.status === 'live'
+  );
   const Icon = iconMap[category.icon] || Code;
+  const viewerCount = category.viewerCount || 0;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -88,7 +82,7 @@ export default function CategoryPage({ params }: PageProps) {
                   </span>
                   <span className="text-muted-foreground">•</span>
                   <span className="font-mono">
-                    {category.viewerCount.toLocaleString()} viewers
+                    {viewerCount.toLocaleString()} viewers
                   </span>
                 </div>
               </div>

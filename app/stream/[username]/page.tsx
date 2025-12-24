@@ -1,6 +1,7 @@
+'use client';
+
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import type { Metadata } from 'next';
+import { useParams } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { StreamPlayer } from '@/components/stream-player';
@@ -17,46 +18,26 @@ import usersData from '@/data/users.json';
 const streams = streamsData as any;
 const users = usersData as any;
 
-interface PageProps {
-  params: {
-    username: string;
-  };
-}
+export default function StreamPage() {
+  const params = useParams();
+  const username = params.username as string;
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const stream = streams.find((s: any) => s.username === params.username);
-  const user = users.find((u: any) => u.username === params.username);
+  const stream = streams.find((s: any) => s.username === username);
+  const user = users.find((u: any) => u.username === username);
 
   if (!stream || !user) {
-    return {
-      title: 'Stream Not Found',
-    };
-  }
-
-  return {
-    title: `${stream.title} - ${user.displayName} | AINative Studio Live`,
-    description: `Watch ${user.displayName} live on AINative Studio Live: ${stream.title}. Experience AI-native development workflows in real-time.`,
-    openGraph: {
-      title: `${stream.title} - ${user.displayName}`,
-      description: `Watch ${user.displayName} live on AINative Studio Live: ${stream.title}`,
-      type: 'video.other',
-      images: [{ url: stream.thumbnail }],
-    },
-  };
-}
-
-export async function generateStaticParams() {
-  return streams.map((stream: any) => ({
-    username: stream.username,
-  }));
-}
-
-export default function StreamPage({ params }: PageProps) {
-  const stream = streams.find((s: any) => s.username === params.username);
-  const user = users.find((u: any) => u.username === params.username);
-
-  if (!stream || !user) {
-    notFound();
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">Stream Not Found</h1>
+            <p className="text-muted-foreground">This stream does not exist or has ended.</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -69,7 +50,7 @@ export default function StreamPage({ params }: PageProps) {
             <div className="space-y-4">
               <StreamPlayer
                 title={stream.title}
-                viewers={stream.viewers}
+                viewers={stream.viewers || 0}
                 username={stream.username}
                 thumbnail={stream.thumbnail}
               />
@@ -79,7 +60,7 @@ export default function StreamPage({ params }: PageProps) {
                   <div className="flex items-start gap-4 mb-4">
                     <Avatar className="w-16 h-16 border-2 border-brand-primary">
                       <AvatarImage src={user.avatar} alt={user.displayName} />
-                      <AvatarFallback>{user.displayName[0]}</AvatarFallback>
+                      <AvatarFallback>{user.displayName?.[0] || 'U'}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
@@ -100,7 +81,7 @@ export default function StreamPage({ params }: PageProps) {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{user.followers.toLocaleString()} followers</span>
+                        <span>{(user.followers || 0).toLocaleString()} followers</span>
                         <span>•</span>
                         <Link
                           href={`/category/${stream.categorySlug}`}
@@ -115,9 +96,9 @@ export default function StreamPage({ params }: PageProps) {
                   <p className="text-muted-foreground mb-4">{user.bio}</p>
 
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {stream.tags.map((tag: any) => (
-                      <Badge key={tag} variant="secondary" className="font-mono">
-                        {tag}
+                    {stream.tags?.map((tag: any) => (
+                      <Badge key={typeof tag === 'string' ? tag : tag.id} variant="secondary" className="font-mono">
+                        {typeof tag === 'string' ? tag : tag.name}
                       </Badge>
                     ))}
                   </div>
