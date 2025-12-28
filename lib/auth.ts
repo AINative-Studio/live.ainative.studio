@@ -82,17 +82,29 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
   formData.append('username', credentials.username);
   formData.append('password', credentials.password);
 
-  const response = await fetch(`${API_BASE_URL}/public/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: formData,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/public/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData,
+    });
+  } catch (networkError) {
+    console.error('Login network error:', networkError);
+    throw new Error('Network error. Please check your connection.');
+  }
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Login failed');
+    let errorMessage = 'Login failed';
+    try {
+      const error = await response.json();
+      errorMessage = error.detail || errorMessage;
+    } catch {
+      // Response wasn't JSON
+    }
+    throw new Error(errorMessage);
   }
 
   const data: AuthResponse = await response.json();
@@ -103,24 +115,41 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
     setRefreshToken(data.refresh_token);
   }
 
-  // Fetch and store user profile
-  await fetchAndStoreUser();
+  // Fetch and store user profile (don't block on failure)
+  try {
+    await fetchAndStoreUser();
+  } catch (userError) {
+    console.error('Failed to fetch user after login:', userError);
+    // Continue anyway - user can be fetched later
+  }
 
   return data;
 }
 
 export async function register(data: RegisterData): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/public/auth/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/public/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  } catch (networkError) {
+    console.error('Register network error:', networkError);
+    throw new Error('Network error. Please check your connection.');
+  }
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Registration failed');
+    let errorMessage = 'Registration failed';
+    try {
+      const error = await response.json();
+      errorMessage = error.detail || errorMessage;
+    } catch {
+      // Response wasn't JSON
+    }
+    throw new Error(errorMessage);
   }
 
   const authData: AuthResponse = await response.json();
@@ -130,7 +159,12 @@ export async function register(data: RegisterData): Promise<AuthResponse> {
     setRefreshToken(authData.refresh_token);
   }
 
-  await fetchAndStoreUser();
+  // Fetch and store user profile (don't block on failure)
+  try {
+    await fetchAndStoreUser();
+  } catch (userError) {
+    console.error('Failed to fetch user after register:', userError);
+  }
 
   return authData;
 }
@@ -188,18 +222,31 @@ async function fetchAndStoreUser(): Promise<void> {
   const token = getAuthToken();
   if (!token) return;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
   try {
     const response = await fetch(`${API_BASE_URL}/public/users/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (response.ok) {
       const user: User = await response.json();
       setCurrentUser(user);
+    } else {
+      console.error('Failed to fetch user, status:', response.status);
     }
   } catch (error) {
-    console.error('Failed to fetch user:', error);
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('Fetch user request timed out');
+    } else {
+      console.error('Failed to fetch user:', error);
+    }
   }
 }
