@@ -24,7 +24,7 @@ export default function LoginPage() {
   // Redirect authenticated users away from login page
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/dashboard');
+      router.replace('/');
     }
   }, [isAuthenticated, router]);
 
@@ -38,8 +38,8 @@ export default function LoginPage() {
         username: email,
         password: password,
       });
-      // Redirect to dashboard on success
-      router.push('/dashboard');
+      // Redirect to homepage on success
+      router.push('/');
     } catch (err) {
       // Display error messages from API
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
