@@ -14,10 +14,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, Menu, Video, User, LogOut, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { NotificationDropdown } from '@/components/notification-dropdown';
+import { useAuth } from '@/hooks/use-auth';
 
 export function Navbar() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,49 +98,64 @@ export function Navbar() {
           </form>
 
           <div className="flex items-center gap-3">
-            <Button asChild className="bg-brand-primary hover:bg-primary-dark text-white font-medium">
-              <Link href="/dashboard">
-                <Video className="w-4 h-4 mr-2" />
-                Go Live
-              </Link>
-            </Button>
-
-            <NotificationDropdown />
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100" />
-                    <AvatarFallback>VC</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link href="/user/urbantech">
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+            {isAuthenticated ? (
+              <>
+                <Button asChild className="bg-brand-primary hover:bg-primary-dark text-white font-medium">
                   <Link href="/dashboard">
                     <Video className="w-4 h-4 mr-2" />
-                    Dashboard
+                    Go Live
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </Button>
+
+                <NotificationDropdown />
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={user?.avatarUrl} />
+                        <AvatarFallback>
+                          {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link href={`/user/${user?.username}`}>
+                        <User className="w-4 h-4 mr-2" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard">
+                        <Video className="w-4 h-4 mr-2" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="ghost">
+                  <Link href="/login">Log In</Link>
+                </Button>
+                <Button asChild className="bg-brand-primary hover:bg-primary-dark text-white font-medium">
+                  <Link href="/register">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
