@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, Menu, Video, User, LogOut, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { NotificationDropdown } from '@/components/notification-dropdown';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/contexts/auth-context';
 
 export function Navbar() {
   const router = useRouter();
@@ -98,7 +98,7 @@ export function Navbar() {
           </form>
 
           <div className="flex items-center gap-3">
-            {isAuthenticated ? (
+            {!isLoading && isAuthenticated ? (
               <>
                 <Button asChild className="bg-brand-primary hover:bg-primary-dark text-white font-medium">
                   <Link href="/dashboard">
@@ -113,9 +113,9 @@ export function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={user?.avatarUrl} />
+                        <AvatarImage src={user?.avatar || undefined} />
                         <AvatarFallback>
-                          {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+                          {user?.displayName?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
