@@ -62,9 +62,24 @@ export function clearAuth(): void {
   document.cookie = 'auth_token=; path=/; max-age=0';
 }
 
+// Sync cookie from localStorage (for existing sessions)
+export function syncAuthCookie(): void {
+  if (typeof window === 'undefined') return;
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    // Check if cookie exists
+    const hasCookie = document.cookie.split(';').some(c => c.trim().startsWith('auth_token='));
+    if (!hasCookie) {
+      document.cookie = `auth_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+    }
+  }
+}
+
 // User management
 export function getCurrentUser(): User | null {
   if (typeof window === 'undefined') return null;
+  // Sync cookie on first access
+  syncAuthCookie();
   const userData = localStorage.getItem(USER_KEY);
   return userData ? JSON.parse(userData) : null;
 }
