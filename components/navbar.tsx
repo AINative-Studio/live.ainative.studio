@@ -19,7 +19,12 @@ import { useAuth } from '@/contexts/auth-context';
 export function Navbar() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,7 +146,7 @@ export function Navbar() {
                         Settings
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
                     </DropdownMenuItem>
