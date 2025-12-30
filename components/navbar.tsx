@@ -121,12 +121,14 @@ export function Navbar() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/user/${user?.username}`}>
-                        <User className="w-4 h-4 mr-2" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
+                    {user?.username && (
+                      <DropdownMenuItem asChild>
+                        <Link href={`/user/${user.username}`}>
+                          <User className="w-4 h-4 mr-2" />
+                          Profile
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard">
                         <Video className="w-4 h-4 mr-2" />

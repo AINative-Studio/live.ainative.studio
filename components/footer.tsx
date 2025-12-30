@@ -32,11 +32,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/events" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Events
-                </Link>
-              </li>
-              <li>
                 <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Start Streaming
                 </Link>
@@ -45,26 +40,21 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="font-mono font-semibold mb-4">Resources</h3>
+            <h3 className="font-mono font-semibold mb-4">Browse</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/docs" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Documentation
+                <Link href="/category/ai-coding" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  AI Coding
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Help Center
+                <Link href="/category/ai-native-development" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  AI-Native Development
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Privacy Policy
+                <Link href="/search" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Search Streams
                 </Link>
               </li>
             </ul>
