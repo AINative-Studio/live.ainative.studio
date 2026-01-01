@@ -41,7 +41,7 @@ export function StreamCard({ stream, priority = false }: StreamCardProps) {
               </Badge>
               <Badge variant="secondary" className="bg-black/80 text-white font-mono text-xs flex items-center gap-1">
                 <Eye className="w-3 h-3" />
-                {viewerCount.toLocaleString()}
+                {(viewerCount ?? 0).toLocaleString()}
               </Badge>
             </div>
           )}

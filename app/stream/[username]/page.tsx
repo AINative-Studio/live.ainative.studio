@@ -39,7 +39,7 @@ export default function StreamPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize chat hook only if stream is live
+  // Initialize chat hook only if stream exists (prevents empty streamId issue #64)
   const chat = useStreamChat({
     streamId: stream?.id || '',
     initialMessages: [],
@@ -158,6 +158,8 @@ export default function StreamPage() {
                 viewers={chat.viewerCount || stream.viewerCount || 0}
                 username={userProfile.username || username}
                 thumbnail={stream.thumbnailUrl || ''}
+                streamId={stream.id}
+                cloudflareVideoId={stream.cloudflareVideoId}
               />
 
               <Card className="border-border">
@@ -186,7 +188,7 @@ export default function StreamPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{userProfile.followerCount.toLocaleString()} followers</span>
+                        <span>{(userProfile.followerCount ?? 0).toLocaleString()} followers</span>
                         {stream.category && (
                           <>
                             <span>•</span>

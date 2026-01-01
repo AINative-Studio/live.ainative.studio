@@ -60,39 +60,35 @@ export default function UserPage() {
       } catch (error: any) {
         console.error('Error fetching user data:', error);
 
-        // Check if 404 error
-        if (error?.status === 404 || error?.message?.includes('404')) {
-          setNotFound(true);
+        // Always try to fallback to mock data first
+        console.log('Falling back to mock data');
+        const mockUser = users.find((u: any) => u.username === username);
+
+        if (mockUser) {
+          // Transform mock data to match User type
+          setUser({
+            id: mockUser.username,
+            email: `${mockUser.username}@example.com`,
+            username: mockUser.username,
+            displayName: mockUser.displayName || null,
+            avatar: mockUser.avatar || null,
+            bio: mockUser.bio || null,
+            role: 'USER',
+            followerCount: mockUser.followers || 0,
+            followingCount: 0,
+            isLive: mockUser.isLive || false,
+            socials: mockUser.socials,
+            createdAt: new Date().toISOString(),
+          });
+
+          // Get mock streams
+          const mockStreams = streams.filter(
+            (s: any) => s.user?.username === username || s.username === username
+          );
+          setUserStreams(mockStreams);
         } else {
-          // Fallback to mock data on API failure
-          console.log('Falling back to mock data');
-          const mockUser = users.find((u: any) => u.username === username);
-
-          if (mockUser) {
-            // Transform mock data to match User type
-            setUser({
-              id: mockUser.username,
-              email: `${mockUser.username}@example.com`,
-              username: mockUser.username,
-              displayName: mockUser.displayName || null,
-              avatar: mockUser.avatar || null,
-              bio: mockUser.bio || null,
-              role: 'USER',
-              followerCount: mockUser.followers || 0,
-              followingCount: 0,
-              isLive: mockUser.isLive || false,
-              socials: mockUser.socials,
-              createdAt: new Date().toISOString(),
-            });
-
-            // Get mock streams
-            const mockStreams = streams.filter(
-              (s: any) => s.user?.username === username || s.username === username
-            );
-            setUserStreams(mockStreams);
-          } else {
-            setNotFound(true);
-          }
+          // Only set notFound if user doesn't exist in mock data either
+          setNotFound(true);
         }
       } finally {
         setIsLoading(false);
@@ -224,7 +220,7 @@ export default function UserPage() {
 
                 <div className="flex flex-wrap items-center gap-4 mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-xl">{user.followerCount.toLocaleString()}</span>
+                    <span className="font-bold text-xl">{(user.followerCount ?? 0).toLocaleString()}</span>
                     <span className="text-muted-foreground">followers</span>
                   </div>
                   {user.isLive && (

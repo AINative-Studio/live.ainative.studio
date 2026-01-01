@@ -59,7 +59,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
               </p>
               {category.viewerCount > 0 && (
                 <Badge variant="secondary" className="mt-3 font-medium text-xs">
-                  {category.viewerCount.toLocaleString()} watching
+                  {(category.viewerCount ?? 0).toLocaleString()} watching
                 </Badge>
               )}
             </div>

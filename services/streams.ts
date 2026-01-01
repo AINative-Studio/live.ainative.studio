@@ -59,6 +59,20 @@ export const streamsService = {
     return apiClient.post(`/streams/id/${streamId}/end`, {}, true);
   },
 
+  /** Get user's active stream (requires auth) - returns first non-ended stream */
+  async getActiveStream(): Promise<Stream | null> {
+    try {
+      // Fetch user's streams - backend only allows one non-ended stream per user
+      const response = await apiClient.get<{ streams: Stream[]; total: number }>('/streams/', true);
+      // Return first stream that isn't ended (backend prevents multiple non-ended streams)
+      const activeStream = response.streams?.find(s => s.status !== 'ended');
+      return activeStream || null;
+    } catch (error) {
+      // Return null if error fetching streams
+      return null;
+    }
+  },
+
   // ==================== Categories ====================
 
   /** Get all categories */

@@ -1,19 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize,
-  Settings,
-  Minimize2
-} from 'lucide-react';
 import { ViewerCountBadge } from './viewer-count-badge';
+
+// Dynamically import Cloudflare Stream player (client-side only)
+const Stream = dynamic(
+  () => import('@cloudflare/stream-react').then((mod) => mod.Stream),
+  { ssr: false }
+);
 
 interface StreamPlayerProps {
   title: string;
@@ -23,6 +19,7 @@ interface StreamPlayerProps {
   thumbnail: string;
   isLive?: boolean;
   streamId?: string;
+  cloudflareVideoId?: string; // Cloudflare Stream video ID
 }
 
 export function StreamPlayer({
@@ -32,112 +29,100 @@ export function StreamPlayer({
   username,
   thumbnail,
   isLive = true,
-  streamId
+  streamId,
+  cloudflareVideoId
 }: StreamPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState([75]);
-  const [showControls, setShowControls] = useState(false);
+  const [showMockPlayer, setShowMockPlayer] = useState(true);
 
   // Use viewerCount if provided (real-time from WebSocket), otherwise fall back to viewers
   const currentViewerCount = viewerCount !== undefined ? viewerCount : (viewers || 0);
 
+  // Get Cloudflare configuration from environment
+  const cloudflareAccountId = process.env.NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID;
+  const cloudflareCustomerSubdomain = process.env.NEXT_PUBLIC_CLOUDFLARE_CUSTOMER_SUBDOMAIN;
+
+  // Check if we have valid Cloudflare configuration
+  useEffect(() => {
+    const hasCloudflareConfig = cloudflareAccountId && cloudflareAccountId !== 'your_account_id_here';
+    const hasVideoId = cloudflareVideoId && cloudflareVideoId !== '';
+
+    setShowMockPlayer(!hasCloudflareConfig || !hasVideoId);
+  }, [cloudflareAccountId, cloudflareVideoId]);
+
   return (
     <Card className="overflow-hidden border-border bg-black">
-      <div
-        className="relative aspect-video bg-black group cursor-pointer"
-        onMouseEnter={() => setShowControls(true)}
-        onMouseLeave={() => setShowControls(false)}
-      >
-        <div
-          className="absolute inset-0 flex items-center justify-center bg-cover bg-center"
-          style={{ backgroundImage: `url(${thumbnail})` }}
-        >
-          <div className="absolute inset-0 bg-black/60" />
-          <div className="relative z-10 text-center">
-            <p className="text-brand-primary font-mono text-xl mb-4">MOCK STREAM PLAYER</p>
-            <p className="text-white/80 text-sm">Live streaming would be integrated here</p>
-          </div>
-        </div>
+      <div className="relative aspect-video bg-black">
+        {/* Cloudflare Stream Player */}
+        {!showMockPlayer && cloudflareVideoId ? (
+          <div className="relative w-full h-full">
+            <Stream
+              src={cloudflareVideoId}
+              controls
+              autoplay={isLive}
+              muted={false}
+              preload="auto"
+              responsive={true}
+              primaryColor="#5867EF"
+              letterboxColor="#000000"
+            />
 
-        <div className="absolute top-4 left-4 flex items-center gap-2 z-20">
-          {isLive && (
-            <div className="bg-success text-white px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
-              <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              LIVE
+            {/* Overlay badges */}
+            <div className="absolute top-4 left-4 flex items-center gap-2 z-20 pointer-events-none">
+              {isLive && (
+                <div className="bg-success text-white px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
+                  <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  LIVE
+                </div>
+              )}
+              <ViewerCountBadge
+                count={currentViewerCount}
+                isLive={isLive}
+                animated={viewerCount !== undefined}
+              />
             </div>
-          )}
-          <ViewerCountBadge
-            count={currentViewerCount}
-            isLive={isLive}
-            animated={viewerCount !== undefined}
-          />
-        </div>
-
-        <div className="absolute top-4 right-4 z-20">
-          <p className="text-white font-semibold text-sm bg-black/80 px-3 py-1 rounded">
-            {title}
-          </p>
-        </div>
-
-        <div
-          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-4 transition-opacity duration-300 ${
-            showControls ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <div className="flex items-center gap-4">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-white hover:text-brand-primary"
-              onClick={() => setIsPlaying(!isPlaying)}
+          </div>
+        ) : (
+          /* Mock Player Fallback */
+          <div className="relative w-full h-full">
+            <div
+              className="absolute inset-0 flex items-center justify-center bg-cover bg-center"
+              style={{ backgroundImage: `url(${thumbnail})` }}
             >
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            </Button>
+              <div className="absolute inset-0 bg-black/60" />
+              <div className="relative z-10 text-center max-w-md px-4">
+                <p className="text-brand-primary font-mono text-xl mb-4">
+                  CLOUDFLARE STREAM NOT CONFIGURED
+                </p>
+                <p className="text-white/80 text-sm mb-2">
+                  To enable live streaming, configure Cloudflare Stream credentials
+                </p>
+                <p className="text-white/60 text-xs font-mono">
+                  Set NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID in .env.local
+                </p>
+              </div>
+            </div>
 
-            <div className="flex items-center gap-2 flex-1">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:text-brand-primary"
-                onClick={() => setIsMuted(!isMuted)}
-              >
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </Button>
-              <Slider
-                value={volume}
-                onValueChange={setVolume}
-                max={100}
-                step={1}
-                className="w-24"
+            <div className="absolute top-4 left-4 flex items-center gap-2 z-20">
+              {isLive && (
+                <div className="bg-success text-white px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
+                  <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  LIVE
+                </div>
+              )}
+              <ViewerCountBadge
+                count={currentViewerCount}
+                isLive={isLive}
+                animated={viewerCount !== undefined}
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:text-brand-primary"
-              >
-                <Settings className="w-5 h-5" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:text-brand-primary"
-              >
-                <Minimize2 className="w-5 h-5" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-white hover:text-brand-primary"
-              >
-                <Maximize className="w-5 h-5" />
-              </Button>
+            <div className="absolute top-4 right-4 z-20">
+              <p className="text-white font-semibold text-sm bg-black/80 px-3 py-1 rounded">
+                {title}
+              </p>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </Card>
   );

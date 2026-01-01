@@ -60,7 +60,7 @@ export function ViewerCountBadge({
     >
       {isLive && <span className="w-2 h-2 bg-success rounded-full animate-live-pulse" />}
       <Eye className={iconSizes[size]} />
-      <span className={isAnimating ? 'font-bold' : ''}>{displayCount.toLocaleString()}</span>
+      <span className={isAnimating ? 'font-bold' : ''}>{(displayCount ?? 0).toLocaleString()}</span>
     </Badge>
   );
 }

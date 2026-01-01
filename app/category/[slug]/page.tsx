@@ -160,7 +160,7 @@ export default function CategoryPage() {
                   </span>
                   <span className="text-muted-foreground">•</span>
                   <span className="font-mono">
-                    {viewerCount.toLocaleString()} viewers
+                    {(viewerCount ?? 0).toLocaleString()} viewers
                   </span>
                 </div>
               </div>

@@ -36,6 +36,7 @@ export interface Stream {
   category: Category | null;
   thumbnailUrl: string | null;
   streamKey: string | null;  // Only for owner
+  cloudflareVideoId: string | null;  // Cloudflare Stream video ID
   viewerCount: number;
   peakViewers: number;
   tags: StreamTag[];
