@@ -434,11 +434,11 @@ export default function AnalyticsPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-muted-foreground">Total Views</p>
-                        <p className="text-2xl font-bold text-brand-primary">{viewerStats.totalViews.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-brand-primary">{(viewerStats.totalViews ?? 0).toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Unique Viewers</p>
-                        <p className="text-2xl font-bold text-brand-primary">{viewerStats.totalUniqueViewers.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-brand-primary">{(viewerStats.totalUniqueViewers ?? 0).toLocaleString()}</p>
                       </div>
                     </div>
 
@@ -520,7 +520,7 @@ export default function AnalyticsPage() {
                             {stream.peakViewers}
                           </td>
                           <td className="py-3 px-2 text-right font-mono">
-                            {stream.totalViews.toLocaleString()}
+                            {(stream.totalViews ?? 0).toLocaleString()}
                           </td>
                           <td className="py-3 px-2 text-right font-mono text-sm">
                             {formatDuration(stream.durationSeconds)}

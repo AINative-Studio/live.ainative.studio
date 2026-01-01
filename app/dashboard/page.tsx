@@ -194,7 +194,7 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-sm text-muted-foreground">Today's Viewers</p>
                         <p className="text-3xl font-bold mt-1">
-                          {quickStats?.todayViewers.toLocaleString() || 0}
+                          {(quickStats?.todayViewers ?? 0).toLocaleString()}
                         </p>
                       </div>
                       <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center">
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-sm text-muted-foreground">Weekly Viewers</p>
                         <p className="text-3xl font-bold mt-1">
-                          {quickStats?.weeklyViewers.toLocaleString() || 0}
+                          {(quickStats?.weeklyViewers ?? 0).toLocaleString()}
                         </p>
                       </div>
                       <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
@@ -226,7 +226,7 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-sm text-muted-foreground">New Followers</p>
                         <p className="text-3xl font-bold mt-1">
-                          +{quickStats?.newFollowersWeek.toLocaleString() || 0}
+                          +{(quickStats?.newFollowersWeek ?? 0).toLocaleString()}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">This week</p>
                       </div>
@@ -399,11 +399,11 @@ export default function DashboardPage() {
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Total Followers</span>
-                      <span className="font-semibold">{overview?.followerCount.toLocaleString() || 0}</span>
+                      <span className="font-semibold">{(overview?.followerCount ?? 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Total Views</span>
-                      <span className="font-semibold">{overview?.totalViews.toLocaleString() || 0}</span>
+                      <span className="font-semibold">{(overview?.totalViews ?? 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Avg Duration</span>

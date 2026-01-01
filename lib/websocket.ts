@@ -46,6 +46,12 @@ class StreamWebSocket {
   private reconnectDelay = 1000;
 
   connect(streamId: string): void {
+    // Validate streamId
+    if (!streamId || streamId.trim() === '') {
+      console.error('[WebSocket] Cannot connect: streamId is required');
+      return;
+    }
+
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.disconnect();
     }
@@ -56,6 +62,7 @@ class StreamWebSocket {
       ? `${WS_BASE_URL}/streams/${streamId}/chat/ws?token=${token}`
       : `${WS_BASE_URL}/streams/${streamId}/chat/ws`;
 
+    console.log(`[WebSocket] Connecting to: ${wsUrl}`);
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {

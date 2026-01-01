@@ -27,7 +27,7 @@ export default function GoLivePage() {
 function GoLiveContent() {
   const router = useRouter();
   const [stream, setStream] = useState<Stream | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Start as true to check for existing stream
   const [error, setError] = useState<string | null>(null);
   const [showStreamKey, setShowStreamKey] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -36,22 +36,26 @@ function GoLiveContent() {
 
   const RTMP_INGEST_URL = 'rtmp://live.cloudflarestream.com/live';
 
-  // Create stream on mount
+  // Check for existing active stream on mount
   useEffect(() => {
-    const createStream = async () => {
+    const checkActiveStream = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const newStream = await streamsService.create({ title: 'New Stream' });
-        setStream(newStream);
+        // Get user's active stream if one exists
+        const activeStream = await streamsService.getActiveStream();
+        if (activeStream) {
+          setStream(activeStream);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create stream');
+        // No active stream or error - this is fine, user can create new one
+        console.log('No active stream found or error checking:', err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    createStream();
+    checkActiveStream();
   }, []);
 
   const handleCopy = async (text: string, type: 'url' | 'key') => {
@@ -85,6 +89,45 @@ function GoLiveContent() {
     }
   };
 
+  const handleEndStream = async () => {
+    if (!stream) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      await streamsService.end(stream.id);
+      setStream(null); // Clear the stream so user can create a new one
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to end stream');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateStream = async (data: { title: string; description?: string; categoryId?: string; tags?: string[] }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const newStream = await streamsService.create(data);
+      setStream(newStream);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create stream';
+      setError(errorMessage);
+
+      // If error is about existing active stream, try to fetch it
+      if (errorMessage.includes('already have an active stream')) {
+        const activeStream = await streamsService.getActiveStream();
+        if (activeStream) {
+          setStream(activeStream);
+        }
+      }
+
+      throw err; // Re-throw to let form handle the error state
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleUpdateStream = async (data: { title: string; description?: string; categoryId?: string; tags?: string[] }) => {
     if (!stream) return;
 
@@ -93,6 +136,7 @@ function GoLiveContent() {
       setStream(updatedStream);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update stream');
+      throw err; // Re-throw to let form handle the error state
     }
   };
 
@@ -110,7 +154,29 @@ function GoLiveContent() {
           {error && (
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  <span>{error}</span>
+                  {error.includes('already have an active stream') && stream && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEndStream}
+                      disabled={isLoading}
+                      className="ml-4"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                          Ending...
+                        </>
+                      ) : (
+                        'End Current Stream'
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </AlertDescription>
             </Alert>
           )}
 
@@ -118,10 +184,24 @@ function GoLiveContent() {
             <div className="flex items-center justify-center py-12">
               <div className="flex flex-col items-center gap-4">
                 <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
-                <p className="text-sm text-muted-foreground">Preparing your stream...</p>
+                <p className="text-sm text-muted-foreground">Creating your stream...</p>
               </div>
             </div>
-          ) : stream ? (
+          ) : !stream ? (
+            <div className="max-w-3xl mx-auto">
+              <Card className="border-border">
+                <CardHeader>
+                  <CardTitle>Create Your Stream</CardTitle>
+                  <CardDescription>
+                    Fill in your stream details to get started. You'll receive your RTMP credentials after creating the stream.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <StreamSetupForm onSubmit={handleCreateStream} />
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main content */}
               <div className="lg:col-span-2 space-y-6">
@@ -129,7 +209,7 @@ function GoLiveContent() {
                 <Card className="border-border">
                   <CardHeader>
                     <CardTitle>Stream Configuration</CardTitle>
-                    <CardDescription>Configure your stream details before going live</CardDescription>
+                    <CardDescription>Update your stream details before going live</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <StreamSetupForm
@@ -137,7 +217,7 @@ function GoLiveContent() {
                         title: stream.title,
                         description: stream.description || '',
                         categoryId: stream.categoryId || '',
-                        tags: stream.tags.map(t => t.name),
+                        tags: stream.tags?.map(t => t.name) || [],
                       }}
                       onSubmit={handleUpdateStream}
                     />
@@ -356,7 +436,7 @@ function GoLiveContent() {
                 </Card>
               </div>
             </div>
-          ) : null}
+          )}
         </div>
       </main>
 

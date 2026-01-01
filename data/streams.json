@@ -1,8 +1,8 @@
 [
   {
-    "id": "1",
-    "username": "urbantech",
-    "displayName": "UrbanTech",
+    "id": "1bb85f08-2fb0-4787-8043-f8b45c5d7cd1",
+    "username": "admin",
+    "displayName": "System Administrator",
     "title": "Building an AI Native IDE with Cursor & Claude",
     "category": "AI Coding",
     "categorySlug": "ai-coding",
@@ -14,9 +14,9 @@
     "startedAt": "2025-12-22T10:00:00Z"
   },
   {
-    "id": "2",
-    "username": "quantumcoder",
-    "displayName": "QuantumCoder",
+    "id": "d848bd09-cbde-41d9-b306-2582fda9df7d",
+    "username": "admin",
+    "displayName": "System Administrator",
     "title": "Real-time AI-Native Development: Multi-Agent RAG System",
     "category": "AI-Native Development",
     "categorySlug": "ai-native-development",
@@ -25,10 +25,11 @@
     "thumbnail": "https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg?auto=compress&cs=tinysrgb&w=800",
     "avatar": "https://images.pexels.com/photos/1840608/pexels-photo-1840608.jpeg?auto=compress&cs=tinysrgb&w=200",
     "tags": ["AI-Native", "RAG", "AI", "LangChain"],
-    "startedAt": "2025-12-22T11:30:00Z"
+    "startedAt": "2025-12-22T11:30:00Z",
+    "cloudflareVideoId": "fc778c385ea52e0afc428d971ad69152"
   },
   {
-    "id": "3",
+    "id": "a3c8e9f1-4b2d-4e8f-9a1c-6d7e8f9a0b1c",
     "username": "nextjsmaster",
     "displayName": "NextJS Master",
     "title": "Building a SaaS Dashboard with Next.js 15 & Server Actions",
@@ -42,7 +43,7 @@
     "startedAt": "2025-12-22T09:00:00Z"
   },
   {
-    "id": "4",
+    "id": "b4d9f0a2-5c3e-4f9g-0b2d-7e8f9a0b1c2d",
     "username": "pythonista_dev",
     "displayName": "Pythonista Dev",
     "title": "FastAPI + PostgreSQL: Production-Grade REST API",
@@ -56,7 +57,7 @@
     "startedAt": "2025-12-22T12:00:00Z"
   },
   {
-    "id": "5",
+    "id": "c5e0a1b3-6d4f-4g0h-1c3e-8f9a0b1c2d3e",
     "username": "rustacean",
     "displayName": "Rustacean",
     "title": "High-Performance Web Server in Rust",
@@ -70,7 +71,7 @@
     "startedAt": "2025-12-22T13:00:00Z"
   },
   {
-    "id": "6",
+    "id": "d6f1b2c4-7e5g-4h1i-2d4f-9a0b1c2d3e4f",
     "username": "aiarchitect",
     "displayName": "AI Architect",
     "title": "Deploying LLMs with Ollama & RAG Pipeline",
@@ -84,7 +85,7 @@
     "startedAt": "2025-12-22T10:45:00Z"
   },
   {
-    "id": "7",
+    "id": "e7g2c3d5-8f6h-4i2j-3e5g-0b1c2d3e4f5a",
     "username": "devops_wizard",
     "displayName": "DevOps Wizard",
     "title": "Kubernetes CI/CD Pipeline from Scratch",
@@ -98,7 +99,7 @@
     "startedAt": null
   },
   {
-    "id": "8",
+    "id": "f8h3d4e6-9g7i-4j3k-4f6h-1c2d3e4f5a6b",
     "username": "web3builder",
     "displayName": "Web3 Builder",
     "title": "Smart Contract Development with Solidity",

@@ -55,6 +55,29 @@ class ApiClient {
     this.baseUrl = baseUrl;
   }
 
+  /**
+   * Normalize endpoint to ensure trailing slashes for streaming endpoints
+   * Backend requires trailing slashes on /streams/ endpoints
+   */
+  private normalizeEndpoint(endpoint: string): string {
+    // If endpoint starts with /streams and doesn't end with a slash (and doesn't have a path param after)
+    if (endpoint.startsWith('/streams') && !endpoint.endsWith('/')) {
+      // Check if it ends with a path segment (not a query param)
+      const hasQueryParams = endpoint.includes('?');
+      const baseEndpoint = hasQueryParams ? endpoint.split('?')[0] : endpoint;
+
+      // Only add trailing slash to list endpoints, not detail endpoints
+      // e.g., /streams/ needs slash, /streams/id/123 doesn't
+      if (baseEndpoint === '/streams' || baseEndpoint === '/streams/categories/trending') {
+        const trailingSlash = hasQueryParams ? '/' : '/';
+        return hasQueryParams
+          ? endpoint.replace('?', '/?')
+          : endpoint + trailingSlash;
+      }
+    }
+    return endpoint;
+  }
+
   private async getHeaders(authenticated: boolean = false): Promise<HeadersInit> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -125,8 +148,9 @@ class ApiClient {
   }
 
   async get<T>(endpoint: string, authenticated: boolean = false): Promise<T> {
+    const normalizedEndpoint = this.normalizeEndpoint(endpoint);
     const headers = await this.getHeaders(authenticated);
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const response = await fetch(`${this.baseUrl}${normalizedEndpoint}`, {
       method: 'GET',
       headers,
     });
@@ -134,8 +158,9 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: unknown, authenticated: boolean = false): Promise<T> {
+    const normalizedEndpoint = this.normalizeEndpoint(endpoint);
     const headers = await this.getHeaders(authenticated);
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const response = await fetch(`${this.baseUrl}${normalizedEndpoint}`, {
       method: 'POST',
       headers,
       body: data ? JSON.stringify(data) : undefined,
@@ -144,8 +169,9 @@ class ApiClient {
   }
 
   async put<T>(endpoint: string, data: unknown, authenticated: boolean = false): Promise<T> {
+    const normalizedEndpoint = this.normalizeEndpoint(endpoint);
     const headers = await this.getHeaders(authenticated);
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const response = await fetch(`${this.baseUrl}${normalizedEndpoint}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify(data),
@@ -154,8 +180,9 @@ class ApiClient {
   }
 
   async delete<T>(endpoint: string, authenticated: boolean = false): Promise<T> {
+    const normalizedEndpoint = this.normalizeEndpoint(endpoint);
     const headers = await this.getHeaders(authenticated);
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const response = await fetch(`${this.baseUrl}${normalizedEndpoint}`, {
       method: 'DELETE',
       headers,
     });

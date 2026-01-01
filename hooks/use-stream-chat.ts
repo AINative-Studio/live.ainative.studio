@@ -29,6 +29,12 @@ export function useStreamChat({ streamId, initialMessages = [] }: UseStreamChatO
 
   // Connect to WebSocket
   useEffect(() => {
+    // Only connect if we have a valid streamId
+    if (!streamId || streamId.trim() === '') {
+      console.warn('[useStreamChat] Cannot connect: streamId is empty or undefined');
+      return;
+    }
+
     streamWebSocket.connect(streamId);
 
     const unsubMessage = streamWebSocket.onMessage((message: WebSocketMessage) => {
