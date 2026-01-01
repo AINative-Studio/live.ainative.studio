@@ -159,7 +159,7 @@ export default function StreamPage() {
                 username={userProfile.username || username}
                 thumbnail={stream.thumbnailUrl || ''}
                 streamId={stream.id}
-                cloudflareVideoId={stream.cloudflareVideoId}
+                cloudflareVideoId={stream.cloudflareVideoId ?? undefined}
               />
 
               <Card className="border-border">
