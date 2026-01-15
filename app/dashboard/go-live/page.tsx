@@ -6,6 +6,8 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { StreamSetupForm } from '@/components/stream-setup-form';
+import { StreamMethodSelector, StreamMethod } from '@/components/stream-method-selector';
+import { BrowserStreamPreview } from '@/components/browser-stream-preview';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { streamsService } from '@/services/streams';
 import type { Stream } from '@/types';
-import { Copy, Eye, EyeOff, Radio, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, Radio, AlertCircle, CheckCircle, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function GoLivePage() {
   return (
@@ -27,31 +29,24 @@ export default function GoLivePage() {
 function GoLiveContent() {
   const router = useRouter();
   const [stream, setStream] = useState<Stream | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Start as true to check for existing stream
   const [error, setError] = useState<string | null>(null);
   const [showStreamKey, setShowStreamKey] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
 
+  // Browser streaming state
+  const [streamMethod, setStreamMethod] = useState<StreamMethod | null>(null);
+  const [showBrowserPreview, setShowBrowserPreview] = useState(false);
+  const [browserStream, setBrowserStream] = useState<MediaStream | null>(null);
+  const [isBrowserStreaming, setIsBrowserStreaming] = useState(false);
+
   const RTMP_INGEST_URL = 'rtmp://live.cloudflarestream.com/live';
 
-  // Create stream on mount
+  // Set loading to false on mount (stream will be created when user submits form)
   useEffect(() => {
-    const createStream = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const newStream = await streamsService.create({ title: 'New Stream' });
-        setStream(newStream);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create stream');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    createStream();
+    setIsLoading(false);
   }, []);
 
   const handleCopy = async (text: string, type: 'url' | 'key') => {
@@ -85,6 +80,36 @@ function GoLiveContent() {
     }
   };
 
+  const handleEndStream = async () => {
+    if (!stream) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      await streamsService.end(stream.id);
+      setStream(null); // Clear the stream so user can create a new one
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to end stream');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateStream = async (data: { title: string; description?: string; categoryId?: string; tags?: string[] }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const newStream = await streamsService.create(data);
+      setStream(newStream);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create stream';
+      setError(errorMessage);
+      throw err; // Re-throw to let form handle the error state
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleUpdateStream = async (data: { title: string; description?: string; categoryId?: string; tags?: string[] }) => {
     if (!stream) return;
 
@@ -93,6 +118,62 @@ function GoLiveContent() {
       setStream(updatedStream);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update stream');
+      throw err; // Re-throw to let form handle the error state
+    }
+  };
+
+  const handleStreamMethodSelect = (method: StreamMethod) => {
+    setStreamMethod(method);
+    if (method === 'browser') {
+      setShowBrowserPreview(true);
+    }
+  };
+
+  const handleBrowserStreamStart = async (mediaStream: MediaStream) => {
+    setBrowserStream(mediaStream);
+    setIsBrowserStreaming(true);
+
+    // In a real implementation, you would:
+    // 1. Use MediaRecorder API to encode the stream
+    // 2. Send encoded chunks to your backend/CDN
+    // 3. Update stream status to 'live'
+
+    try {
+      setIsStarting(true);
+      setError(null);
+
+      // For now, just update the stream status
+      if (stream) {
+        await streamsService.start(stream.id);
+        router.push(`/stream/${stream.user.username}`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start browser stream');
+      setIsBrowserStreaming(false);
+      // Stop media tracks on error
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const handleStopBrowserPreview = () => {
+    setShowBrowserPreview(false);
+    setStreamMethod(null);
+    if (browserStream) {
+      browserStream.getTracks().forEach(track => track.stop());
+      setBrowserStream(null);
+    }
+  };
+
+  const handleBackToMethodSelect = () => {
+    setStreamMethod(null);
+    setShowBrowserPreview(false);
+    if (browserStream) {
+      browserStream.getTracks().forEach(track => track.stop());
+      setBrowserStream(null);
     }
   };
 
@@ -110,7 +191,29 @@ function GoLiveContent() {
           {error && (
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  <span>{error}</span>
+                  {error.includes('already have an active stream') && stream && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEndStream}
+                      disabled={isLoading}
+                      className="ml-4"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                          Ending...
+                        </>
+                      ) : (
+                        'End Current Stream'
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </AlertDescription>
             </Alert>
           )}
 
@@ -118,31 +221,82 @@ function GoLiveContent() {
             <div className="flex items-center justify-center py-12">
               <div className="flex flex-col items-center gap-4">
                 <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
-                <p className="text-sm text-muted-foreground">Preparing your stream...</p>
+                <p className="text-sm text-muted-foreground">Creating your stream...</p>
               </div>
             </div>
-          ) : stream ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main content */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Stream Configuration */}
-                <Card className="border-border">
-                  <CardHeader>
-                    <CardTitle>Stream Configuration</CardTitle>
-                    <CardDescription>Configure your stream details before going live</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <StreamSetupForm
-                      initialData={{
-                        title: stream.title,
-                        description: stream.description || '',
-                        categoryId: stream.categoryId || '',
-                        tags: stream.tags.map(t => t.name),
-                      }}
-                      onSubmit={handleUpdateStream}
-                    />
-                  </CardContent>
-                </Card>
+          ) : !stream ? (
+            <div className="max-w-3xl mx-auto">
+              <Card className="border-border">
+                <CardHeader>
+                  <CardTitle>Create Your Stream</CardTitle>
+                  <CardDescription>
+                    Fill in your stream details to get started. You'll receive your streaming setup after creating the stream.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <StreamSetupForm onSubmit={handleCreateStream} />
+                </CardContent>
+              </Card>
+            </div>
+          ) : streamMethod === null ? (
+            <div className="max-w-5xl mx-auto">
+              <StreamMethodSelector
+                onSelect={handleStreamMethodSelect}
+                selectedMethod={streamMethod || undefined}
+              />
+            </div>
+          ) : streamMethod === 'browser' && showBrowserPreview ? (
+            <div className="max-w-4xl mx-auto">
+              <div className="mb-6">
+                <Button
+                  variant="ghost"
+                  onClick={handleBackToMethodSelect}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Method Selection
+                </Button>
+              </div>
+              <BrowserStreamPreview
+                onStartStreaming={handleBrowserStreamStart}
+                onStopPreview={handleStopBrowserPreview}
+              />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="ghost"
+                  onClick={handleBackToMethodSelect}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Method Selection
+                </Button>
+                <Badge variant="secondary">RTMP Streaming</Badge>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main content */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Stream Configuration */}
+                  <Card className="border-border">
+                    <CardHeader>
+                      <CardTitle>Stream Configuration</CardTitle>
+                      <CardDescription>Update your stream details before going live</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <StreamSetupForm
+                        initialData={{
+                          title: stream.title,
+                          description: stream.description || '',
+                          categoryId: stream.categoryId || '',
+                          tags: stream.tags?.map(t => t.name) || [],
+                        }}
+                        onSubmit={handleUpdateStream}
+                      />
+                    </CardContent>
+                  </Card>
 
                 {/* RTMP Settings */}
                 <Card className="border-border border-brand-primary/30">
@@ -356,7 +510,8 @@ function GoLiveContent() {
                 </Card>
               </div>
             </div>
-          ) : null}
+            </div>
+          )}
         </div>
       </main>
 
