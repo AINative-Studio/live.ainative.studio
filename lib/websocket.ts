@@ -162,3 +162,6 @@ class StreamWebSocket {
 // Singleton instance
 export const streamWebSocket = new StreamWebSocket();
 export default streamWebSocket;
+
+// Export WebSocketClient for performance testing
+export { WebSocketClient } from './websocket-client';
