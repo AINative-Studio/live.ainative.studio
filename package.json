@@ -10,7 +10,14 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:performance": "jest --testPathPatterns=performance --maxWorkers=1",
+    "test:performance:coverage": "jest --testPathPatterns=performance --coverage --maxWorkers=1",
+    "test:performance:verbose": "jest --testPathPatterns=performance --verbose --maxWorkers=1",
+    "test:websocket": "jest lib/__tests__/performance/websocket-performance.test.ts",
+    "test:chat": "jest hooks/__tests__/performance/chat-load.test.ts",
+    "test:streaming": "jest components/__tests__/performance/streaming-performance.test.tsx",
+    "test:benchmark": "jest lib/__tests__/performance/benchmark.test.ts"
   },
   "dependencies": {
     "@cloudflare/stream-react": "^1.9.3",
@@ -76,6 +83,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@swc/core": "^1.15.8",
+    "@swc/jest": "^0.2.39",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
