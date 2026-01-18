@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Navbar } from '@/components/navbar';
-import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -261,11 +259,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-
-      <main className="flex-1 bg-gradient-to-b from-background to-card/30">
-        <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2">Analytics</h1>
@@ -585,9 +579,5 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-
-      <Footer />
-    </div>
   );
 }

@@ -50,7 +50,7 @@ export function StreamCard({ stream, priority = false }: StreamCardProps) {
           <div className="flex gap-3">
             <Avatar className="w-10 h-10 border-2 border-primary/50">
               <AvatarImage src={avatar || undefined} alt={displayName} />
-              <AvatarFallback>{displayName[0]}</AvatarFallback>
+              <AvatarFallback>{displayName?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">

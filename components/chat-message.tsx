@@ -16,7 +16,7 @@ export const ChatMessage = memo(function ChatMessage({ message }: ChatMessagePro
       <Avatar className="w-8 h-8">
         <AvatarImage src={message.avatar || undefined} alt={displayName} />
         <AvatarFallback className="bg-dark-3 text-brand-primary font-medium">
-          {displayName[0].toUpperCase()}
+          {displayName?.[0]?.toUpperCase() || 'U'}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">

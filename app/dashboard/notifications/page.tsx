@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Navbar } from '@/components/navbar';
-import { Footer } from '@/components/footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -255,11 +253,7 @@ export default function NotificationsPage() {
   const hasMore = notifications.length < totalNotifications;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-
-      <main className="flex-1 bg-gradient-to-b from-background to-card/30">
-        <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
               <Bell className="w-8 h-8 text-brand-primary" />
@@ -405,9 +399,5 @@ export default function NotificationsPage() {
             </div>
           </div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
   );
 }

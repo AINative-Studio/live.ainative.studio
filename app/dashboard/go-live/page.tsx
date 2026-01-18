@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/protected-route';
-import { Navbar } from '@/components/navbar';
-import { Footer } from '@/components/footer';
 import { StreamSetupForm } from '@/components/stream-setup-form';
 import { StreamMethodSelector, StreamMethod } from '@/components/stream-method-selector';
 import { BrowserStreamPreview } from '@/components/browser-stream-preview';
@@ -204,11 +202,7 @@ function GoLiveContent() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-
-      <main className="flex-1 bg-gradient-to-b from-background to-card/30">
-        <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2">Go Live</h1>
             <p className="text-muted-foreground">Set up your stream and start broadcasting</p>
@@ -539,9 +533,5 @@ function GoLiveContent() {
             </div>
           )}
         </div>
-      </main>
-
-      <Footer />
-    </div>
   );
 }
