@@ -281,7 +281,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <Button variant="destructive" className="w-full" asChild>
-                      <Link href="/dashboard/stream">End Stream</Link>
+                      <Link href="/dashboard/go-live">End Stream</Link>
                     </Button>
                   </CardContent>
                 </Card>
