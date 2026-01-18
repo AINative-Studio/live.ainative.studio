@@ -4,9 +4,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Eye } from 'lucide-react';
+import type { Stream } from '@/types';
 
 interface StreamCardProps {
-  stream: any; // Support both mock data and API data
+  stream: Stream;
   priority?: boolean;
 }
 
