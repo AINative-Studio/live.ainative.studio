@@ -112,6 +112,11 @@ if (typeof Element !== 'undefined') {
     Element.prototype.setPointerCapture = () => {}
     Element.prototype.releasePointerCapture = () => {}
   }
+
+  // Mock scrollIntoView
+  if (typeof Element.prototype.scrollIntoView === 'undefined') {
+    Element.prototype.scrollIntoView = () => {}
+  }
 }
 
 // Suppress console errors in tests (optional)

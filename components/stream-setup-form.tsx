@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { X, Plus, Loader2 } from 'lucide-react';
+import { X, Plus, Loader2, AlertCircle } from 'lucide-react';
 import categoriesData from '@/data/categories.json';
 
 interface StreamSetupFormProps {
@@ -45,6 +45,7 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
   const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const categories = categoriesData as Category[];
 
@@ -104,6 +105,7 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
 
     try {
       setIsSubmitting(true);
+      setSubmitError(null);
       await onSubmit({
         title: title.trim(),
         description: description.trim() || undefined,
@@ -112,6 +114,8 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
       });
     } catch (err) {
       console.error('Failed to update stream:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save stream configuration. Please try again.';
+      setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -249,6 +253,21 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
           </div>
         )}
       </div>
+
+      {/* Submit Error */}
+      {submitError && (
+        <div className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-destructive">
+              Error saving stream configuration
+            </p>
+            <p className="text-sm text-destructive/80 mt-1">
+              {submitError}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Submit Button */}
       <Button
