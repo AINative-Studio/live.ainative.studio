@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-card mt-auto">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
               <img src="/ainative-icon.svg" alt="AINative Studio Live" className="h-8 w-auto" />
@@ -55,6 +55,22 @@ export function Footer() {
               <li>
                 <Link href="/search" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Search Streams
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-mono font-semibold mb-4">Legal</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
