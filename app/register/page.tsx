@@ -73,8 +73,8 @@ export default function RegisterPage() {
         password,
       });
 
-      // Redirect to dashboard on success
-      router.push('/dashboard');
+      // Redirect to verify-email page with success message
+      router.push(`/verify-email?registered=true&email=${encodeURIComponent(email)}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
 
