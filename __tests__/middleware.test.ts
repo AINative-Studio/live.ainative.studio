@@ -51,7 +51,7 @@ describe('middleware', () => {
 
   describe('when user has valid auth token', () => {
     it('should allow access to dashboard', async () => {
-      const request = createMockRequest('/dashboard', { auth_token: 'valid-token-123' });
+      const request = createMockRequest('/dashboard', { ainative_access_token: 'valid-token-123' });
       const response = await testMiddleware(request);
 
       expect(response).toBeDefined();
@@ -67,7 +67,7 @@ describe('middleware', () => {
       ];
 
       routes.forEach((route) => {
-        const request = createMockRequest(route, { auth_token: 'valid-token-123' });
+        const request = createMockRequest(route, { ainative_access_token: 'valid-token-123' });
         const response = middleware(request);
 
         expect(response).toBeInstanceOf(NextResponse);
@@ -76,7 +76,7 @@ describe('middleware', () => {
     });
 
     it('should allow access to settings', () => {
-      const request = createMockRequest('/settings', { auth_token: 'valid-token-123' });
+      const request = createMockRequest('/settings', { ainative_access_token: 'valid-token-123' });
       const response = middleware(request);
 
       expect(response).toBeInstanceOf(NextResponse);
@@ -151,7 +151,7 @@ describe('middleware', () => {
     });
 
     it('should handle empty cookie value', () => {
-      const request = createMockRequest('/dashboard', { auth_token: '' });
+      const request = createMockRequest('/dashboard', { ainative_access_token: '' });
       const response = middleware(request);
 
       expect(response.status).toBe(307);
@@ -159,7 +159,7 @@ describe('middleware', () => {
     });
 
     it('should handle whitespace-only cookie value', () => {
-      const request = createMockRequest('/dashboard', { auth_token: '   ' });
+      const request = createMockRequest('/dashboard', { ainative_access_token: '   ' });
       const response = middleware(request);
 
       // Middleware currently treats any truthy value as valid
@@ -189,7 +189,7 @@ describe('middleware', () => {
   describe('authentication consistency', () => {
     it('should use consistent cookie name across app', () => {
       // This test ensures the cookie name matches what's used in auth.ts
-      const request = createMockRequest('/dashboard', { auth_token: 'test' });
+      const request = createMockRequest('/dashboard', { ainative_access_token: 'test' });
       const response = middleware(request);
 
       // Should allow access when cookie name is correct

@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check for auth token in cookies
-  const token = request.cookies.get('auth_token')?.value;
+  const token = request.cookies.get('ainative_access_token')?.value;
 
   // If no token, redirect to login with the original path as redirect parameter
   if (!token) {

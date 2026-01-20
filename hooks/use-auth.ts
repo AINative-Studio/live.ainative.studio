@@ -19,7 +19,7 @@ interface UseAuthReturn {
 /**
  * Authentication hook
  *
- * This is a stub implementation that checks for auth_token cookie.
+ * This is a stub implementation that checks for ainative_access_token cookie.
  * Will be replaced with full auth context implementation (issue #27).
  *
  * @returns Authentication state including user, isAuthenticated, and isLoading
@@ -39,7 +39,7 @@ export function useAuth(): UseAuthReturn {
           return acc;
         }, {} as Record<string, string>);
 
-        const token = cookies['auth_token'];
+        const token = cookies['ainative_access_token'];
 
         if (token) {
           // TODO: Validate token with backend and fetch user data

@@ -40,7 +40,7 @@ export function setAuthToken(token: string): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(TOKEN_KEY, token);
   // Also set as cookie for middleware
-  document.cookie = `auth_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+  document.cookie = `ainative_access_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
 }
 
 export function getRefreshToken(): string | null {
@@ -59,7 +59,7 @@ export function clearAuth(): void {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   // Also clear the cookie
-  document.cookie = 'auth_token=; path=/; max-age=0';
+  document.cookie = 'ainative_access_token=; path=/; max-age=0';
 }
 
 // Sync cookie from localStorage (for existing sessions)
@@ -68,9 +68,9 @@ export function syncAuthCookie(): void {
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
     // Check if cookie exists
-    const hasCookie = document.cookie.split(';').some(c => c.trim().startsWith('auth_token='));
+    const hasCookie = document.cookie.split(';').some(c => c.trim().startsWith('ainative_access_token='));
     if (!hasCookie) {
-      document.cookie = `auth_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      document.cookie = `ainative_access_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
     }
   }
 }
@@ -103,7 +103,7 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/public/auth/login`, {
+    response = await fetch(`${API_BASE_URL}/auth/login-json`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -148,7 +148,7 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
 export async function register(data: RegisterData): Promise<AuthResponse> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/public/auth/register`, {
+    response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ export async function logout(): Promise<void> {
   try {
     const token = getAuthToken();
     if (token) {
-      await fetch(`${API_BASE_URL}/public/auth/logout`, {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -211,7 +211,7 @@ export async function refreshToken(): Promise<boolean> {
   if (!refresh) return false;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/public/auth/refresh`, {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -245,7 +245,7 @@ async function fetchAndStoreUser(): Promise<void> {
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
   try {
-    const response = await fetch(`${API_BASE_URL}/public/users/me`, {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
