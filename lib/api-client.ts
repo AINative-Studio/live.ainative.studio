@@ -1,4 +1,5 @@
 import { getAuthToken, refreshToken, clearAuth } from './auth';
+import { transformKeys } from './transformers';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.ainative.studio/v1';
 
@@ -144,7 +145,9 @@ class ApiClient {
       return {} as T;
     }
 
-    return response.json();
+    // Parse JSON and transform snake_case keys to camelCase
+    const data = await response.json();
+    return transformKeys(data) as T;
   }
 
   async get<T>(endpoint: string, authenticated: boolean = false): Promise<T> {
