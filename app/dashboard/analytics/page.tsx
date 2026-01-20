@@ -59,6 +59,11 @@ export default function AnalyticsPage() {
   const [viewerStats, setViewerStats] = useState<ViewerGrowth | null>(null);
   const [topStreams, setTopStreams] = useState<TopStream[]>([]);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([]);
+  const [geographicData, setGeographicData] = useState<{
+    geographicBreakdown: { countryCode: string; viewerCount: number; percentage: number }[];
+    viewerTypeBreakdown: { authenticated: number; anonymous: number };
+    avgWatchTimeMinutes: number;
+  } | null>(null);
 
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,12 +85,13 @@ export default function AnalyticsPage() {
 
       try {
         // Fetch all analytics data in parallel
-        const [channelOverview, followerData, viewerData, topStreamsData, categoryData] = await Promise.all([
+        const [channelOverview, followerData, viewerData, topStreamsData, categoryData, audienceData] = await Promise.all([
           dashboardService.getChannelOverview().catch(() => null),
           dashboardService.getFollowerGrowth(dateRange).catch(() => null),
           dashboardService.getViewerGrowth(dateRange).catch(() => null),
           dashboardService.getTopStreams(topStreamMetric, 10).catch(() => []),
           dashboardService.getCategoryBreakdown().catch(() => []),
+          dashboardService.getAudienceDemographics().catch(() => null),
         ]);
 
         // Set overview stats
@@ -220,6 +226,11 @@ export default function AnalyticsPage() {
             },
           ]);
         }
+
+        // Set geographic data
+        if (audienceData) {
+          setGeographicData(audienceData);
+        }
       } catch (err) {
         console.error('Failed to fetch analytics:', err);
         setError('Failed to load analytics data. Please try again.');
@@ -242,6 +253,35 @@ export default function AnalyticsPage() {
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Helper function to convert country code to name
+  const getCountryName = (countryCode: string): string => {
+    const countryMap: Record<string, string> = {
+      US: 'United States', GB: 'United Kingdom', CA: 'Canada', AU: 'Australia',
+      DE: 'Germany', FR: 'France', IT: 'Italy', ES: 'Spain', NL: 'Netherlands',
+      SE: 'Sweden', NO: 'Norway', DK: 'Denmark', FI: 'Finland', PL: 'Poland',
+      BR: 'Brazil', MX: 'Mexico', AR: 'Argentina', CL: 'Chile', JP: 'Japan',
+      KR: 'South Korea', CN: 'China', IN: 'India', SG: 'Singapore', NZ: 'New Zealand',
+      ZA: 'South Africa', RU: 'Russia', UA: 'Ukraine',
+    };
+    return countryMap[countryCode] || `${countryCode} (Unknown)`;
+  };
+
+  // Helper function to get country flag emoji
+  const getCountryFlag = (countryCode: string): string => {
+    const flags: Record<string, string> = {
+      US: '\u{1F1FA}\u{1F1F8}', GB: '\u{1F1EC}\u{1F1E7}', CA: '\u{1F1E8}\u{1F1E6}',
+      DE: '\u{1F1E9}\u{1F1EA}', FR: '\u{1F1EB}\u{1F1F7}', AU: '\u{1F1E6}\u{1F1FA}',
+      IT: '\u{1F1EE}\u{1F1F9}', ES: '\u{1F1EA}\u{1F1F8}', NL: '\u{1F1F3}\u{1F1F1}',
+      SE: '\u{1F1F8}\u{1F1EA}', NO: '\u{1F1F3}\u{1F1F4}', DK: '\u{1F1E9}\u{1F1F0}',
+      FI: '\u{1F1EB}\u{1F1EE}', PL: '\u{1F1F5}\u{1F1F1}', BR: '\u{1F1E7}\u{1F1F7}',
+      MX: '\u{1F1F2}\u{1F1FD}', AR: '\u{1F1E6}\u{1F1F7}', CL: '\u{1F1E8}\u{1F1F1}',
+      JP: '\u{1F1EF}\u{1F1F5}', KR: '\u{1F1F0}\u{1F1F7}', CN: '\u{1F1E8}\u{1F1F3}',
+      IN: '\u{1F1EE}\u{1F1F3}', SG: '\u{1F1F8}\u{1F1EC}', NZ: '\u{1F1F3}\u{1F1FF}',
+      ZA: '\u{1F1FF}\u{1F1E6}', RU: '\u{1F1F7}\u{1F1FA}', UA: '\u{1F1FA}\u{1F1E6}',
+    };
+    return flags[countryCode] || '\u{1F30D}';
   };
 
   // Show loading while checking auth
@@ -534,7 +574,7 @@ export default function AnalyticsPage() {
           </Card>
 
           {/* Category Breakdown */}
-          <Card className="border-border">
+          <Card className="border-border mb-8">
             <CardHeader>
               <CardTitle>Category Breakdown</CardTitle>
               <CardDescription>Performance by streaming category</CardDescription>
@@ -575,6 +615,69 @@ export default function AnalyticsPage() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">No category data available</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Geographic Analytics */}
+          <Card className="border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Geographic Analytics
+              </CardTitle>
+              <CardDescription>Viewer distribution by location</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingData ? (
+                <div className="animate-pulse space-y-3">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="h-16 bg-muted rounded"></div>
+                  ))}
+                </div>
+              ) : geographicData && geographicData.geographicBreakdown.length > 0 ? (
+                <div className="space-y-4">
+                  {geographicData.geographicBreakdown.map((country) => (
+                    <div
+                      key={country.countryCode}
+                      className="border border-border rounded-lg p-4 hover:border-brand-primary/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="text-2xl">{getCountryFlag(country.countryCode)}</div>
+                          <div>
+                            <h3 className="font-semibold">
+                              {getCountryName(country.countryCode)}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">{country.countryCode}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-brand-primary">
+                            {country.viewerCount.toLocaleString()}
+                          </p>
+                          <p className="text-sm text-muted-foreground">viewers</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Percentage of total</span>
+                          <span className="font-semibold text-green-500">{country.percentage.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div
+                            className="bg-brand-primary h-2 rounded-full transition-all"
+                            style={{ width: `${country.percentage}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No geographic data available
+                </p>
               )}
             </CardContent>
           </Card>
