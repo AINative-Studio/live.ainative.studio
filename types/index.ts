@@ -231,6 +231,13 @@ export interface SearchFilters {
   perPage?: number;
 }
 
+export interface TrendingStreamsResponse {
+  streams: Stream[];
+  total: number;
+  limit: number;
+  time_window_hours: number;
+}
+
 // ==================== Analytics Types ====================
 
 export interface ChannelOverview {
