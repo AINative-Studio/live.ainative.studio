@@ -30,7 +30,6 @@ function GoLiveContent() {
   const [isLoading, setIsLoading] = useState(true); // Start as true to check for existing stream
   const [error, setError] = useState<string | null>(null);
   const [showStreamKey, setShowStreamKey] = useState(false);
-  const [isStarting, setIsStarting] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
 
@@ -79,20 +78,11 @@ function GoLiveContent() {
     }
   };
 
-  const handleStartStream = async () => {
+  const handleNavigateToStream = () => {
     if (!stream) return;
-
-    try {
-      setIsStarting(true);
-      setError(null);
-      await streamsService.start(stream.id);
-      // Navigate to stream page
-      router.push(`/stream/${stream.user.username}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start stream');
-    } finally {
-      setIsStarting(false);
-    }
+    // Stream goes live automatically when RTMP connection is established
+    // Just navigate to the stream page to view it
+    router.push(`/stream/${stream.user.username}`);
   };
 
   const handleEndStream = async () => {
@@ -160,26 +150,12 @@ function GoLiveContent() {
     // In a real implementation, you would:
     // 1. Use MediaRecorder API to encode the stream
     // 2. Send encoded chunks to your backend/CDN
-    // 3. Update stream status to 'live'
+    // 3. Stream goes live automatically via webhook when streaming starts
 
-    try {
-      setIsStarting(true);
-      setError(null);
-
-      // For now, just update the stream status
-      if (stream) {
-        await streamsService.start(stream.id);
-        router.push(`/stream/${stream.user.username}`);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start browser stream');
-      setIsBrowserStreaming(false);
-      // Stop media tracks on error
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-      }
-    } finally {
-      setIsStarting(false);
+    // For now, just navigate to the stream page
+    // The stream will go live automatically when the RTMP/WebRTC connection is established
+    if (stream) {
+      router.push(`/stream/${stream.user.username}`);
     }
   };
 
@@ -421,35 +397,16 @@ function GoLiveContent() {
 
               {/* Sidebar */}
               <div className="space-y-6">
-                {/* Start Streaming */}
+                {/* Stream Status */}
                 <Card className="border-border">
                   <CardHeader>
-                    <CardTitle>Ready to Go Live?</CardTitle>
+                    <CardTitle>Stream Status</CardTitle>
                     <CardDescription>
-                      Make sure your streaming software is connected before starting
+                      Your stream will go live automatically when you start broadcasting
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button
-                      size="lg"
-                      className="w-full"
-                      onClick={handleStartStream}
-                      disabled={isStarting || !stream.streamKey}
-                    >
-                      {isStarting ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Starting...
-                        </>
-                      ) : (
-                        <>
-                          <Radio className="w-5 h-5 mr-2" />
-                          Start Stream
-                        </>
-                      )}
-                    </Button>
-
-                    {stream.status === 'live' && (
+                    {stream.status === 'live' ? (
                       <div className="space-y-3">
                         <Badge variant="destructive" className="w-full justify-center py-2 font-medium">
                           <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-2" />
@@ -458,9 +415,25 @@ function GoLiveContent() {
                         <Button
                           variant="outline"
                           className="w-full"
-                          onClick={() => router.push(`/stream/${stream.user.username}`)}
+                          onClick={handleNavigateToStream}
                         >
                           Go to Stream
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="bg-muted/50 border border-border rounded-lg p-4">
+                          <p className="text-sm text-muted-foreground text-center">
+                            Stream is ready. Start streaming in your software and your stream will go live automatically.
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={handleNavigateToStream}
+                          disabled={!stream.streamKey}
+                        >
+                          View Stream Page
                         </Button>
                       </div>
                     )}
@@ -491,11 +464,7 @@ function GoLiveContent() {
                     </div>
                     <div className="flex gap-2">
                       <span className="text-brand-primary font-medium">5.</span>
-                      <p>Start streaming in your software</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="text-brand-primary font-medium">6.</span>
-                      <p>Click "Start Stream" to go live on AINative Studio</p>
+                      <p>Start streaming in your software - your stream will go live automatically!</p>
                     </div>
                   </CardContent>
                 </Card>

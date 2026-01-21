@@ -7,13 +7,24 @@ import type {
   SearchResult,
   SearchFilters,
   PaginatedResponse,
+  TrendingStreamsResponse,
 } from '@/types';
 
+/**
+ * Streams Service
+ *
+ * Stream Lifecycle:
+ * - Streams are created via the create() method, which returns stream credentials (streamKey, etc.)
+ * - Streams go LIVE automatically when the RTMP connection is established (managed by backend webhook)
+ * - There is NO manual "start stream" endpoint - the backend detects when streaming begins
+ * - Streams can be manually ended via the end() method
+ * - Users can only have one non-ended stream at a time (enforced by backend)
+ */
 export const streamsService = {
   // ==================== Discovery ====================
 
   /** Get trending streams */
-  async getTrending(limit: number = 20): Promise<{ streams: Stream[]; total: number }> {
+  async getTrending(limit: number = 20): Promise<TrendingStreamsResponse> {
     return apiClient.get(`/streams/trending?limit=${limit}`);
   },
 
@@ -49,12 +60,11 @@ export const streamsService = {
     return apiClient.put(`/streams/id/${streamId}`, data, true);
   },
 
-  /** Start stream (requires auth) */
-  async start(streamId: string): Promise<Stream> {
-    return apiClient.post(`/streams/id/${streamId}/start`, {}, true);
-  },
-
-  /** End stream (requires auth) */
+  /**
+   * End stream (requires auth)
+   * Note: Streams go live automatically when RTMP connection is established via webhook.
+   * This endpoint is only for manually ending a stream.
+   */
   async end(streamId: string): Promise<Stream> {
     return apiClient.post(`/streams/id/${streamId}/end`, {}, true);
   },
