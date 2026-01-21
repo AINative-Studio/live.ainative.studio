@@ -153,6 +153,7 @@ export default function RegisterPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isLoading}
+                  autoComplete="username"
                   required
                 />
                 <p className="text-xs text-muted-foreground">
@@ -169,6 +170,7 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -182,6 +184,7 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
+                  autoComplete="new-password"
                   required
                 />
                 <p className="text-xs text-muted-foreground">
@@ -198,6 +201,7 @@ export default function RegisterPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isLoading}
+                  autoComplete="new-password"
                   required
                 />
                 {passwordError && (

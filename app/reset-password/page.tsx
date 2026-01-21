@@ -202,6 +202,7 @@ export default function ResetPasswordPage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       disabled={isLoading}
+                      autoComplete="new-password"
                       required
                       minLength={8}
                     />
@@ -218,6 +219,7 @@ export default function ResetPasswordPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       disabled={isLoading}
+                      autoComplete="new-password"
                       required
                       minLength={8}
                     />

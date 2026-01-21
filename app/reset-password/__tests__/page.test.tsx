@@ -110,6 +110,28 @@ describe('ResetPasswordPage', () => {
       expect(confirmPasswordInput).toBeRequired();
     });
 
+    it('should have autocomplete="new-password" on new password field', () => {
+      // Given the reset password page
+      render(<ResetPasswordPage />);
+
+      // When the password input is rendered
+      const newPasswordInput = screen.getByLabelText(/^new password$/i);
+
+      // Then it should have autocomplete="new-password"
+      expect(newPasswordInput).toHaveAttribute('autocomplete', 'new-password');
+    });
+
+    it('should have autocomplete="new-password" on confirm password field', () => {
+      // Given the reset password page
+      render(<ResetPasswordPage />);
+
+      // When the confirm password input is rendered
+      const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+
+      // Then it should have autocomplete="new-password"
+      expect(confirmPasswordInput).toHaveAttribute('autocomplete', 'new-password');
+    });
+
     it('should enforce minimum password length', () => {
       // Given the reset password page
       render(<ResetPasswordPage />);
