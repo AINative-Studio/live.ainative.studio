@@ -10,9 +10,17 @@ interface ApiResponse<T> {
 }
 
 interface ApiErrorBody {
-  detail: string;
+  detail: string | ValidationError[];
   status: number;
   traceId?: string;
+}
+
+interface ValidationError {
+  message?: string;
+  detail?: string;
+  field?: string;
+  type?: string;
+  loc?: string[];
 }
 
 // Custom Error Classes
@@ -54,6 +62,50 @@ class ApiClient {
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  /**
+   * Parse error details from API response
+   * Handles both string details and arrays of validation error objects
+   */
+  private parseErrorMessage(detail: string | ValidationError[] | undefined): string {
+    if (!detail) {
+      return 'An unexpected error occurred';
+    }
+
+    // If detail is a string, return it directly
+    if (typeof detail === 'string') {
+      return detail;
+    }
+
+    // If detail is an array of validation errors
+    if (Array.isArray(detail)) {
+      const messages = detail
+        .map((error) => {
+          // Try to extract message from various possible fields
+          const message = error.message || error.detail;
+
+          // If there's a field name, include it for context
+          if (error.field && message) {
+            return `${error.field}: ${message}`;
+          }
+
+          // If there's a location array (FastAPI style), format it
+          if (error.loc && Array.isArray(error.loc) && message) {
+            const field = error.loc[error.loc.length - 1]; // Get the last item (field name)
+            return `${field}: ${message}`;
+          }
+
+          return message || 'Validation error';
+        })
+        .filter(Boolean); // Remove any undefined/null values
+
+      // Join multiple error messages with newlines
+      return messages.length > 0 ? messages.join('\n') : 'Validation error';
+    }
+
+    // Fallback for unexpected format
+    return 'An unexpected error occurred';
   }
 
   /**
@@ -101,7 +153,8 @@ class ApiClient {
         detail: 'Resource not found',
         status: 404,
       }));
-      throw new NotFoundError(errorBody.detail);
+      const errorMessage = this.parseErrorMessage(errorBody.detail);
+      throw new NotFoundError(errorMessage);
     }
 
     // Handle 401 Unauthorized
@@ -124,17 +177,19 @@ class ApiClient {
         detail: 'Forbidden',
         status: 403,
       }));
-      throw new ForbiddenError(errorBody.detail);
+      const errorMessage = this.parseErrorMessage(errorBody.detail);
+      throw new ForbiddenError(errorMessage);
     }
 
-    // Handle other errors
+    // Handle other errors (including 422 validation errors)
     if (!response.ok) {
       const errorBody: ApiErrorBody = await response.json().catch(() => ({
         detail: 'An unexpected error occurred',
         status: response.status,
       }));
+      const errorMessage = this.parseErrorMessage(errorBody.detail);
       throw new ApiError(
-        errorBody.detail || `HTTP ${response.status}`,
+        errorMessage || `HTTP ${response.status}`,
         response.status,
         errorBody.traceId
       );
