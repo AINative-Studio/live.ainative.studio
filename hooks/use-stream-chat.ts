@@ -31,8 +31,11 @@ export function useStreamChat({ streamId, initialMessages = [] }: UseStreamChatO
   useEffect(() => {
     // Only connect if we have a valid streamId
     if (!streamId || streamId.trim() === '') {
-      console.warn('[useStreamChat] Cannot connect: streamId is empty or undefined');
-      return;
+      // Reset state to initial values when streamId is invalid
+      setIsConnected(false);
+      setError(null);
+      setViewerCount(0);
+      return; // Exit early - don't set up any subscriptions or connections
     }
 
     streamWebSocket.connect(streamId);
@@ -115,12 +118,20 @@ export function useStreamChat({ streamId, initialMessages = [] }: UseStreamChatO
   // Send message
   const sendMessage = useCallback((content: string) => {
     if (!content.trim()) return;
+    if (!streamId || streamId.trim() === '') {
+      console.warn('[useStreamChat] Cannot send message: streamId is invalid');
+      return;
+    }
     streamWebSocket.sendMessage(content);
-  }, []);
+  }, [streamId]);
 
   // Load chat history
   const loadHistory = useCallback(async () => {
     if (isLoadingHistory) return;
+    if (!streamId || streamId.trim() === '') {
+      console.warn('[useStreamChat] Cannot load history: streamId is invalid');
+      return;
+    }
 
     setIsLoadingHistory(true);
     try {
