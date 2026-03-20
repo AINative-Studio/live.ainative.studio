@@ -58,6 +58,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <meta name="ai-content-declaration" content="human-authored" />
+        <meta name="ai-training" content="allowed" />
+        <link rel="llms" type="text/plain" href="/llms.txt" />
+      </head>
       <body className={`${poppins.variable} ${firaCode.variable} antialiased`}>
         <AuthProvider>
           <StreamsProvider>

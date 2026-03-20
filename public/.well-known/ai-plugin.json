@@ -1,0 +1,12 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "AINative Studio Live",
+  "name_for_model": "ainative_live",
+  "description_for_human": "Developer livestreaming platform. Watch developers build in real-time, collaborate through live chat, and discover AI-native development workflows.",
+  "description_for_model": "AINative Studio Live is a developer livestreaming platform for coding streams, AI-native development showcases, and build-in-public sessions. Features live IDE streaming via Cloudflare Stream, real-time chat, categories (web dev, mobile, AI/ML, DevOps, game dev), VOD replays, and streamer analytics. Part of the AINative Studio ecosystem.",
+  "auth": { "type": "none" },
+  "api": { "type": "openapi", "url": "https://api.ainative.studio/docs" },
+  "logo_url": "https://live.ainative.studio/ainative-icon.svg",
+  "contact_email": "hello@ainative.studio",
+  "legal_info_url": "https://live.ainative.studio/privacy"
+}

@@ -1,0 +1,41 @@
+# AINative Studio Live
+
+> The premier livestreaming platform for developers. Stream your IDE, build in public, and showcase AI-native development workflows in real-time.
+
+## Features
+
+- Live Coding Streams: Watch developers build in real-time with IDE streaming
+- AI-Native Development: Showcasing multi-agent collaboration and AI-assisted workflows
+- Live Chat: Real-time WebSocket chat during streams
+- Categories: Web Dev, Mobile, AI/ML, DevOps, Game Dev, and more
+- Video on Demand: Recorded streams available for replay
+- Developer Profiles: Follow developers, see their stream history and social links
+- Stream Analytics: Viewer counts, engagement metrics, geographic breakdowns
+- Cloudflare Stream: HLS video powered by Cloudflare for low-latency playback
+
+## For Streamers
+
+- Go Live: Stream your IDE directly from the dashboard
+- Schedule Streams: Plan and promote upcoming sessions
+- Moderator Management: Assign channel moderators
+- Analytics Dashboard: Track viewers, engagement, and growth
+
+## Categories
+
+- Web Development
+- Mobile Development
+- AI & Machine Learning
+- DevOps & Infrastructure
+- Game Development
+- Open Source
+- System Design
+- Vibe Coding (AI-native flow state development)
+
+## Links
+
+- Platform: https://live.ainative.studio
+- About: https://live.ainative.studio/about
+- What is AI-Native Development: https://live.ainative.studio/vibe-coding
+- Search Streams: https://live.ainative.studio/search
+- Parent Platform: https://www.ainative.studio
+- API: https://api.ainative.studio
