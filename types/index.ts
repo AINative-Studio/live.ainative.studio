@@ -44,6 +44,13 @@ export interface Stream {
   endedAt: string | null;
   createdAt: string;
   user: StreamUser;
+  // Mock data fallback fields
+  username?: string;
+  displayName?: string;
+  avatar?: string | null;
+  thumbnail?: string | null;
+  live?: boolean;
+  viewers?: number;
 }
 
 export interface StreamUser {
@@ -332,4 +339,43 @@ export interface ApiError {
   message?: string;
   status?: number;
   traceId?: string;
+}
+
+// ==================== VOD Types ====================
+
+export interface VODQualityLevel {
+  label: string;
+  height: number;
+  width: number;
+  bitrate: number;
+  url?: string;
+}
+
+// ==================== Moderator Types ====================
+
+export interface Moderator {
+  id: string;
+  userId: string;
+  username: string;
+  displayName: string;
+  avatar: string | null;
+  isVip: boolean;
+  addedAt: string;
+}
+
+export interface ModeratorCreate {
+  userId: string;
+  isVip?: boolean;
+}
+
+export interface ModeratorUpdate {
+  isVip?: boolean;
+}
+
+export interface ModeratorSearchResult {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar: string | null;
+  avatarUrl?: string | null;
 }

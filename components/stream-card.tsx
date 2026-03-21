@@ -19,7 +19,7 @@ export function StreamCard({ stream, priority = false }: StreamCardProps) {
   const thumbnail = stream.thumbnailUrl || stream.thumbnail || '/placeholder-stream.jpg';
   const isLive = stream.status === 'live' || stream.live === true;
   const viewerCount = stream.viewerCount || stream.viewers || 0;
-  const categoryName = stream.category?.name || stream.category || '';
+  const categoryName = stream.category?.name || (typeof stream.category === 'string' ? stream.category : '') || '';
   const tags = stream.tags || [];
 
   return (

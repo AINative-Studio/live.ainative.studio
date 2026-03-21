@@ -198,37 +198,38 @@ function SchedulePageContent() {
   const upcomingEntries = getUpcomingEntries();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Schedule Management</h1>
-              <p className="text-muted-foreground">
-                Manage your streaming schedule and let viewers know when you'll be live
-              </p>
-            </div>
-            <Button onClick={handleCreateEntry} size="lg">
-              <Plus className="w-5 h-5 mr-2" />
-              Add Schedule
-            </Button>
+    <>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Schedule Management</h1>
+            <p className="text-muted-foreground">
+              Manage your streaming schedule and let viewers know when you&#39;ll be live
+            </p>
           </div>
+          <Button onClick={handleCreateEntry} size="lg">
+            <Plus className="w-5 h-5 mr-2" />
+            Add Schedule
+          </Button>
+        </div>
 
-          {error && (
-            <Card className="mb-6 border-yellow-500/50 bg-yellow-500/10">
-              <CardContent className="pt-6">
-                <p className="text-sm text-yellow-600 dark:text-yellow-400">{error}</p>
-              </CardContent>
-            </Card>
-          )}
+        {error && (
+          <Card className="mb-6 border-yellow-500/50 bg-yellow-500/10">
+            <CardContent className="pt-6">
+              <p className="text-sm text-yellow-600 dark:text-yellow-400">{error}</p>
+            </CardContent>
+          </Card>
+        )}
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center gap-4">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                <p className="text-sm text-muted-foreground">Loading schedule...</p>
-              </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="text-sm text-muted-foreground">Loading schedule...</p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Weekly Schedule Grid */}
               <div className="lg:col-span-2 space-y-4">
                 <Card className="border-border">
@@ -398,11 +399,8 @@ function SchedulePageContent() {
                 </Card>
               </div>
             </div>
-          )}
-        </div>
-      </main>
-
-      <Footer />
+        )}
+      </div>
 
       {/* Schedule Editor Dialog */}
       <ScheduleEditor
@@ -435,7 +433,7 @@ function SchedulePageContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }
 
