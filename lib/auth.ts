@@ -97,18 +97,17 @@ export function isAuthenticated(): boolean {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.ainative.studio/v1';
 
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
-  const formData = new URLSearchParams();
-  formData.append('username', credentials.username);
-  formData.append('password', credentials.password);
-
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/auth/login-json`, {
+    response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
-      body: formData,
+      body: JSON.stringify({
+        email: credentials.username,
+        password: credentials.password,
+      }),
     });
   } catch (networkError) {
     console.error('Login network error:', networkError);
