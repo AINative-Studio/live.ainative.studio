@@ -37,7 +37,10 @@ export const usersService = {
 
   /** Get user's streams */
   async getStreams(username: string): Promise<Stream[]> {
-    return apiClient.get(`/streams/users/${username}/streams`);
+    const response = await apiClient.get<{ streams: Stream[]; total: number }>(
+      `/streams/users/${username}/streams`
+    );
+    return response.streams || [];
   },
 
   /** Get user's VODs */
