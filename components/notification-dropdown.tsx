@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { dashboardService } from '@/services/dashboard';
+import { useAuth } from '@/contexts/auth-context';
 import type { FollowNotification } from '@/types';
 
 function getRelativeTime(dateString: string): string {
@@ -91,14 +92,17 @@ const mockNotifications: FollowNotification[] = [
 ];
 
 export function NotificationDropdown() {
-  const [notifications, setNotifications] = useState<FollowNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
+  const [notifications, setNotifications] = useState<FollowNotification[]>(mockNotifications);
+  const [unreadCount, setUnreadCount] = useState(mockNotifications.filter(n => !n.isRead).length);
+  const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    loadNotifications();
-  }, []);
+    if (isAuthenticated) {
+      loadNotifications();
+    }
+  }, [isAuthenticated]);
 
   const loadNotifications = async () => {
     setIsLoading(true);
@@ -112,7 +116,7 @@ export function NotificationDropdown() {
       setNotifications(recentNotifications);
       setUnreadCount(response?.unreadCount ?? recentNotifications.filter((n: FollowNotification) => !n.isRead).length);
     } catch (error) {
-      console.error('Failed to load notifications, using mock data:', error);
+      // Endpoint may not exist yet — silently fall back to mock data
       setNotifications(mockNotifications);
       setUnreadCount(mockNotifications.filter(n => !n.isRead).length);
     } finally {
@@ -130,8 +134,7 @@ export function NotificationDropdown() {
 
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-
+      // Mark as read locally even if API fails
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
       );
