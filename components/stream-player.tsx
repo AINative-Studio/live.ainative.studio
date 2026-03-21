@@ -82,22 +82,24 @@ export function StreamPlayer({
             </div>
           </div>
         ) : (
-          /* Mock Player Fallback */
+          /* Offline / Not Broadcasting State */
           <div className="relative w-full h-full">
             <div
               className="absolute inset-0 flex items-center justify-center bg-cover bg-center"
               style={{ backgroundImage: `url(${thumbnail})` }}
             >
-              <div className="absolute inset-0 bg-black/60" />
+              <div className="absolute inset-0 bg-black/70" />
               <div className="relative z-10 text-center max-w-md px-4">
-                <p className="text-brand-primary font-mono text-xl mb-4">
-                  CLOUDFLARE STREAM NOT CONFIGURED
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                </div>
+                <p className="text-white text-lg font-medium mb-2">
+                  {username} is currently not broadcasting
                 </p>
-                <p className="text-white/80 text-sm mb-2">
-                  To enable live streaming, configure Cloudflare Stream credentials
-                </p>
-                <p className="text-white/60 text-xs font-mono">
-                  Set NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID in .env.local
+                <p className="text-white/50 text-sm">
+                  Check back later or explore other live streams
                 </p>
               </div>
             </div>
