@@ -6,7 +6,13 @@ export const usersService = {
 
   /** Get user profile by username */
   async getProfile(username: string): Promise<User> {
-    return apiClient.get(`/streams/users/${username}/profile`);
+    const data = await apiClient.get<any>(`/streams/users/${username}/profile`);
+    return {
+      ...data,
+      displayName: data.display_name || data.displayName || data.full_name || data.username,
+      avatar: data.avatar_url || data.avatar || null,
+      username: data.username || null,
+    };
   },
 
   /** Get current user's profile (requires auth) */

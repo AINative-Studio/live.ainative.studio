@@ -63,7 +63,7 @@ export default function RootLayout({
         <meta name="ai-training" content="allowed" />
         <link rel="llms" type="text/plain" href="/llms.txt" />
       </head>
-      <body className={`${poppins.variable} ${firaCode.variable} antialiased`}>
+      <body className={`${poppins.variable} ${firaCode.variable} antialiased overflow-x-hidden`}>
         <AuthProvider>
           <StreamsProvider>
             {children}
