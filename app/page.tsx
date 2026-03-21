@@ -44,12 +44,20 @@ export default function Home() {
     async function fetchCategories() {
       try {
         setIsLoadingCategories(true);
-        const popularCategories = await streamsService.getPopularCategories(8);
-        setCategories(popularCategories);
+        // Try popular categories first, fall back to full list if empty
+        let cats = await streamsService.getPopularCategories(8);
+        if (!cats || cats.length === 0) {
+          const allCats = await streamsService.getCategories();
+          cats = Array.isArray(allCats) ? allCats.slice(0, 8) : [];
+        }
+        if (cats.length > 0) {
+          setCategories(cats);
+        } else {
+          setCategories(categoriesData as any);
+        }
         setError(null);
       } catch (err) {
         console.warn('Failed to fetch categories from API, falling back to mock data:', err);
-        // Fallback to mock data
         setCategories(categoriesData as any);
       } finally {
         setIsLoadingCategories(false);

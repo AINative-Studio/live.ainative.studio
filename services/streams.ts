@@ -110,7 +110,10 @@ export const streamsService = {
 
   /** Get streams in category */
   async getStreamsByCategory(slug: string): Promise<Stream[]> {
-    return apiClient.get(`/streams/categories/by-slug/${slug}/streams`);
+    const response = await apiClient.get<{ streams: Stream[]; category: any; total: number }>(
+      `/streams/categories/by-slug/${slug}/streams`
+    );
+    return response.streams || [];
   },
 
   // ==================== Tags ====================
