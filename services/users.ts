@@ -9,8 +9,9 @@ export const usersService = {
     const data = await apiClient.get<any>(`/streams/users/${username}/profile`);
     return {
       ...data,
-      displayName: data.display_name || data.displayName || data.full_name || data.username,
-      avatar: data.avatar_url || data.avatar || null,
+      // API keys are auto-transformed to camelCase by apiClient (avatarUrl, displayName, etc.)
+      displayName: data.displayName || data.fullName || data.username,
+      avatar: data.avatarUrl || data.avatar || null,
       username: data.username || null,
     };
   },
