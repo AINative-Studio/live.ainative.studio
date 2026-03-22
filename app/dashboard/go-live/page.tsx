@@ -82,7 +82,8 @@ function GoLiveContent() {
     if (!stream) return;
     // Stream goes live automatically when RTMP connection is established
     // Just navigate to the stream page to view it
-    router.push(`/stream/${stream.user.username}`);
+    const username = stream.streamer?.username || stream.user?.username || 'me';
+    router.push(`/stream/${username}`);
   };
 
   const handleEndStream = async () => {
@@ -155,7 +156,8 @@ function GoLiveContent() {
     // For now, just navigate to the stream page
     // The stream will go live automatically when the RTMP/WebRTC connection is established
     if (stream) {
-      router.push(`/stream/${stream.user.username}`);
+      const username = stream.streamer?.username || stream.user?.username || 'me';
+      router.push(`/stream/${username}`);
     }
   };
 
