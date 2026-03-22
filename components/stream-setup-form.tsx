@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { X, Plus, Loader2, AlertCircle } from 'lucide-react';
 import categoriesData from '@/data/categories.json';
+import { streamsService } from '@/services/streams';
 
 interface StreamSetupFormProps {
   initialData?: {
@@ -46,8 +47,19 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>(categoriesData as Category[]);
 
-  const categories = categoriesData as Category[];
+  // Fetch real categories from API
+  useEffect(() => {
+    streamsService.getCategories().then((cats: any) => {
+      const apiCats = Array.isArray(cats) ? cats : [];
+      if (apiCats.length > 0) {
+        setCategories(apiCats);
+      }
+    }).catch(() => {
+      // Keep mock data as fallback
+    });
+  }, []);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
