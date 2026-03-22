@@ -93,8 +93,8 @@ const mockNotifications: FollowNotification[] = [
 
 export function NotificationDropdown() {
   const { isAuthenticated } = useAuth();
-  const [notifications, setNotifications] = useState<FollowNotification[]>(mockNotifications);
-  const [unreadCount, setUnreadCount] = useState(mockNotifications.filter(n => !n.isRead).length);
+  const [notifications, setNotifications] = useState<FollowNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -116,9 +116,9 @@ export function NotificationDropdown() {
       setNotifications(recentNotifications);
       setUnreadCount(response?.unreadCount ?? recentNotifications.filter((n: FollowNotification) => !n.isRead).length);
     } catch (error) {
-      // Endpoint may not exist yet — silently fall back to mock data
-      setNotifications(mockNotifications);
-      setUnreadCount(mockNotifications.filter(n => !n.isRead).length);
+      // Endpoint may not exist yet — silently use empty state
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setIsLoading(false);
     }
