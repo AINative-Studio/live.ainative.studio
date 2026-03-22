@@ -14,15 +14,31 @@ import type {
 
 export const dashboardService = {
   // ==================== Overview ====================
+  // NOTE: /dashboard/* endpoints are not yet implemented on the backend.
+  // These return sensible defaults until the API is built.
 
   /** Get dashboard overview (requires auth) */
   async getOverview(): Promise<DashboardOverview> {
-    return apiClient.get('/dashboard/overview', true);
+    return {
+      currentStream: null,
+      recentStreams: [],
+      followerCount: 0,
+      totalViews: 0,
+      upcomingSchedule: [],
+      notifications: [],
+    };
   },
 
   /** Get quick stats (requires auth) */
   async getQuickStats(): Promise<DashboardQuickStats> {
-    return apiClient.get('/dashboard/quick-stats', true);
+    return {
+      todayViewers: 0,
+      weeklyViewers: 0,
+      monthlyViewers: 0,
+      avgStreamDuration: 0,
+      newFollowersToday: 0,
+      newFollowersWeek: 0,
+    };
   },
 
   /** Get recent activity (requires auth) */
@@ -31,7 +47,7 @@ export const dashboardService = {
     recentFollowers: any[];
     recentEvents: any[];
   }> {
-    return apiClient.get('/dashboard/recent-activity', true);
+    return { recentStreams: [], recentFollowers: [], recentEvents: [] };
   },
 
   // ==================== Notifications ====================
@@ -42,7 +58,7 @@ export const dashboardService = {
     total: number;
     unreadCount: number;
   }> {
-    return apiClient.get(`/dashboard/notifications?page=${page}`, true);
+    return { notifications: [], total: 0, unreadCount: 0 };
   },
 
   /** Mark notification as read (requires auth) */
