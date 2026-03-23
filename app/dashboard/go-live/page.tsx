@@ -13,8 +13,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { streamsService } from '@/services/streams';
+import { WHIPClient } from '@/lib/whip-client';
 import type { Stream } from '@/types';
-import { Copy, Eye, EyeOff, Radio, AlertCircle, CheckCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { Copy, Eye, EyeOff, Radio, AlertCircle, CheckCircle, Loader2, ArrowLeft, Wifi, WifiOff } from 'lucide-react';
 
 export default function GoLivePage() {
   return (
@@ -38,6 +39,8 @@ function GoLiveContent() {
   const [showBrowserPreview, setShowBrowserPreview] = useState(false);
   const [browserStream, setBrowserStream] = useState<MediaStream | null>(null);
   const [isBrowserStreaming, setIsBrowserStreaming] = useState(false);
+  const [whipClient, setWhipClient] = useState<WHIPClient | null>(null);
+  const [whipStatus, setWhipStatus] = useState<string>('idle');
 
   const RTMP_INGEST_URL = 'rtmp://live.cloudflarestream.com/live';
 
@@ -145,38 +148,66 @@ function GoLiveContent() {
   };
 
   const handleBrowserStreamStart = async (mediaStream: MediaStream) => {
-    setBrowserStream(mediaStream);
-    setIsBrowserStreaming(true);
+    if (!stream) return;
 
-    // In a real implementation, you would:
-    // 1. Use MediaRecorder API to encode the stream
-    // 2. Send encoded chunks to your backend/CDN
-    // 3. Stream goes live automatically via webhook when streaming starts
+    const webrtcUrl = stream.ingest?.webrtcUrl;
+    if (!webrtcUrl) {
+      setError('Browser streaming is not available for this stream. The WHIP endpoint was not provisioned. Try using RTMP software instead.');
+      return;
+    }
 
-    // For now, just navigate to the stream page
-    // The stream will go live automatically when the RTMP/WebRTC connection is established
-    if (stream) {
-      const username = stream.streamer?.username || stream.user?.username || 'me';
-      router.push(`/stream/${username}`);
+    try {
+      setBrowserStream(mediaStream);
+      setWhipStatus('connecting');
+      setError(null);
+
+      // Connect to Cloudflare via WHIP
+      const client = new WHIPClient(webrtcUrl);
+      client.onConnectionStateChange((state) => {
+        setWhipStatus(state);
+        if (state === 'failed' || state === 'disconnected') {
+          setError('Stream connection lost. Please try again.');
+          setIsBrowserStreaming(false);
+        }
+      });
+
+      await client.publish(mediaStream);
+      setWhipClient(client);
+      setIsBrowserStreaming(true);
+      setWhipStatus('connected');
+
+      // Stream goes live automatically via Cloudflare webhook (live_input.connected)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to start browser stream';
+      setError(msg);
+      setWhipStatus('failed');
+      setIsBrowserStreaming(false);
     }
   };
 
-  const handleStopBrowserPreview = () => {
-    setShowBrowserPreview(false);
-    setStreamMethod(null);
+  const stopStreaming = async () => {
+    if (whipClient) {
+      await whipClient.disconnect();
+      setWhipClient(null);
+    }
     if (browserStream) {
       browserStream.getTracks().forEach(track => track.stop());
       setBrowserStream(null);
     }
+    setIsBrowserStreaming(false);
+    setWhipStatus('idle');
   };
 
-  const handleBackToMethodSelect = () => {
+  const handleStopBrowserPreview = async () => {
+    await stopStreaming();
+    setShowBrowserPreview(false);
+    setStreamMethod(null);
+  };
+
+  const handleBackToMethodSelect = async () => {
+    await stopStreaming();
     setStreamMethod(null);
     setShowBrowserPreview(false);
-    if (browserStream) {
-      browserStream.getTracks().forEach(track => track.stop());
-      setBrowserStream(null);
-    }
   };
 
   return (
@@ -245,15 +276,38 @@ function GoLiveContent() {
             </div>
           ) : streamMethod === 'browser' && showBrowserPreview ? (
             <div className="max-w-4xl mx-auto">
-              <div className="mb-6">
+              <div className="mb-6 flex items-center justify-between">
                 <Button
                   variant="ghost"
                   onClick={handleBackToMethodSelect}
                   className="gap-2"
+                  disabled={isBrowserStreaming}
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back to Method Selection
                 </Button>
+                {isBrowserStreaming && (
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-success text-white animate-pulse gap-1.5">
+                      <Wifi className="w-3 h-3" />
+                      LIVE — Streaming to Cloudflare
+                    </Badge>
+                    <Button variant="destructive" size="sm" onClick={async () => {
+                      await stopStreaming();
+                      if (stream) await streamsService.end(stream.id);
+                      setStream(null);
+                    }}>
+                      <WifiOff className="w-4 h-4 mr-2" />
+                      End Stream
+                    </Button>
+                  </div>
+                )}
+                {whipStatus === 'connecting' && (
+                  <Badge variant="secondary" className="gap-1.5">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Connecting to Cloudflare...
+                  </Badge>
+                )}
               </div>
               <BrowserStreamPreview
                 onStartStreaming={handleBrowserStreamStart}

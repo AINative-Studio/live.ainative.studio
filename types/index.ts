@@ -37,6 +37,13 @@ export interface Stream {
   thumbnailUrl: string | null;
   streamKey: string | null;  // Only for owner
   cloudflareVideoId: string | null;  // Cloudflare Stream video ID
+  // Ingest info (owner only, from StreamWithIngestResponse)
+  ingest?: {
+    rtmpsUrl: string;
+    rtmpsKey: string;
+    srtUrl?: string;
+    webrtcUrl?: string;  // WHIP WebRTC publish URL
+  };
   viewerCount: number;
   peakViewers: number;
   tags: StreamTag[];
