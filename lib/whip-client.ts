@@ -48,12 +48,10 @@ export class WHIPClient {
       throw new Error('Failed to create local SDP description');
     }
 
-    // Send offer to WHIP endpoint
-    const response = await fetch(this.whipUrl, {
+    // Send offer via local WHIP proxy to avoid CORS issues with Cloudflare
+    const proxyUrl = `/api/whip?url=${encodeURIComponent(this.whipUrl)}`;
+    const response = await fetch(proxyUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/sdp',
-      },
       body: localDescription.sdp,
     });
 
@@ -65,7 +63,7 @@ export class WHIPClient {
     // Store the resource URL for later teardown
     const location = response.headers.get('Location');
     if (location) {
-      this.resourceUrl = new URL(location, this.whipUrl).toString();
+      this.resourceUrl = location;
     }
 
     // Set remote answer
@@ -79,10 +77,10 @@ export class WHIPClient {
    * Disconnect and clean up the WebRTC session.
    */
   async disconnect(): Promise<void> {
-    // Send DELETE to tear down the WHIP resource
+    // Send DELETE via proxy to tear down the WHIP resource
     if (this.resourceUrl) {
       try {
-        await fetch(this.resourceUrl, { method: 'DELETE' });
+        await fetch(`/api/whip?url=${encodeURIComponent(this.resourceUrl)}`, { method: 'DELETE' });
       } catch (e) {
         // Best effort — server may already have cleaned up
       }
