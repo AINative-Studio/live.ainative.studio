@@ -219,7 +219,8 @@ export async function refreshToken(): Promise<boolean> {
     });
 
     if (!response.ok) {
-      clearAuth();
+      // Don't clear auth — the access token may still be valid
+      // even if refresh fails (endpoint may not exist yet)
       return false;
     }
 

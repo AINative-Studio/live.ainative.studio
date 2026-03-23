@@ -159,15 +159,14 @@ class ApiClient {
 
     // Handle 401 Unauthorized
     if (response.status === 401) {
-      // Try to refresh token
-      const refreshed = await refreshToken();
-      if (!refreshed) {
-        clearAuth();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
+      // Don't wipe auth on 401 — the token may still be valid for other requests.
+      // Only redirect to login if there's genuinely no token stored.
+      const token = typeof window !== 'undefined' ? localStorage.getItem('ainative_access_token') : null;
+      if (!token) {
         throw new UnauthorizedError('Authentication required');
       }
+      // Token exists but request failed — could be a transient issue or
+      // the specific endpoint requires different auth. Don't wipe the session.
       throw new UnauthorizedError('Authentication required');
     }
 
