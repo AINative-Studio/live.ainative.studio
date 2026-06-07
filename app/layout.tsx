@@ -20,13 +20,19 @@ const firaCode = Fira_Code({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://live.ainative.studio'),
-  title: 'AINative Studio Live - Developer Streaming Platform',
+  title: {
+    default: 'AINative Studio Live - Developer Streaming Platform',
+    template: '%s | AINative Studio Live',
+  },
   description: 'The premier livestreaming platform for developers. Watch developers build in real-time, collaborate, and showcase cutting-edge development workflows.',
   keywords: ['livestreaming', 'coding', 'developer streams', 'IDE streaming', 'programming', 'live coding'],
   authors: [{ name: 'AINative Studio' }],
   icons: {
     icon: '/ainative-icon.svg',
     apple: '/ainative-icon.svg',
+  },
+  alternates: {
+    canonical: 'https://live.ainative.studio',
   },
   openGraph: {
     title: 'AINative Studio Live - Developer Streaming Platform',
@@ -36,10 +42,11 @@ export const metadata: Metadata = {
     siteName: 'AINative Studio Live',
     images: [
       {
-        url: '/ainative-icon.svg',
-        width: 100,
-        height: 85,
-        alt: 'AINative Studio Live Logo',
+        // Dynamic OG image via /api/og — replace with a static /og-image.png (1200x630) when final brand asset is available
+        url: '/api/og',
+        width: 1200,
+        height: 630,
+        alt: 'AINative Studio Live - Developer Streaming Platform',
       },
     ],
   },
@@ -47,7 +54,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'AINative Studio Live - Developer Streaming Platform',
     description: 'Watch developers build in real-time, collaborate, and showcase cutting-edge development workflows.',
-    images: ['/ainative-icon.svg'],
+    images: ['/api/og'],
   },
 };
 

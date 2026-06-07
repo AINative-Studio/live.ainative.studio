@@ -3,8 +3,16 @@ import Link from 'next/link';
 import { Shield, ArrowLeft } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | AINative Studio Live',
+  title: 'Privacy Policy',
   description: 'Privacy Policy for AINative Studio Live - How we collect, use, and protect your data',
+  alternates: {
+    canonical: '/privacy',
+  },
+  openGraph: {
+    title: 'Privacy Policy | AINative Studio Live',
+    description: 'Privacy Policy for AINative Studio Live - How we collect, use, and protect your data.',
+    url: '/privacy',
+  },
 };
 
 export default function PrivacyPage() {

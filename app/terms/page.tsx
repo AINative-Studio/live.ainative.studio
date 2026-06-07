@@ -3,8 +3,16 @@ import Link from 'next/link';
 import { FileText, ArrowLeft } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | AINative Studio Live',
+  title: 'Terms of Service',
   description: 'Terms of Service for AINative Studio Live - Live coding streams for AI-native developers',
+  alternates: {
+    canonical: '/terms',
+  },
+  openGraph: {
+    title: 'Terms of Service | AINative Studio Live',
+    description: 'Terms of Service for AINative Studio Live.',
+    url: '/terms',
+  },
 };
 
 export default function TermsPage() {
