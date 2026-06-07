@@ -24,7 +24,9 @@ export default function LoginPage() {
   // Redirect authenticated users away from login page
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/');
+      const params = new URLSearchParams(window.location.search);
+      const redirectTo = params.get('redirect') || '/dashboard';
+      router.replace(redirectTo);
     }
   }, [isAuthenticated, router]);
 
