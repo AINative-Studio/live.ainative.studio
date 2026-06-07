@@ -22,84 +22,16 @@ import { Calendar, Clock, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-// Mock schedule data for fallback
-const MOCK_SCHEDULE: WeeklySchedule = {
-  userId: '1',
-  username: 'demo-user',
-  schedule: [
-    {
-      dayOfWeek: 0,
-      dayName: 'Monday',
-      schedules: [
-        {
-          id: '1',
-          userId: '1',
-          dayOfWeek: 0,
-          startTime: '18:00',
-          endTime: '20:00',
-          title: 'Building with Next.js',
-          category: { id: '3', name: 'Next.js', slug: 'nextjs' } as any,
-          isRecurring: true,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    },
-    {
-      dayOfWeek: 1,
-      dayName: 'Tuesday',
-      schedules: [],
-    },
-    {
-      dayOfWeek: 2,
-      dayName: 'Wednesday',
-      schedules: [
-        {
-          id: '2',
-          userId: '1',
-          dayOfWeek: 2,
-          startTime: '19:00',
-          endTime: '21:00',
-          title: 'AI Coding Session',
-          category: { id: '1', name: 'AI Coding', slug: 'ai-coding' } as any,
-          isRecurring: true,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    },
-    {
-      dayOfWeek: 3,
-      dayName: 'Thursday',
-      schedules: [],
-    },
-    {
-      dayOfWeek: 4,
-      dayName: 'Friday',
-      schedules: [
-        {
-          id: '3',
-          userId: '1',
-          dayOfWeek: 4,
-          startTime: '17:00',
-          endTime: '19:00',
-          title: 'Weekend Kickoff Stream',
-          category: { id: '2', name: 'AI-Native Development', slug: 'ai-native-development' } as any,
-          isRecurring: true,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    },
-    {
-      dayOfWeek: 5,
-      dayName: 'Saturday',
-      schedules: [],
-    },
-    {
-      dayOfWeek: 6,
-      dayName: 'Sunday',
-      schedules: [],
-    },
-  ],
-  totalEntries: 3,
+// Empty schedule fallback when API is unavailable
+const EMPTY_SCHEDULE: WeeklySchedule = {
+  userId: '',
+  username: '',
+  schedule: DAYS_OF_WEEK.map((dayName, i) => ({
+    dayOfWeek: i,
+    dayName,
+    schedules: [],
+  })),
+  totalEntries: 0,
 };
 
 function SchedulePageContent() {
@@ -125,9 +57,8 @@ function SchedulePageContent() {
       const data = await dashboardService.getMySchedule();
       setSchedule(data);
     } catch (err) {
-      console.error('Failed to load schedule, using mock data:', err);
-      setError('Failed to load schedule from API, showing mock data');
-      setSchedule(MOCK_SCHEDULE);
+      console.error('Failed to load schedule:', err);
+      setSchedule(EMPTY_SCHEDULE);
     } finally {
       setIsLoading(false);
     }

@@ -46,80 +46,8 @@ function getNotificationIcon(type: FollowNotification['type']) {
   return <Bell className="w-5 h-5" />;
 }
 
-const mockNotifications: FollowNotification[] = [
-  {
-    id: '1',
-    type: 'new_follower',
-    followerId: 'user1',
-    followerUsername: 'devmaster',
-    followerAvatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100',
-    isRead: false,
-    createdAt: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    id: '2',
-    type: 'stream_live',
-    followerId: 'user2',
-    followerUsername: 'codewizard',
-    followerAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
-    isRead: false,
-    createdAt: new Date(Date.now() - 14400000).toISOString(),
-  },
-  {
-    id: '3',
-    type: 'new_follower',
-    followerId: 'user3',
-    followerUsername: 'pythonista',
-    followerAvatar: null,
-    isRead: true,
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: '4',
-    type: 'new_follower',
-    followerId: 'user4',
-    followerUsername: 'rustacean',
-    followerAvatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=100',
-    isRead: true,
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-  },
-  {
-    id: '5',
-    type: 'stream_live',
-    followerId: 'user5',
-    followerUsername: 'aibuilder',
-    followerAvatar: null,
-    isRead: true,
-    createdAt: new Date(Date.now() - 259200000).toISOString(),
-  },
-  {
-    id: '6',
-    type: 'new_follower',
-    followerId: 'user6',
-    followerUsername: 'frontend_ninja',
-    followerAvatar: 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg?auto=compress&cs=tinysrgb&w=100',
-    isRead: true,
-    createdAt: new Date(Date.now() - 345600000).toISOString(),
-  },
-  {
-    id: '7',
-    type: 'stream_live',
-    followerId: 'user7',
-    followerUsername: 'backend_guru',
-    followerAvatar: null,
-    isRead: true,
-    createdAt: new Date(Date.now() - 432000000).toISOString(),
-  },
-  {
-    id: '8',
-    type: 'new_follower',
-    followerId: 'user8',
-    followerUsername: 'fullstack_dev',
-    followerAvatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=100',
-    isRead: true,
-    createdAt: new Date(Date.now() - 518400000).toISOString(),
-  },
-];
+// Empty fallback when API is unavailable
+const emptyNotifications: FollowNotification[] = [];
 
 interface NotificationItemProps {
   notification: FollowNotification;
@@ -215,9 +143,9 @@ export default function NotificationsPage() {
       setUnreadCount(response.unreadCount);
     } catch (error) {
       console.error('Failed to load notifications, using mock data:', error);
-      setNotifications(mockNotifications);
-      setTotalNotifications(mockNotifications.length);
-      setUnreadCount(mockNotifications.filter(n => !n.isRead).length);
+      setNotifications(emptyNotifications);
+      setTotalNotifications(emptyNotifications.length);
+      setUnreadCount(emptyNotifications.filter(n => !n.isRead).length);
     } finally {
       setIsLoading(false);
     }
