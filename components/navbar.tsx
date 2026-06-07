@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Menu, Video, User, LogOut, Settings } from 'lucide-react';
+import { Search, Menu, Video, User, LogOut, Settings, Radio } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { NotificationDropdown } from '@/components/notification-dropdown';
 import { useAuth } from '@/contexts/auth-context';
@@ -118,8 +118,8 @@ export function Navbar() {
             {!isLoading && isAuthenticated ? (
               <>
                 <Button asChild className="bg-brand-primary hover:bg-primary-dark text-white font-medium">
-                  <Link href="/dashboard">
-                    <Video className="w-4 h-4 mr-2" />
+                  <Link href="/dashboard/go-live">
+                    <Radio className="w-4 h-4 mr-2" />
                     Go Live
                   </Link>
                 </Button>
