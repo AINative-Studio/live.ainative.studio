@@ -8,9 +8,18 @@ import { ArrowRight, Zap, Brain, Users, Sparkles } from 'lucide-react';
 import { TerminalHeader } from '@/components/terminal-header';
 
 export const metadata: Metadata = {
-  title: 'What is AI-Native Development? | AINative Studio Live',
+  title: 'Vibe Coding',
   description:
     'Discover AI-native development - the future of building software with AI. Watch developers work with AI agents, multi-agent systems, and cutting-edge AI-powered tooling in real-time.',
+  alternates: {
+    canonical: '/vibe-coding',
+  },
+  openGraph: {
+    title: 'Vibe Coding | AINative Studio Live',
+    description:
+      'Discover AI-native development - the future of building software with AI.',
+    url: '/vibe-coding',
+  },
 };
 
 export default function VibeCodingPage() {

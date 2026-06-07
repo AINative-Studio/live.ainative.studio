@@ -6,9 +6,18 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'About AINative Studio Live | Live Coding for AI-Native Developers',
+  title: 'About',
   description:
     'Learn about AINative Studio Live - the livestreaming platform built for developers who want to share their AI-native workflows, collaborate in real-time, and build in public.',
+  alternates: {
+    canonical: '/about',
+  },
+  openGraph: {
+    title: 'About | AINative Studio Live',
+    description:
+      'Learn about AINative Studio Live - the livestreaming platform built for developers who want to share their AI-native workflows.',
+    url: '/about',
+  },
 };
 
 export default function AboutPage() {
