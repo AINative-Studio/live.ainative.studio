@@ -1,73 +1,73 @@
 [
   {
     "id": "1",
-    "name": "AI Coding",
-    "slug": "ai-coding",
-    "description": "Explore AI-powered development workflows, LLMs, and intelligent coding assistants",
+    "name": "AI & Machine Learning",
+    "slug": "ai-ml",
+    "description": "LLMs, computer vision, NLP, model training, prompt engineering, and AI agents",
     "icon": "brain",
     "color": "brand-primary",
-    "viewerCount": 3123
+    "viewerCount": 0
   },
   {
     "id": "2",
-    "name": "AI-Native Development",
-    "slug": "ai-native-development",
-    "description": "Watch developers in flow state building with AI agents and cutting-edge tools",
-    "icon": "zap",
+    "name": "Web Development",
+    "slug": "web-dev",
+    "description": "Frontend, backend, full-stack web development with modern frameworks",
+    "icon": "layout",
     "color": "brand-primary",
-    "viewerCount": 892
+    "viewerCount": 0
   },
   {
     "id": "3",
-    "name": "Next.js",
-    "slug": "nextjs",
-    "description": "React framework with server-side rendering, routing, and modern web development",
-    "icon": "layout",
+    "name": "Vibe Coding",
+    "slug": "vibe-coding",
+    "description": "AI-assisted development with agents, copilots, and flow-state coding",
+    "icon": "zap",
     "color": "brand-primary",
-    "viewerCount": 2341
+    "viewerCount": 0
   },
   {
     "id": "4",
-    "name": "Python",
-    "slug": "python",
-    "description": "Backend development, data science, ML, and general-purpose programming",
-    "icon": "code",
-    "color": "brand-primary",
-    "viewerCount": 654
-  },
-  {
-    "id": "5",
-    "name": "Rust",
-    "slug": "rust",
-    "description": "Systems programming, performance, and memory safety",
-    "icon": "cpu",
-    "color": "brand-primary",
-    "viewerCount": 445
-  },
-  {
-    "id": "6",
-    "name": "DevOps",
+    "name": "DevOps & Infrastructure",
     "slug": "devops",
-    "description": "Infrastructure, CI/CD, containerization, and cloud deployment",
+    "description": "CI/CD, containerization, cloud deployment, and infrastructure automation",
     "icon": "server",
     "color": "brand-primary",
     "viewerCount": 0
   },
   {
+    "id": "5",
+    "name": "Mobile Development",
+    "slug": "mobile",
+    "description": "iOS, Android, React Native, Flutter, and cross-platform mobile apps",
+    "icon": "cpu",
+    "color": "brand-primary",
+    "viewerCount": 0
+  },
+  {
+    "id": "6",
+    "name": "Game Development",
+    "slug": "game-dev",
+    "description": "Unity, Unreal, Godot, and indie game creation",
+    "icon": "gamepad-2",
+    "color": "brand-primary",
+    "viewerCount": 0
+  },
+  {
     "id": "7",
-    "name": "Web3",
-    "slug": "web3",
-    "description": "Blockchain development, smart contracts, and decentralized applications",
-    "icon": "link",
+    "name": "Open Source",
+    "slug": "open-source",
+    "description": "Contributing to open source projects, maintainer workflows",
+    "icon": "code",
     "color": "brand-primary",
     "viewerCount": 0
   },
   {
     "id": "8",
-    "name": "Game Dev",
-    "slug": "game-dev",
-    "description": "Game development, Unity, Unreal, and indie game creation",
-    "icon": "gamepad-2",
+    "name": "Security",
+    "slug": "security",
+    "description": "Cybersecurity, penetration testing, and secure development",
+    "icon": "link",
     "color": "brand-primary",
     "viewerCount": 0
   }

@@ -43,13 +43,18 @@ export function Footer() {
             <h3 className="font-mono font-semibold mb-4">Browse</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/category/ai-coding" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  AI Coding
+                <Link href="/category/ai-ml" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  AI & Machine Learning
                 </Link>
               </li>
               <li>
-                <Link href="/category/ai-native-development" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  AI-Native Development
+                <Link href="/category/vibe-coding" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Vibe Coding
+                </Link>
+              </li>
+              <li>
+                <Link href="/category/web-dev" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Web Development
                 </Link>
               </li>
               <li>
