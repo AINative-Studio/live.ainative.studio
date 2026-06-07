@@ -50,11 +50,12 @@ export function NotificationDropdown() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  // Only load notifications when dropdown opens, not on every mount
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && isOpen) {
       loadNotifications();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isOpen]);
 
   const loadNotifications = async () => {
     setIsLoading(true);

@@ -30,9 +30,7 @@ export function StreamsProvider({ children }: { children: React.ReactNode }) {
       setTrendingStreams(response.streams);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch trending streams:', err);
-      setError('Failed to load trending streams');
-      // Gracefully fall back to empty array
+      // Silent fallback — don't spam console on expected failures
       setTrendingStreams([]);
     }
   }, []);
@@ -43,9 +41,7 @@ export function StreamsProvider({ children }: { children: React.ReactNode }) {
       setRisingStreams(response.streams);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch rising streams:', err);
-      setError('Failed to load rising streams');
-      // Gracefully fall back to empty array
+      // Silent fallback — don't spam console on expected failures
       setRisingStreams([]);
     }
   }, []);
@@ -78,15 +74,13 @@ export function StreamsProvider({ children }: { children: React.ReactNode }) {
     fetchInitialData();
   }, [refreshTrending, refreshRising, refreshCategories]);
 
-  // Set up 30-second auto-refresh interval
+  // Auto-refresh every 2 minutes (not 30s — avoids console spam when API is down)
   useEffect(() => {
     const interval = setInterval(() => {
       refreshTrending();
       refreshRising();
-      // Categories don't change as frequently, so we skip them in auto-refresh
-    }, 30000); // 30 seconds
+    }, 120000); // 2 minutes
 
-    // Clean up interval on unmount
     return () => clearInterval(interval);
   }, [refreshTrending, refreshRising]);
 
