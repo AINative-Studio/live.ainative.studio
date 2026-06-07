@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
@@ -49,6 +49,7 @@ interface CategoryDisplay extends Partial<Category> {
 export default function CategoryPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const router = useRouter();
 
   const [category, setCategory] = useState<CategoryDisplay | null>(null);
   const [categoryStreams, setCategoryStreams] = useState<Stream[]>([]);
@@ -107,6 +108,13 @@ export default function CategoryPage() {
     fetchData();
   }, [slug]);
 
+  // Redirect to 404 only when both API and mock data fail (notFound === true)
+  useEffect(() => {
+    if (!loading && notFound) {
+      router.replace('/not-found');
+    }
+  }, [loading, notFound, router]);
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -124,7 +132,12 @@ export default function CategoryPage() {
     );
   }
 
-  if (notFound || !category) {
+  // notFound means both API and mock data failed — redirect is in flight
+  if (notFound) {
+    return null;
+  }
+
+  if (!category) {
     return (
       <div className="flex flex-col min-h-screen">
         <Navbar />

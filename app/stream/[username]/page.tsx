@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
@@ -32,12 +32,14 @@ export default function StreamPage() {
   const params = useParams();
   const username = params.username as string;
   const { user: currentUser, isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [stream, setStream] = useState<Stream | null>(null);
   const [isLive, setIsLive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   // Initialize chat hook only if stream exists (prevents empty streamId issue #64)
   const chat = useStreamChat({
@@ -75,6 +77,8 @@ export default function StreamPage() {
           setUserProfile(mockUser);
           setStream(mockStream);
           setIsLive(true);
+        } else {
+          setNotFound(true);
         }
       } finally {
         setIsLoading(false);
@@ -83,6 +87,13 @@ export default function StreamPage() {
 
     fetchData();
   }, [username]);
+
+  // Redirect to 404 when user/stream not found
+  useEffect(() => {
+    if (!isLoading && notFound) {
+      router.replace('/not-found');
+    }
+  }, [isLoading, notFound, router]);
 
   // Loading state
   if (isLoading) {
@@ -100,20 +111,9 @@ export default function StreamPage() {
     );
   }
 
-  // User not found
-  if (!userProfile) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-2">User Not Found</h1>
-            <p className="text-muted-foreground">This user does not exist.</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+  // User not found — redirect is in flight; render nothing to avoid flash
+  if (notFound || !userProfile) {
+    return null;
   }
 
   // User is not live
