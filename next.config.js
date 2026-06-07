@@ -3,6 +3,16 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Suppress "Can't resolve 'encoding'" warning from node-fetch (pulled in by openai SDK)
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        encoding: false,
+      };
+    }
+    return config;
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
