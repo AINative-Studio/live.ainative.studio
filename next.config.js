@@ -20,6 +20,13 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      { source: '/signup', destination: '/register', permanent: true },
+      { source: '/go-live', destination: '/dashboard/go-live', permanent: true },
+      { source: '/pricing', destination: '/upgrade', permanent: true },
+    ];
+  },
   async rewrites() {
     return [
       {
