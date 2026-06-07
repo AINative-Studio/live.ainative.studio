@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { vodService } from '@/services/vod';
+import { NotFoundError } from '@/lib/api-client';
 import type { VODRecording, VODChapter } from '@/types';
 import {
   Play,
@@ -46,11 +47,13 @@ function formatViewCount(count: number): string {
 export default function VODViewerPage() {
   const params = useParams();
   const vodId = params.id as string;
+  const router = useRouter();
 
   const [vod, setVod] = useState<VODRecording | null>(null);
   const [chapters, setChapters] = useState<VODChapter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState<VODChapter | null>(null);
 
   useEffect(() => {
@@ -59,6 +62,7 @@ export default function VODViewerPage() {
 
       setIsLoading(true);
       setError(null);
+      setNotFound(false);
 
       try {
         const [vodData, chaptersData] = await Promise.all([
@@ -70,7 +74,11 @@ export default function VODViewerPage() {
         setChapters(chaptersData);
       } catch (err: any) {
         console.error('Failed to fetch VOD data:', err);
-        setError(err?.message || 'Failed to load VOD');
+        if (err instanceof NotFoundError) {
+          setNotFound(true);
+        } else {
+          setError(err?.message || 'Failed to load VOD');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -78,6 +86,13 @@ export default function VODViewerPage() {
 
     fetchVODData();
   }, [vodId]);
+
+  // Redirect to 404 when VOD is not found
+  useEffect(() => {
+    if (!isLoading && notFound) {
+      router.replace('/not-found');
+    }
+  }, [isLoading, notFound, router]);
 
   if (isLoading) {
     return (
@@ -100,6 +115,11 @@ export default function VODViewerPage() {
         <Footer />
       </div>
     );
+  }
+
+  // Not found — redirect is in flight; render nothing to avoid flash
+  if (notFound) {
+    return null;
   }
 
   if (error || !vod) {

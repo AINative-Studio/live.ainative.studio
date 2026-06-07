@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ export default function UserPage() {
   const params = useParams();
   const username = params.username as string;
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
   const [userStreams, setUserStreams] = useState<Stream[]>([]);
@@ -98,6 +99,13 @@ export default function UserPage() {
     fetchUserData();
   }, [username, isAuthenticated]);
 
+  // Redirect to 404 when user is not found in API or mock data
+  useEffect(() => {
+    if (!isLoading && notFound) {
+      router.replace('/not-found');
+    }
+  }, [isLoading, notFound, router]);
+
   const handleFollowToggle = async () => {
     if (!isAuthenticated || !user) {
       // Redirect to login or show a message
@@ -140,20 +148,9 @@ export default function UserPage() {
     );
   }
 
-  // User not found
+  // User not found — redirect is in flight; render nothing to avoid flash
   if (notFound || !user) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-2">User Not Found</h1>
-            <p className="text-muted-foreground">This user does not exist.</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+    return null;
   }
 
   // Get live stream and past streams
