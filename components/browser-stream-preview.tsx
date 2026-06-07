@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -21,7 +21,8 @@ import {
   AlertCircle,
   Loader2,
   Monitor,
-  Camera
+  Camera,
+  ScreenShare,
 } from 'lucide-react';
 
 interface MediaDeviceInfo {
@@ -35,6 +36,7 @@ interface BrowserStreamPreviewProps {
 }
 
 export type StreamQuality = '720p' | '1080p' | '1440p';
+type VideoSource = 'camera' | 'screen';
 
 interface QualitySettings {
   width: number;
@@ -58,134 +60,193 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
   const [selectedVideoDevice, setSelectedVideoDevice] = useState<string>('');
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>('');
   const [selectedQuality, setSelectedQuality] = useState<StreamQuality>('1080p');
+  const [videoSource, setVideoSource] = useState<VideoSource>('camera');
 
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [permissionDenied, setPermissionDenied] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
-  // Enumerate media devices
-  useEffect(() => {
-    const loadDevices = async () => {
-      try {
-        // Request permissions first to get device labels
-        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  // Enumerate devices without requesting permissions upfront
+  const loadDevices = useCallback(async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devices
+        .filter(device => device.kind === 'videoinput')
+        .map(device => ({
+          deviceId: device.deviceId,
+          label: device.label || `Camera ${device.deviceId.slice(0, 5)}`,
+        }));
+      const audioInputs = devices
+        .filter(device => device.kind === 'audioinput')
+        .map(device => ({
+          deviceId: device.deviceId,
+          label: device.label || `Microphone ${device.deviceId.slice(0, 5)}`,
+        }));
 
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoInputs = devices
-          .filter(device => device.kind === 'videoinput')
-          .map(device => ({
-            deviceId: device.deviceId,
-            label: device.label || `Camera ${device.deviceId.slice(0, 5)}`,
-          }));
+      setVideoDevices(videoInputs);
+      setAudioDevices(audioInputs);
 
-        const audioInputs = devices
-          .filter(device => device.kind === 'audioinput')
-          .map(device => ({
-            deviceId: device.deviceId,
-            label: device.label || `Microphone ${device.deviceId.slice(0, 5)}`,
-          }));
-
-        setVideoDevices(videoInputs);
-        setAudioDevices(audioInputs);
-
-        // Select first device by default
-        if (videoInputs.length > 0 && !selectedVideoDevice) {
-          setSelectedVideoDevice(videoInputs[0].deviceId);
-        }
-        if (audioInputs.length > 0 && !selectedAudioDevice) {
-          setSelectedAudioDevice(audioInputs[0].deviceId);
-        }
-      } catch (err) {
-        console.error('Error enumerating devices:', err);
-        if (err instanceof Error && err.name === 'NotAllowedError') {
-          setPermissionDenied(true);
-          setError('Camera and microphone access denied. Please allow access to continue.');
-        } else {
-          setError('Failed to access media devices. Please check your browser permissions.');
-        }
+      if (videoInputs.length > 0 && !selectedVideoDevice) {
+        setSelectedVideoDevice(videoInputs[0].deviceId);
       }
-    };
+      if (audioInputs.length > 0 && !selectedAudioDevice) {
+        setSelectedAudioDevice(audioInputs[0].deviceId);
+      }
+    } catch (err) {
+      console.error('Error enumerating devices:', err);
+    }
+  }, [selectedVideoDevice, selectedAudioDevice]);
 
+  useEffect(() => {
     loadDevices();
   }, []);
 
-  // Start preview stream when devices are selected
-  useEffect(() => {
-    if (!selectedVideoDevice || !selectedAudioDevice) {
-      setIsLoading(false);
-      return;
+  const stopCurrentStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
 
-    const startPreview = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  // Request permissions and start preview
+  const startPreview = useCallback(async (source: VideoSource) => {
+    setIsLoading(true);
+    setError(null);
+    stopCurrentStream();
 
-        // Stop existing stream
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop());
-        }
+    try {
+      let videoStream: MediaStream | null = null;
+      let audioStream: MediaStream | null = null;
 
-        const quality = QUALITY_PRESETS[selectedQuality];
-        const constraints: MediaStreamConstraints = {
-          video: isVideoEnabled ? {
-            deviceId: selectedVideoDevice ? { exact: selectedVideoDevice } : undefined,
-            width: { ideal: quality.width },
-            height: { ideal: quality.height },
-            frameRate: { ideal: quality.frameRate },
-          } : false,
-          audio: isAudioEnabled ? {
-            deviceId: selectedAudioDevice ? { exact: selectedAudioDevice } : undefined,
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          } : false,
-        };
-
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        streamRef.current = stream;
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Error starting preview:', err);
-        if (err instanceof Error) {
-          if (err.name === 'NotAllowedError') {
-            setPermissionDenied(true);
-            setError('Permission denied. Please allow camera and microphone access.');
-          } else if (err.name === 'NotFoundError') {
-            setError('No camera or microphone found. Please connect a device.');
-          } else if (err.name === 'NotReadableError') {
-            setError('Device is already in use by another application.');
-          } else {
-            setError(`Failed to start preview: ${err.message}`);
+      // Get video source
+      if (isVideoEnabled) {
+        if (source === 'screen') {
+          try {
+            videoStream = await navigator.mediaDevices.getDisplayMedia({
+              video: {
+                width: { ideal: QUALITY_PRESETS[selectedQuality].width },
+                height: { ideal: QUALITY_PRESETS[selectedQuality].height },
+                frameRate: { ideal: QUALITY_PRESETS[selectedQuality].frameRate },
+              },
+              audio: false,
+            });
+          } catch (err) {
+            if (err instanceof Error && err.name === 'NotAllowedError') {
+              setError('Screen share cancelled. Select a screen, window, or tab to share.');
+              setIsLoading(false);
+              return;
+            }
+            throw err;
+          }
+        } else {
+          try {
+            videoStream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                deviceId: selectedVideoDevice ? { exact: selectedVideoDevice } : undefined,
+                width: { ideal: QUALITY_PRESETS[selectedQuality].width },
+                height: { ideal: QUALITY_PRESETS[selectedQuality].height },
+                frameRate: { ideal: QUALITY_PRESETS[selectedQuality].frameRate },
+              },
+              audio: false,
+            });
+          } catch (err) {
+            if (err instanceof Error && err.name === 'NotAllowedError') {
+              setError('Camera access denied. You can still stream with screen share.');
+              setIsLoading(false);
+              return;
+            }
+            if (err instanceof Error && err.name === 'NotFoundError') {
+              setError('No camera found. Try screen share instead.');
+              setIsLoading(false);
+              return;
+            }
+            throw err;
           }
         }
+      }
+
+      // Get audio separately — don't let audio failure block video
+      if (isAudioEnabled) {
+        try {
+          audioStream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: {
+              deviceId: selectedAudioDevice ? { exact: selectedAudioDevice } : undefined,
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+        } catch (err) {
+          console.warn('Microphone access failed, streaming without audio:', err);
+        }
+      }
+
+      // Combine video + audio tracks into one stream
+      const combinedStream = new MediaStream();
+      if (videoStream) {
+        videoStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
+        // If screen share ends (user clicks "Stop sharing"), handle it
+        if (source === 'screen') {
+          videoStream.getVideoTracks()[0]?.addEventListener('ended', () => {
+            stopCurrentStream();
+            setHasStarted(false);
+            setError('Screen share ended.');
+          });
+        }
+      }
+      if (audioStream) {
+        audioStream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
+      }
+
+      if (combinedStream.getTracks().length === 0) {
+        setError('No video or audio sources available. Please allow at least one.');
         setIsLoading(false);
+        return;
       }
-    };
 
-    startPreview();
+      streamRef.current = combinedStream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = combinedStream;
+      }
 
-    // Cleanup on unmount
+      // Re-enumerate devices to get labels (permissions now granted)
+      await loadDevices();
+      setHasStarted(true);
+    } catch (err) {
+      console.error('Error starting preview:', err);
+      if (err instanceof Error) {
+        if (err.name === 'NotReadableError') {
+          setError('Device is already in use by another application.');
+        } else {
+          setError(`Failed to start preview: ${err.message}`);
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isVideoEnabled, isAudioEnabled, selectedVideoDevice, selectedAudioDevice, selectedQuality, stopCurrentStream, loadDevices]);
+
+  // Restart preview when device or quality changes (only if already started)
+  useEffect(() => {
+    if (hasStarted) {
+      startPreview(videoSource);
+    }
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+      if (!hasStarted) return;
+      stopCurrentStream();
     };
-  }, [selectedVideoDevice, selectedAudioDevice, selectedQuality, isVideoEnabled, isAudioEnabled]);
+  }, [selectedVideoDevice, selectedAudioDevice, selectedQuality]);
 
   const handleToggleVideo = () => {
     if (streamRef.current) {
       const videoTracks = streamRef.current.getVideoTracks();
-      videoTracks.forEach(track => {
-        track.enabled = !isVideoEnabled;
-      });
+      videoTracks.forEach(track => { track.enabled = !isVideoEnabled; });
     }
     setIsVideoEnabled(!isVideoEnabled);
   };
@@ -193,9 +254,7 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
   const handleToggleAudio = () => {
     if (streamRef.current) {
       const audioTracks = streamRef.current.getAudioTracks();
-      audioTracks.forEach(track => {
-        track.enabled = !isAudioEnabled;
-      });
+      audioTracks.forEach(track => { track.enabled = !isAudioEnabled; });
     }
     setIsAudioEnabled(!isAudioEnabled);
   };
@@ -207,229 +266,274 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
   };
 
   const handleStopPreview = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
+    stopCurrentStream();
+    setHasStarted(false);
     onStopPreview();
   };
 
-  const hasPermission = videoDevices.length > 0 || audioDevices.length > 0;
+  const handleSourceChange = (source: VideoSource) => {
+    setVideoSource(source);
+    if (hasStarted) {
+      startPreview(source);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Permission Error */}
-      {permissionDenied && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <p className="font-medium mb-2">Camera and Microphone Access Required</p>
-            <p className="text-sm mb-3">
-              To stream from your browser, you need to grant permission to access your camera and microphone.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.reload()}
-              className="bg-background"
-            >
-              Retry Permission Request
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* General Error */}
-      {error && !permissionDenied && (
+      {/* Error Alert */}
+      {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      {/* Video Preview */}
-      <Card className="border-border overflow-hidden">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Stream Preview</CardTitle>
-              <CardDescription>Preview your stream before going live</CardDescription>
-            </div>
-            <Badge variant="secondary" className="flex items-center gap-2">
-              <Monitor className="w-3 h-3" />
-              {selectedQuality}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="relative bg-black aspect-video">
-            {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
-                  <p className="text-sm text-white">Starting preview...</p>
+      {/* Source Selection — shown before starting */}
+      {!hasStarted && (
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle>Choose Video Source</CardTitle>
+            <CardDescription>Select how you want to stream</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Button
+                variant={videoSource === 'screen' ? 'default' : 'outline'}
+                className={`h-auto py-6 flex flex-col items-center gap-3 ${videoSource === 'screen' ? 'bg-brand-primary hover:bg-primary-dark text-white' : ''}`}
+                onClick={() => setVideoSource('screen')}
+              >
+                <ScreenShare className="h-8 w-8" />
+                <div className="text-center">
+                  <p className="font-semibold">Share Screen</p>
+                  <p className="text-xs opacity-80 mt-1">Share your IDE, browser, or desktop</p>
                 </div>
-              </div>
-            )}
-
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-            />
-
-            {!isVideoEnabled && !isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/90">
-                <div className="flex flex-col items-center gap-2">
-                  <VideoOff className="h-12 w-12 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Camera is off</p>
+              </Button>
+              <Button
+                variant={videoSource === 'camera' ? 'default' : 'outline'}
+                className={`h-auto py-6 flex flex-col items-center gap-3 ${videoSource === 'camera' ? 'bg-brand-primary hover:bg-primary-dark text-white' : ''}`}
+                onClick={() => setVideoSource('camera')}
+              >
+                <Camera className="h-8 w-8" />
+                <div className="text-center">
+                  <p className="font-semibold">Camera</p>
+                  <p className="text-xs opacity-80 mt-1">Stream from your webcam</p>
                 </div>
-              </div>
-            )}
-
-            {/* Controls Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-              <div className="flex items-center justify-center gap-3">
-                <Button
-                  variant={isVideoEnabled ? "secondary" : "destructive"}
-                  size="icon"
-                  onClick={handleToggleVideo}
-                  disabled={isLoading || !hasPermission}
-                  className="h-12 w-12 rounded-full"
-                >
-                  {isVideoEnabled ? (
-                    <Video className="h-5 w-5" />
-                  ) : (
-                    <VideoOff className="h-5 w-5" />
-                  )}
-                </Button>
-
-                <Button
-                  variant={isAudioEnabled ? "secondary" : "destructive"}
-                  size="icon"
-                  onClick={handleToggleAudio}
-                  disabled={isLoading || !hasPermission}
-                  className="h-12 w-12 rounded-full"
-                >
-                  {isAudioEnabled ? (
-                    <Mic className="h-5 w-5" />
-                  ) : (
-                    <MicOff className="h-5 w-5" />
-                  )}
-                </Button>
-              </div>
+              </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Device and Quality Settings */}
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle>Stream Settings</CardTitle>
-          <CardDescription>Select your devices and stream quality</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Video Device */}
-          <div className="space-y-2">
-            <Label htmlFor="video-device">
-              <Camera className="w-4 h-4 inline mr-2" />
-              Camera
-            </Label>
-            <Select
-              value={selectedVideoDevice}
-              onValueChange={setSelectedVideoDevice}
-              disabled={isLoading || videoDevices.length === 0}
-            >
-              <SelectTrigger id="video-device">
-                <SelectValue placeholder="Select camera" />
-              </SelectTrigger>
-              <SelectContent>
-                {videoDevices.map(device => (
-                  <SelectItem key={device.deviceId} value={device.deviceId}>
-                    {device.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Audio Device */}
-          <div className="space-y-2">
-            <Label htmlFor="audio-device">
-              <Mic className="w-4 h-4 inline mr-2" />
-              Microphone
-            </Label>
-            <Select
-              value={selectedAudioDevice}
-              onValueChange={setSelectedAudioDevice}
-              disabled={isLoading || audioDevices.length === 0}
-            >
-              <SelectTrigger id="audio-device">
-                <SelectValue placeholder="Select microphone" />
-              </SelectTrigger>
-              <SelectContent>
-                {audioDevices.map(device => (
-                  <SelectItem key={device.deviceId} value={device.deviceId}>
-                    {device.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Quality Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="quality">
-              <Monitor className="w-4 h-4 inline mr-2" />
-              Stream Quality
-            </Label>
-            <Select
-              value={selectedQuality}
-              onValueChange={(value) => setSelectedQuality(value as StreamQuality)}
+            <Button
+              onClick={() => startPreview(videoSource)}
               disabled={isLoading}
+              className="w-full mt-4 bg-brand-primary hover:bg-primary-dark text-white"
             >
-              <SelectTrigger id="quality">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="720p">
-                  720p (1280x720, 30fps) - Recommended
-                </SelectItem>
-                <SelectItem value="1080p">
-                  1080p (1920x1080, 30fps) - High Quality
-                </SelectItem>
-                <SelectItem value="1440p">
-                  1440p (2560x1440, 30fps) - Ultra HD
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Higher quality requires more bandwidth. Choose based on your internet speed.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Starting preview...
+                </>
+              ) : (
+                <>
+                  {videoSource === 'screen' ? <ScreenShare className="h-4 w-4 mr-2" /> : <Camera className="h-4 w-4 mr-2" />}
+                  Start Preview
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Action Buttons */}
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          onClick={handleStopPreview}
-          className="flex-1"
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleStartStreaming}
-          disabled={isLoading || !streamRef.current || (!isVideoEnabled && !isAudioEnabled)}
-          className="flex-1"
-        >
-          Start Streaming
-        </Button>
-      </div>
+      {/* Video Preview — shown after starting */}
+      {hasStarted && (
+        <>
+          <Card className="border-border overflow-hidden">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Stream Preview</CardTitle>
+                  <CardDescription>
+                    {videoSource === 'screen' ? 'Screen share' : 'Camera'} preview — check before going live
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    {videoSource === 'screen' ? <ScreenShare className="w-3 h-3" /> : <Camera className="w-3 h-3" />}
+                    {videoSource === 'screen' ? 'Screen' : 'Camera'}
+                  </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Monitor className="w-3 h-3" />
+                    {selectedQuality}
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="relative bg-black aspect-video">
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+                      <p className="text-sm text-white">Starting preview...</p>
+                    </div>
+                  </div>
+                )}
+
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-contain"
+                />
+
+                {!isVideoEnabled && !isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/90">
+                    <div className="flex flex-col items-center gap-2">
+                      <VideoOff className="h-12 w-12 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Video is off</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Controls Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <div className="flex items-center justify-center gap-3">
+                    <Button
+                      variant={isVideoEnabled ? "secondary" : "destructive"}
+                      size="icon"
+                      onClick={handleToggleVideo}
+                      disabled={isLoading}
+                      className="h-12 w-12 rounded-full"
+                      title={isVideoEnabled ? 'Turn off video' : 'Turn on video'}
+                    >
+                      {isVideoEnabled ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
+                    </Button>
+
+                    <Button
+                      variant={isAudioEnabled ? "secondary" : "destructive"}
+                      size="icon"
+                      onClick={handleToggleAudio}
+                      disabled={isLoading}
+                      className="h-12 w-12 rounded-full"
+                      title={isAudioEnabled ? 'Mute microphone' : 'Unmute microphone'}
+                    >
+                      {isAudioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+                    </Button>
+
+                    {/* Switch source while previewing */}
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      onClick={() => handleSourceChange(videoSource === 'screen' ? 'camera' : 'screen')}
+                      disabled={isLoading}
+                      className="h-12 w-12 rounded-full"
+                      title={videoSource === 'screen' ? 'Switch to camera' : 'Switch to screen share'}
+                    >
+                      {videoSource === 'screen' ? <Camera className="h-5 w-5" /> : <ScreenShare className="h-5 w-5" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Device and Quality Settings */}
+          <Card className="border-border">
+            <CardHeader>
+              <CardTitle>Stream Settings</CardTitle>
+              <CardDescription>Select your devices and stream quality</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Camera Selection — only show for camera source */}
+              {videoSource === 'camera' && (
+                <div className="space-y-2">
+                  <Label htmlFor="video-device">
+                    <Camera className="w-4 h-4 inline mr-2" />
+                    Camera
+                  </Label>
+                  <Select
+                    value={selectedVideoDevice}
+                    onValueChange={setSelectedVideoDevice}
+                    disabled={isLoading || videoDevices.length === 0}
+                  >
+                    <SelectTrigger id="video-device">
+                      <SelectValue placeholder="Select camera" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {videoDevices.map(device => (
+                        <SelectItem key={device.deviceId} value={device.deviceId}>
+                          {device.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Audio Device */}
+              <div className="space-y-2">
+                <Label htmlFor="audio-device">
+                  <Mic className="w-4 h-4 inline mr-2" />
+                  Microphone
+                </Label>
+                <Select
+                  value={selectedAudioDevice}
+                  onValueChange={setSelectedAudioDevice}
+                  disabled={isLoading || audioDevices.length === 0}
+                >
+                  <SelectTrigger id="audio-device">
+                    <SelectValue placeholder="Select microphone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {audioDevices.map(device => (
+                      <SelectItem key={device.deviceId} value={device.deviceId}>
+                        {device.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Quality Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="quality">
+                  <Monitor className="w-4 h-4 inline mr-2" />
+                  Stream Quality
+                </Label>
+                <Select
+                  value={selectedQuality}
+                  onValueChange={(value) => setSelectedQuality(value as StreamQuality)}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger id="quality">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="720p">720p (1280x720, 30fps) — Recommended</SelectItem>
+                    <SelectItem value="1080p">1080p (1920x1080, 30fps) — High Quality</SelectItem>
+                    <SelectItem value="1440p">1440p (2560x1440, 30fps) — Ultra HD</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Higher quality requires more bandwidth. Choose based on your internet speed.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={handleStopPreview} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleStartStreaming}
+              disabled={isLoading || !streamRef.current}
+              className="flex-1 bg-brand-primary hover:bg-primary-dark text-white"
+            >
+              Start Streaming
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
