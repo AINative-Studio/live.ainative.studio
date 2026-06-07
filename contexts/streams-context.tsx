@@ -52,9 +52,7 @@ export function StreamsProvider({ children }: { children: React.ReactNode }) {
       setCategories(response);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch categories:', err);
-      setError('Failed to load categories');
-      // Gracefully fall back to empty array
+      // Silent fallback — don't spam console on expected failures
       setCategories([]);
     }
   }, []);
