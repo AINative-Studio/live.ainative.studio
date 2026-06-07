@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Video, Github, AlertCircle, Loader2 } from 'lucide-react';
 import { TerminalHeader } from '@/components/terminal-header';
@@ -110,7 +110,7 @@ export default function RegisterPage() {
             <div className="text-center">
               <TerminalHeader text="> create_account" typingSpeed={80} />
             </div>
-            <CardTitle className="text-2xl font-bold text-center">Join AINative Studio Live</CardTitle>
+            <h1 className="text-2xl font-bold text-center tracking-tight">Join AINative Studio Live</h1>
             <CardDescription className="text-center">
               Start streaming your AI-native development sessions today
             </CardDescription>
@@ -153,14 +153,21 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-500">{error}</p>
-              </div>
-            )}
+            <div
+              id="register-error"
+              role="alert"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {error && (
+                <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                  <p className="text-sm text-red-500">{error}</p>
+                </div>
+              )}
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <Input
@@ -172,8 +179,10 @@ export default function RegisterPage() {
                   disabled={isLoading}
                   autoComplete="username"
                   required
+                  aria-required="true"
+                  aria-describedby="username-hint"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p id="username-hint" className="text-xs text-muted-foreground">
                   This will be your streaming URL
                 </p>
               </div>
@@ -189,6 +198,8 @@ export default function RegisterPage() {
                   disabled={isLoading}
                   autoComplete="email"
                   required
+                  aria-required="true"
+                  aria-describedby={error ? 'register-error' : undefined}
                 />
               </div>
 
@@ -203,8 +214,10 @@ export default function RegisterPage() {
                   disabled={isLoading}
                   autoComplete="new-password"
                   required
+                  aria-required="true"
+                  aria-describedby="password-hint"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p id="password-hint" className="text-xs text-muted-foreground">
                   Must be at least 8 characters
                 </p>
               </div>
@@ -220,9 +233,11 @@ export default function RegisterPage() {
                   disabled={isLoading}
                   autoComplete="new-password"
                   required
+                  aria-required="true"
+                  aria-describedby={passwordError ? 'confirm-password-error' : undefined}
                 />
                 {passwordError && (
-                  <p className="text-xs text-red-500">{passwordError}</p>
+                  <p id="confirm-password-error" className="text-xs text-red-500" role="alert">{passwordError}</p>
                 )}
               </div>
 

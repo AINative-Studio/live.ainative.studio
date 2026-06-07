@@ -71,12 +71,46 @@ export default function RootLayout({
         <link rel="llms" type="text/plain" href="/llms.txt" />
       </head>
       <body className={`${poppins.variable} ${firaCode.variable} antialiased overflow-x-hidden`}>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-brand-primary focus:text-white focus:rounded"
+        >
+          Skip to main content
+        </a>
         <AuthProvider>
           <StreamsProvider>
-            {children}
+            <main id="main-content">
+              {children}
+            </main>
           </StreamsProvider>
         </AuthProvider>
         <Toaster />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'AINative Studio Live',
+              url: 'https://live.ainative.studio',
+              description: 'Developer streaming platform for live coding and collaboration',
+              publisher: {
+                '@type': 'Organization',
+                name: 'AINative Studio',
+                url: 'https://ainative.studio',
+                logo: {
+                  '@type': 'ImageObject',
+                  url: 'https://live.ainative.studio/api/og',
+                },
+              },
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: 'https://live.ainative.studio/search?q={search_term}',
+                'query-input': 'required name=search_term',
+              },
+            }),
+          }}
+        />
       </body>
     </html>
   );

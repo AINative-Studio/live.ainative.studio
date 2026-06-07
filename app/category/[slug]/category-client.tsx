@@ -75,10 +75,7 @@ export default function CategoryPage() {
       } catch (error) {
         console.warn('Failed to fetch category data from API, falling back to mock data:', error);
 
-        if (!mockCategory) {
-          // Slug is not recognised — show a graceful not-found state rather than 404
-          setNotFound(true);
-        } else {
+        if (mockCategory) {
           setCategory(mockCategory);
 
           // Filter mock streams by category slug
@@ -86,6 +83,21 @@ export default function CategoryPage() {
             (s: any) => s.categorySlug === slug || s.category?.slug === slug
           );
           setCategoryStreams(mockCategoryStreams);
+        } else {
+          // Slug is not in mock data either — synthesise a minimal category object
+          // so the page renders an empty-streams state instead of a hard 404.
+          // This covers categories the API knows about but the mock snapshot doesn't
+          // (e.g. newly created categories).
+          setCategory({
+            id: slug,
+            name: slug
+              .split('-')
+              .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' '),
+            slug,
+            description: null,
+          });
+          setCategoryStreams([]);
         }
       } finally {
         setLoading(false);

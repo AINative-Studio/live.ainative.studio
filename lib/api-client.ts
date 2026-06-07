@@ -57,11 +57,31 @@ export class ForbiddenError extends ApiError {
   }
 }
 
+// Default request timeout — prevents fetch() from hanging indefinitely when
+// the API is unreachable, which would keep skeleton loaders visible forever
+// because the finally block never executes (issue #22).
+const REQUEST_TIMEOUT_MS = 8000;
+
 class ApiClient {
   private baseUrl: string;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  /**
+   * Wraps fetch with an AbortController timeout so that requests always
+   * settle within REQUEST_TIMEOUT_MS. The AbortError propagates as a normal
+   * thrown Error so all callers' catch/finally blocks execute correctly.
+   */
+  private async fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(timerId);
+    }
   }
 
   /**
@@ -207,7 +227,7 @@ class ApiClient {
   async get<T>(endpoint: string, authenticated: boolean = false): Promise<T> {
     const normalizedEndpoint = this.normalizeEndpoint(endpoint);
     const headers = await this.getHeaders(authenticated);
-    const response = await fetch(`${this.baseUrl}${normalizedEndpoint}`, {
+    const response = await this.fetchWithTimeout(`${this.baseUrl}${normalizedEndpoint}`, {
       method: 'GET',
       headers,
     });
@@ -217,7 +237,7 @@ class ApiClient {
   async post<T>(endpoint: string, data?: unknown, authenticated: boolean = false): Promise<T> {
     const normalizedEndpoint = this.normalizeEndpoint(endpoint);
     const headers = await this.getHeaders(authenticated);
-    const response = await fetch(`${this.baseUrl}${normalizedEndpoint}`, {
+    const response = await this.fetchWithTimeout(`${this.baseUrl}${normalizedEndpoint}`, {
       method: 'POST',
       headers,
       body: data ? JSON.stringify(data) : undefined,
@@ -228,7 +248,7 @@ class ApiClient {
   async put<T>(endpoint: string, data: unknown, authenticated: boolean = false): Promise<T> {
     const normalizedEndpoint = this.normalizeEndpoint(endpoint);
     const headers = await this.getHeaders(authenticated);
-    const response = await fetch(`${this.baseUrl}${normalizedEndpoint}`, {
+    const response = await this.fetchWithTimeout(`${this.baseUrl}${normalizedEndpoint}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify(data),
@@ -239,14 +259,14 @@ class ApiClient {
   async delete<T>(endpoint: string, authenticated: boolean = false): Promise<T> {
     const normalizedEndpoint = this.normalizeEndpoint(endpoint);
     const headers = await this.getHeaders(authenticated);
-    const response = await fetch(`${this.baseUrl}${normalizedEndpoint}`, {
+    const response = await this.fetchWithTimeout(`${this.baseUrl}${normalizedEndpoint}`, {
       method: 'DELETE',
       headers,
     });
     return this.handleResponse<T>(response);
   }
 
-  // Form data upload (for thumbnails, avatars)
+  // Form data upload (for thumbnails, avatars) — uses a longer timeout for large payloads
   async upload<T>(endpoint: string, formData: FormData, authenticated: boolean = true): Promise<T> {
     const token = getAuthToken();
     const headers: HeadersInit = {};
@@ -254,12 +274,19 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-    return this.handleResponse<T>(response);
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), 30000); // 30s for uploads
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers,
+        body: formData,
+        signal: controller.signal,
+      });
+      return this.handleResponse<T>(response);
+    } finally {
+      clearTimeout(timerId);
+    }
   }
 }
 
