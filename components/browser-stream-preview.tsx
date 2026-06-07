@@ -24,6 +24,12 @@ import {
   Camera,
   ScreenShare,
 } from 'lucide-react';
+import {
+  ScreenRecorder,
+  CameraRecorder,
+  createCameraRecorder,
+  AudioRecorder,
+} from '@ainative/ai-kit-video';
 
 interface MediaDeviceInfo {
   deviceId: string;
@@ -54,6 +60,11 @@ const QUALITY_PRESETS: Record<StreamQuality, QualitySettings> = {
 export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: BrowserStreamPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // AI Kit recorder refs for cleanup
+  const screenRecorderRef = useRef<ScreenRecorder | null>(null);
+  const cameraRecorderRef = useRef<CameraRecorder | null>(null);
+  const audioRecorderRef = useRef<AudioRecorder | null>(null);
 
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
@@ -104,6 +115,21 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
   }, []);
 
   const stopCurrentStream = useCallback(() => {
+    // Stop and dispose AI Kit recorders
+    if (screenRecorderRef.current) {
+      screenRecorderRef.current.dispose();
+      screenRecorderRef.current = null;
+    }
+    if (cameraRecorderRef.current) {
+      cameraRecorderRef.current.stop();
+      cameraRecorderRef.current = null;
+    }
+    if (audioRecorderRef.current) {
+      audioRecorderRef.current.stopRecording().catch(() => {});
+      audioRecorderRef.current = null;
+    }
+
+    // Stop any remaining tracks on the combined stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -113,7 +139,7 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
     }
   }, []);
 
-  // Request permissions and start preview
+  // Request permissions and start preview using AI Kit recorders
   const startPreview = useCallback(async (source: VideoSource) => {
     setIsLoading(true);
     setError(null);
@@ -123,18 +149,18 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
       let videoStream: MediaStream | null = null;
       let audioStream: MediaStream | null = null;
 
-      // Get video source
+      // Get video source via AI Kit recorders
       if (isVideoEnabled) {
         if (source === 'screen') {
           try {
-            videoStream = await navigator.mediaDevices.getDisplayMedia({
-              video: {
-                width: { ideal: QUALITY_PRESETS[selectedQuality].width },
-                height: { ideal: QUALITY_PRESETS[selectedQuality].height },
-                frameRate: { ideal: QUALITY_PRESETS[selectedQuality].frameRate },
-              },
+            const recorder = new ScreenRecorder({
+              quality: selectedQuality === '720p' ? 'medium' : selectedQuality === '1080p' ? 'high' : 'ultra',
+              cursor: 'always',
               audio: false,
             });
+            await recorder.startRecording();
+            videoStream = recorder.getStream();
+            screenRecorderRef.current = recorder;
           } catch (err) {
             if (err instanceof Error && err.name === 'NotAllowedError') {
               setError('Screen share cancelled. Select a screen, window, or tab to share.');
@@ -145,15 +171,12 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
           }
         } else {
           try {
-            videoStream = await navigator.mediaDevices.getUserMedia({
-              video: {
-                deviceId: selectedVideoDevice ? { exact: selectedVideoDevice } : undefined,
-                width: { ideal: QUALITY_PRESETS[selectedQuality].width },
-                height: { ideal: QUALITY_PRESETS[selectedQuality].height },
-                frameRate: { ideal: QUALITY_PRESETS[selectedQuality].frameRate },
-              },
+            const camera = createCameraRecorder({
+              resolution: selectedQuality === '1440p' ? '4K' : selectedQuality === '1080p' ? '1080p' : '720p',
               audio: false,
             });
+            videoStream = await camera.getStream();
+            cameraRecorderRef.current = camera;
           } catch (err) {
             if (err instanceof Error && err.name === 'NotAllowedError') {
               setError('Camera access denied. You can still stream with screen share.');
@@ -170,24 +193,22 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
         }
       }
 
-      // Get audio separately — don't let audio failure block video
+      // Get audio via AI Kit AudioRecorder — don't let audio failure block video
       if (isAudioEnabled) {
         try {
-          audioStream = await navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: {
-              deviceId: selectedAudioDevice ? { exact: selectedAudioDevice } : undefined,
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            },
+          const audioRecorder = new AudioRecorder();
+          audioStream = await audioRecorder.startRecording({
+            microphone: true,
+            noiseCancellation: true,
+            echoCancellation: true,
           });
+          audioRecorderRef.current = audioRecorder;
         } catch (err) {
           console.warn('Microphone access failed, streaming without audio:', err);
         }
       }
 
-      // Combine video + audio tracks into one stream
+      // Combine video + audio tracks into one stream for the WHIP client
       const combinedStream = new MediaStream();
       if (videoStream) {
         videoStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));

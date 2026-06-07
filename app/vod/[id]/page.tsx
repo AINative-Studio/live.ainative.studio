@@ -10,17 +10,18 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VODPlayer } from '@/components/vod-player';
+import { VODTranscriptPanel } from '@/components/vod-transcript-panel';
+import type { TranscriptSegment } from '@/components/vod-transcript-panel';
 import { vodService } from '@/services/vod';
 import { NotFoundError } from '@/lib/api-client';
 import type { VODRecording, VODChapter } from '@/types';
 import {
-  Play,
   Eye,
   Clock,
   Share2,
   Heart,
   UserPlus,
-  PlayCircle,
 } from 'lucide-react';
 
 function formatDuration(seconds: number): string {
@@ -44,6 +45,16 @@ function formatViewCount(count: number): string {
   return count.toString();
 }
 
+// Convert VODChapter array into TranscriptSegment array for the transcript panel.
+// When a real transcript endpoint is available this mapping can be replaced.
+function chaptersToTranscriptSegments(chapters: VODChapter[]): TranscriptSegment[] {
+  return chapters.map((ch) => ({
+    text: ch.description ? `${ch.title} — ${ch.description}` : ch.title,
+    start: ch.startTimeSeconds,
+    end: ch.endTimeSeconds,
+  }));
+}
+
 export default function VODViewerPage() {
   const params = useParams();
   const vodId = params.id as string;
@@ -51,10 +62,19 @@ export default function VODViewerPage() {
 
   const [vod, setVod] = useState<VODRecording | null>(null);
   const [chapters, setChapters] = useState<VODChapter[]>([]);
+  const [transcriptSegments, setTranscriptSegments] = useState<TranscriptSegment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState<VODChapter | null>(null);
+
+  // Playback time shared between VODPlayer and VODTranscriptPanel
+  const [currentTime, setCurrentTime] = useState(0);
+  // Seek target sent down to VODPlayer when the user clicks a transcript segment
+  const [seekTarget, setSeekTarget] = useState<number | undefined>(undefined);
+
+  const [isGeneratingChapters, setIsGeneratingChapters] = useState(false);
+  const [isGeneratingTranscript, setIsGeneratingTranscript] = useState(false);
 
   useEffect(() => {
     async function fetchVODData() {
@@ -72,6 +92,7 @@ export default function VODViewerPage() {
 
         setVod(vodData);
         setChapters(chaptersData);
+        setTranscriptSegments(chaptersToTranscriptSegments(chaptersData));
       } catch (err: any) {
         console.error('Failed to fetch VOD data:', err);
         if (err instanceof NotFoundError) {
@@ -93,6 +114,41 @@ export default function VODViewerPage() {
       router.replace('/not-found');
     }
   }, [isLoading, notFound, router]);
+
+  const handleGenerateChapters = async () => {
+    if (!vodId) return;
+    setIsGeneratingChapters(true);
+    try {
+      const generated = await vodService.generateChapters(vodId);
+      setChapters(generated);
+      setTranscriptSegments(chaptersToTranscriptSegments(generated));
+    } catch (err) {
+      console.error('Failed to generate chapters:', err);
+    } finally {
+      setIsGeneratingChapters(false);
+    }
+  };
+
+  // Transcript generate is the same endpoint — chapters serve as segments for now
+  const handleGenerateTranscript = async () => {
+    if (!vodId) return;
+    setIsGeneratingTranscript(true);
+    try {
+      const generated = await vodService.generateChapters(vodId);
+      setChapters(generated);
+      setTranscriptSegments(chaptersToTranscriptSegments(generated));
+    } catch (err) {
+      console.error('Failed to generate transcript:', err);
+    } finally {
+      setIsGeneratingTranscript(false);
+    }
+  };
+
+  const handleTranscriptSeek = (time: number) => {
+    setSeekTarget(time);
+    // Reset after a tick so subsequent clicks to the same timestamp still fire
+    setTimeout(() => setSeekTarget(undefined), 100);
+  };
 
   if (isLoading) {
     return (
@@ -151,36 +207,19 @@ export default function VODViewerPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6">
             {/* Main Content */}
             <div className="space-y-4">
-              {/* Video Player Placeholder */}
-              <Card className="overflow-hidden border-border bg-black">
-                <div className="relative aspect-video bg-gradient-to-br from-brand-primary/20 to-secondary/20">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <Play className="w-20 h-20 text-white/80 mx-auto mb-4" />
-                      <p className="text-brand-primary font-mono text-xl mb-2">
-                        VOD PLAYER
-                      </p>
-                      <p className="text-white/60 text-sm">
-                        Video playback would be integrated here
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* VOD Badge */}
-                  <div className="absolute top-4 left-4">
-                    <div className="bg-brand-primary text-white px-3 py-1 rounded text-xs font-medium">
-                      VOD
-                    </div>
-                  </div>
-
-                  {/* Duration */}
-                  <div className="absolute top-4 right-4">
-                    <div className="bg-black/80 text-white px-3 py-1 rounded text-xs font-mono">
-                      {formatDuration(vod.duration)}
-                    </div>
-                  </div>
-                </div>
-              </Card>
+              {/* Video Player with chapters */}
+              <VODPlayer
+                title={vod.title}
+                duration={vod.duration}
+                videoUrl={vod.videoUrl ?? undefined}
+                thumbnailUrl={vod.thumbnailUrl ?? undefined}
+                chapters={chapters}
+                vodId={vodId}
+                currentTime={seekTarget}
+                onTimeUpdate={setCurrentTime}
+                onGenerateChapters={handleGenerateChapters}
+                isGeneratingChapters={isGeneratingChapters}
+              />
 
               {/* VOD Info Card */}
               <Card className="border-border">
@@ -260,69 +299,18 @@ export default function VODViewerPage() {
               </Card>
             </div>
 
-            {/* Sidebar - Chapters */}
-            <div className="lg:sticky lg:top-20 h-fit">
-              <Card className="border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold">
-                    Chapters ({chapters.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {chapters.length > 0 ? (
-                    <div className="max-h-[600px] overflow-y-auto">
-                      {chapters.map((chapter, index) => (
-                        <button
-                          key={chapter.id}
-                          onClick={() => setSelectedChapter(chapter)}
-                          className={`w-full text-left p-4 border-b border-border last:border-0 hover:bg-muted/50 transition-colors ${
-                            selectedChapter?.id === chapter.id
-                              ? 'bg-muted/50'
-                              : ''
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="mt-1 shrink-0">
-                              <PlayCircle className="w-5 h-5 text-brand-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm mb-1 truncate">
-                                {index + 1}. {chapter.title}
-                              </h4>
-                              {chapter.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                                  {chapter.description}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span className="font-mono">
-                                  {formatDuration(chapter.startTimeSeconds)}
-                                </span>
-                                {chapter.isAiGenerated && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs h-5 px-1.5"
-                                  >
-                                    AI
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-8 text-center text-muted-foreground">
-                      <PlayCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p className="text-sm">No chapters available</p>
-                      <p className="text-xs mt-1">
-                        Chapters help you navigate through the recording
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+            {/* Sidebar - Transcript Panel */}
+            <div className="lg:sticky lg:top-20 h-fit space-y-4">
+              <VODTranscriptPanel
+                vodId={vodId}
+                segments={transcriptSegments}
+                currentTime={currentTime}
+                onSeek={handleTranscriptSeek}
+                isGenerating={isGeneratingTranscript}
+                onGenerateTranscript={
+                  transcriptSegments.length === 0 ? handleGenerateTranscript : undefined
+                }
+              />
             </div>
           </div>
         </div>
