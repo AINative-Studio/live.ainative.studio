@@ -43,54 +43,6 @@ function getNotificationMessage(notification: FollowNotification): string {
   return 'New notification';
 }
 
-const mockNotifications: FollowNotification[] = [
-  {
-    id: '1',
-    type: 'new_follower',
-    followerId: 'user1',
-    followerUsername: 'devmaster',
-    followerAvatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100',
-    isRead: false,
-    createdAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-  },
-  {
-    id: '2',
-    type: 'stream_live',
-    followerId: 'user2',
-    followerUsername: 'codewizard',
-    followerAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
-    isRead: false,
-    createdAt: new Date(Date.now() - 14400000).toISOString(), // 4 hours ago
-  },
-  {
-    id: '3',
-    type: 'new_follower',
-    followerId: 'user3',
-    followerUsername: 'pythonista',
-    followerAvatar: null,
-    isRead: true,
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-  },
-  {
-    id: '4',
-    type: 'new_follower',
-    followerId: 'user4',
-    followerUsername: 'rustacean',
-    followerAvatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=100',
-    isRead: true,
-    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-  },
-  {
-    id: '5',
-    type: 'stream_live',
-    followerId: 'user5',
-    followerUsername: 'aibuilder',
-    followerAvatar: null,
-    isRead: true,
-    createdAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
-  },
-];
-
 export function NotificationDropdown() {
   const { isAuthenticated } = useAuth();
   const [notifications, setNotifications] = useState<FollowNotification[]>([]);

@@ -102,130 +102,26 @@ export default function AnalyticsPage() {
             averageViewers: channelOverview.avgViewersPerStream,
           });
         } else {
-          // Mock data fallback
-          setOverviewStats({
-            totalStreams: 42,
-            hoursStreamed: 126.5,
-            averageViewers: 87,
-          });
+          setOverviewStats({ totalStreams: 0, hoursStreamed: 0, averageViewers: 0 });
         }
 
         // Set follower growth data
         if (followerData) {
           setFollowerGrowth(followerData);
         } else {
-          // Mock data fallback
-          setFollowerGrowth({
-            timeline: Array.from({ length: dateRange }, (_, i) => ({
-              date: new Date(Date.now() - (dateRange - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              newFollowers: Math.floor(Math.random() * 20) + 5,
-              totalFollowers: 450 + i * 10,
-            })),
-            periodDays: dateRange,
-            totalNewFollowers: 127,
-            growthRatePercent: 12.5,
-          });
+          setFollowerGrowth({ timeline: [], periodDays: dateRange, totalNewFollowers: 0, growthRatePercent: 0 });
         }
 
         // Set viewer stats
         if (viewerData) {
           setViewerStats(viewerData);
         } else {
-          // Mock data fallback
-          setViewerStats({
-            timeline: Array.from({ length: dateRange }, (_, i) => ({
-              date: new Date(Date.now() - (dateRange - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              totalViews: Math.floor(Math.random() * 500) + 200,
-              uniqueViewers: Math.floor(Math.random() * 100) + 50,
-              avgPeakViewers: Math.floor(Math.random() * 150) + 70,
-            })),
-            periodDays: dateRange,
-            totalViews: 12543,
-            totalUniqueViewers: 3421,
-          });
+          setViewerStats({ timeline: [], periodDays: dateRange, totalViews: 0, totalUniqueViewers: 0 });
         }
 
         // Set top streams
-        if (topStreamsData && topStreamsData.length > 0) {
-          setTopStreams(topStreamsData);
-        } else {
-          // Mock data fallback
-          setTopStreams([
-            {
-              id: '1',
-              title: 'Building AI-powered features with Claude API',
-              description: null,
-              peakViewers: 234,
-              durationSeconds: 7200,
-              totalViews: 1543,
-              totalMessages: 892,
-              category: { name: 'Software Development', slug: 'software-development' },
-              startedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-              endedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 7200 * 1000).toISOString(),
-            },
-            {
-              id: '2',
-              title: 'Live coding session: Next.js 13 app router deep dive',
-              description: null,
-              peakViewers: 198,
-              durationSeconds: 5400,
-              totalViews: 1287,
-              totalMessages: 654,
-              category: { name: 'Web Development', slug: 'web-development' },
-              startedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-              endedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000 + 5400 * 1000).toISOString(),
-            },
-            {
-              id: '3',
-              title: 'System design interview prep: Distributed systems',
-              description: null,
-              peakViewers: 176,
-              durationSeconds: 6300,
-              totalViews: 1098,
-              totalMessages: 523,
-              category: { name: 'Computer Science', slug: 'computer-science' },
-              startedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
-              endedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000 + 6300 * 1000).toISOString(),
-            },
-          ]);
-        }
-
-        // Set category breakdown
-        if (categoryData && categoryData.length > 0) {
-          setCategoryBreakdown(categoryData);
-        } else {
-          // Mock data fallback
-          setCategoryBreakdown([
-            {
-              categoryId: '1',
-              categoryName: 'Software Development',
-              streamCount: 18,
-              avgPeakViewers: 145,
-              totalHours: 54.5,
-            },
-            {
-              categoryId: '2',
-              categoryName: 'Web Development',
-              streamCount: 12,
-              avgPeakViewers: 123,
-              totalHours: 38.2,
-            },
-            {
-              categoryId: '3',
-              categoryName: 'Computer Science',
-              streamCount: 8,
-              avgPeakViewers: 98,
-              totalHours: 24.8,
-            },
-            {
-              categoryId: '4',
-              categoryName: 'AI & Machine Learning',
-              streamCount: 4,
-              avgPeakViewers: 167,
-              totalHours: 9.0,
-            },
-          ]);
-        }
+        setTopStreams(topStreamsData && topStreamsData.length > 0 ? topStreamsData : []);
+        setCategoryBreakdown(categoryData && categoryData.length > 0 ? categoryData : []);
 
         // Set geographic data
         if (audienceData) {
