@@ -3,7 +3,7 @@ import { Github, Twitter, Youtube } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-card mt-auto">
+    <footer role="contentinfo" className="border-t border-border bg-card mt-auto">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div>
@@ -83,25 +83,28 @@ export function Footer() {
                 href="https://github.com/AINative-Studio"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="GitHub"
                 className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
               >
-                <Github className="w-5 h-5" />
+                <Github className="w-5 h-5" aria-hidden="true" />
               </a>
               <a
                 href="https://x.com/ainaboratory"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="X (Twitter)"
                 className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-secondary hover:text-primary-foreground transition-colors"
               >
-                <Twitter className="w-5 h-5" />
+                <Twitter className="w-5 h-5" aria-hidden="true" />
               </a>
               <a
                 href="https://youtube.com/@AINativeStudio"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="YouTube"
                 className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"
               >
-                <Youtube className="w-5 h-5" />
+                <Youtube className="w-5 h-5" aria-hidden="true" />
               </a>
             </div>
           </div>

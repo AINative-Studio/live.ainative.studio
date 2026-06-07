@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Video, Github, Loader2, AlertCircle } from 'lucide-react';
 import { TerminalHeader } from '@/components/terminal-header';
@@ -67,7 +67,7 @@ export default function LoginPage() {
             <div className="text-center">
               <TerminalHeader text="> login" typingSpeed={80} />
             </div>
-            <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
+            <h1 className="text-2xl font-bold text-center tracking-tight">Welcome Back</h1>
             <CardDescription className="text-center">
               Sign in to your AINative account
             </CardDescription>
@@ -110,14 +110,21 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20">
-                <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
-                <p className="text-sm text-destructive">{error}</p>
-              </div>
-            )}
+            <div
+              id="login-error"
+              role="alert"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {error && (
+                <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                  <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" aria-hidden="true" />
+                  <p className="text-sm text-destructive">{error}</p>
+                </div>
+              )}
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -129,6 +136,8 @@ export default function LoginPage() {
                   disabled={isLoading}
                   autoComplete="email"
                   required
+                  aria-required="true"
+                  aria-describedby={error ? 'login-error' : undefined}
                 />
               </div>
 
@@ -147,6 +156,8 @@ export default function LoginPage() {
                   disabled={isLoading}
                   autoComplete="current-password"
                   required
+                  aria-required="true"
+                  aria-describedby={error ? 'login-error' : undefined}
                 />
               </div>
 
