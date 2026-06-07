@@ -80,7 +80,7 @@ export function Footer() {
             <h3 className="font-mono font-semibold mb-4">Connect</h3>
             <div className="flex gap-3">
               <a
-                href="https://github.com"
+                href="https://github.com/AINative-Studio"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
@@ -88,7 +88,7 @@ export function Footer() {
                 <Github className="w-5 h-5" />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://x.com/ainaboratory"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-secondary hover:text-primary-foreground transition-colors"
@@ -96,7 +96,7 @@ export function Footer() {
                 <Twitter className="w-5 h-5" />
               </a>
               <a
-                href="https://youtube.com"
+                href="https://youtube.com/@AINativeStudio"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-muted rounded flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"
