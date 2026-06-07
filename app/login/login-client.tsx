@@ -38,8 +38,10 @@ export default function LoginPage() {
         username: email,
         password: password,
       });
-      // Redirect to homepage on success
-      router.push('/');
+      // Redirect to the original page or dashboard after login
+      const params = new URLSearchParams(window.location.search);
+      const redirectTo = params.get('redirect') || '/dashboard';
+      router.push(redirectTo);
     } catch (err) {
       // Display error messages from API
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');

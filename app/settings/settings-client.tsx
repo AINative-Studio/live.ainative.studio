@@ -33,7 +33,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function SettingsPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user: authUser, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<UserType | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -75,33 +75,24 @@ export default function SettingsPage() {
         });
       } catch (error) {
         console.error('Failed to fetch profile:', error);
-        // Fall back to mock data
-        const mockProfile: UserType = {
-          id: '1',
-          email: 'user@example.com',
-          username: 'demo_user',
-          displayName: 'Demo User',
-          avatar: null,
-          bio: 'Developer and streamer',
-          role: 'USER',
-          followerCount: 0,
-          followingCount: 0,
-          isLive: false,
-          socials: {
-            twitter: '',
-            github: '',
-            youtube: '',
-            website: '',
-          },
-          createdAt: new Date().toISOString(),
-        };
-        setProfile(mockProfile);
-        reset({
-          displayName: mockProfile.displayName || '',
-          bio: mockProfile.bio || '',
-          socials: mockProfile.socials,
-        });
-        toast.error('Failed to load profile. Using mock data.');
+        // Fall back to auth context user data
+        if (authUser) {
+          const fallback: UserType = {
+            id: authUser.id,
+            email: authUser.email,
+            username: authUser.username,
+            displayName: authUser.displayName,
+            avatar: authUser.avatar,
+            bio: null,
+            role: authUser.role,
+            followerCount: 0,
+            followingCount: 0,
+            isLive: false,
+            createdAt: new Date().toISOString(),
+          };
+          setProfile(fallback);
+          reset({ displayName: fallback.displayName || '', bio: '', socials: {} });
+        }
       } finally {
         setIsLoadingProfile(false);
       }
