@@ -55,9 +55,9 @@ export function Navbar() {
               </span>
             </Link>
 
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="font-mono hidden md:flex">
+                <Button type="button" variant="ghost" className="font-mono hidden md:flex">
                   <Menu className="w-4 h-4 mr-2" />
                   Categories
                 </Button>
@@ -127,9 +127,9 @@ export function Navbar() {
 
                 <NotificationDropdown />
 
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
+                    <Button type="button" variant="ghost" size="icon" className="rounded-full">
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={user?.avatar || undefined} />
                         <AvatarFallback>

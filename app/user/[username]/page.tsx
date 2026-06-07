@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,6 @@ export default function UserPage() {
   const params = useParams();
   const username = params.username as string;
   const { isAuthenticated } = useAuth();
-  const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
   const [userStreams, setUserStreams] = useState<Stream[]>([]);
@@ -99,13 +98,6 @@ export default function UserPage() {
     fetchUserData();
   }, [username, isAuthenticated]);
 
-  // Redirect to 404 when user is not found in API or mock data
-  useEffect(() => {
-    if (!isLoading && notFound) {
-      router.replace('/not-found');
-    }
-  }, [isLoading, notFound, router]);
-
   const handleFollowToggle = async () => {
     if (!isAuthenticated || !user) {
       // Redirect to login or show a message
@@ -148,9 +140,72 @@ export default function UserPage() {
     );
   }
 
-  // User not found — redirect is in flight; render nothing to avoid flash
+  // User not found — show a basic profile page using the username from URL
   if (notFound || !user) {
-    return null;
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1">
+          <div className="border-b border-border bg-gradient-to-b from-card/50 to-background">
+            <div className="container mx-auto px-4 py-12">
+              <div className="flex flex-col md:flex-row items-start gap-8">
+                <Avatar className="w-32 h-32 border-4 border-border">
+                  <AvatarFallback className="text-4xl">{username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                    <div>
+                      <h1 className="text-4xl font-bold mb-2">{username}</h1>
+                      <p className="text-muted-foreground font-mono">@{username}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button className="font-mono" asChild>
+                        <Link href="/login">
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Follow
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xl">0</span>
+                      <span className="text-muted-foreground">followers</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="container mx-auto px-4 py-8">
+            <Tabs defaultValue="past" className="w-full">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsTrigger value="about">About</TabsTrigger>
+                <TabsTrigger value="past">Past Streams</TabsTrigger>
+              </TabsList>
+              <TabsContent value="about" className="mt-6">
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-bold mb-4">About {username}</h3>
+                    <p className="text-muted-foreground leading-relaxed">No bio yet.</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="past" className="mt-6">
+                <Card className="border-border">
+                  <CardContent className="p-12 text-center">
+                    <Video className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No streams yet</h3>
+                    <p className="text-muted-foreground">Check back later for recorded streams</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   // Get live stream and past streams
