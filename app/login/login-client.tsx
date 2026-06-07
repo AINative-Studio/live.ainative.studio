@@ -78,11 +78,21 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3">
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => {
+                const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || 'Ov23li0zGXukHTHcQNrP';
+                const redirectUri = `${window.location.origin}/login/callback`;
+                const state = `github:${Date.now()}`;
+                window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=read:user+user:email&state=${state}`;
+              }}>
                 <Github className="w-4 h-4 mr-2" />
                 Continue with GitHub
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => {
+                const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '492547064086-7nrh4a2ub5qk7gkv8s5hqfp82nqn9bsq.apps.googleusercontent.com';
+                const redirectUri = `${window.location.origin}/login/callback`;
+                const state = `google:${Date.now()}`;
+                window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid+email+profile&state=${state}&access_type=offline&prompt=consent`;
+              }}>
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
