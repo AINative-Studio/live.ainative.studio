@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
@@ -32,7 +32,6 @@ export default function StreamPage() {
   const params = useParams();
   const username = params.username as string;
   const { user: currentUser, isAuthenticated } = useAuth();
-  const router = useRouter();
 
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [stream, setStream] = useState<Stream | null>(null);
@@ -88,13 +87,6 @@ export default function StreamPage() {
     fetchData();
   }, [username]);
 
-  // Redirect to 404 when user/stream not found
-  useEffect(() => {
-    if (!isLoading && notFound) {
-      router.replace('/not-found');
-    }
-  }, [isLoading, notFound, router]);
-
   // Loading state
   if (isLoading) {
     return (
@@ -111,9 +103,31 @@ export default function StreamPage() {
     );
   }
 
-  // User not found — redirect is in flight; render nothing to avoid flash
+  // User not found or no profile — show offline state using username from URL
   if (notFound || !userProfile) {
-    return null;
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <Avatar className="w-24 h-24 mx-auto mb-4 border-2 border-border">
+              <AvatarFallback>{username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+            </Avatar>
+            <h1 className="text-2xl font-bold mb-2">@{username} is not currently streaming</h1>
+            <p className="text-muted-foreground mb-6">This channel is offline. Check back later.</p>
+            <div className="flex gap-3 justify-center">
+              <Link href={`/user/${username}`}>
+                <Button variant="outline">View Profile</Button>
+              </Link>
+              <Link href="/">
+                <Button className="bg-brand-primary hover:bg-primary-dark">Browse Streams</Button>
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   // User is not live
@@ -125,10 +139,10 @@ export default function StreamPage() {
           <div className="text-center max-w-md">
             <Avatar className="w-24 h-24 mx-auto mb-4 border-2 border-border">
               <AvatarImage src={userProfile.avatar || ''} alt={userProfile.displayName || ''} />
-              <AvatarFallback>{userProfile.displayName?.[0] || 'U'}</AvatarFallback>
+              <AvatarFallback>{userProfile.displayName?.[0] || username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
-            <h1 className="text-2xl font-bold mb-2">{userProfile.displayName} is Offline</h1>
-            <p className="text-muted-foreground mb-6">This channel is not currently streaming.</p>
+            <h1 className="text-2xl font-bold mb-2">@{userProfile.displayName || username} is not currently streaming</h1>
+            <p className="text-muted-foreground mb-6">This channel is offline. Check back later.</p>
             <div className="flex gap-3 justify-center">
               <Link href={`/user/${username}`}>
                 <Button variant="outline">View Profile</Button>
