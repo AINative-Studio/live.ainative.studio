@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import { getCurrentUser } from '@/lib/auth';
 import type {
   Stream,
   StreamCreate,
@@ -72,9 +73,12 @@ export const streamsService = {
   /** Get user's active stream (requires auth) - returns first non-ended stream */
   async getActiveStream(): Promise<Stream | null> {
     try {
-      // Fetch only the current user's streams using mine=true filter
-      const response = await apiClient.get<{ streams: Stream[]; total: number }>('/streams/?mine=true', true);
-      const activeStream = response.streams?.find(s => s.status !== 'ended');
+      const currentUser = getCurrentUser();
+      const response = await apiClient.get<{ streams: Stream[]; total: number }>('/streams/', true);
+      // Filter to only current user's non-ended streams
+      const activeStream = response.streams?.find(
+        s => s.status !== 'ended' && (!currentUser || s.userId === currentUser.id)
+      );
       return activeStream || null;
     } catch (error) {
       return null;
