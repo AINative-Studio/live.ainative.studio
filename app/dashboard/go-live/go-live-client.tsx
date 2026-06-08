@@ -156,7 +156,8 @@ function GoLiveContent() {
     if (!webrtcUrl) {
       try {
         setError(null);
-        await streamsService.end(stream.id);
+        // Try to end the stale stream (may fail with 403 if not owned by us — that's OK)
+        await streamsService.end(stream.id).catch(() => {});
         const freshStream = await streamsService.create({ title: stream.title || 'Live Stream' });
         setStream(freshStream);
         webrtcUrl = freshStream.ingest?.webrtcUrl;

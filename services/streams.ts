@@ -72,16 +72,11 @@ export const streamsService = {
   /** Get user's active stream (requires auth) - returns first non-ended stream */
   async getActiveStream(): Promise<Stream | null> {
     try {
-      // Fetch user's streams - backend only allows one non-ended stream per user
-      const response = await apiClient.get<{ streams: Stream[]; total: number }>('/streams/', true);
-      // Return first stream that isn't ended (backend prevents multiple non-ended streams)
+      // Fetch only the current user's streams using mine=true filter
+      const response = await apiClient.get<{ streams: Stream[]; total: number }>('/streams/?mine=true', true);
       const activeStream = response.streams?.find(s => s.status !== 'ended');
-      if (!activeStream) return null;
-      // Fetch full stream details (including ingest URLs) — the list endpoint omits them
-      const fullStream = await apiClient.get<Stream>(`/streams/id/${activeStream.id}`, true);
-      return fullStream;
+      return activeStream || null;
     } catch (error) {
-      // Return null if error fetching streams
       return null;
     }
   },
