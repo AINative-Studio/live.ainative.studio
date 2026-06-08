@@ -16,7 +16,7 @@ export function StreamCard({ stream, priority = false }: StreamCardProps) {
   const streamer = stream.streamer || stream.user;
   const username = streamer?.username || stream.username || 'unknown';
   const displayName = streamer?.displayName || stream.displayName || username;
-  const avatar = streamer?.avatarUrl || stream.user?.avatar || stream.avatar;
+  const avatar = (streamer as any)?.avatarUrl || streamer?.avatar || stream.user?.avatar || stream.avatar;
   const thumbnail = stream.thumbnailUrl || stream.thumbnail || '/placeholder-stream.jpg';
   const isLive = stream.status === 'live' || stream.live === true;
   const viewerCount = stream.viewerCount || stream.viewers || 0;
