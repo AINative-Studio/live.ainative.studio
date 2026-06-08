@@ -76,7 +76,10 @@ export const streamsService = {
       const response = await apiClient.get<{ streams: Stream[]; total: number }>('/streams/', true);
       // Return first stream that isn't ended (backend prevents multiple non-ended streams)
       const activeStream = response.streams?.find(s => s.status !== 'ended');
-      return activeStream || null;
+      if (!activeStream) return null;
+      // Fetch full stream details (including ingest URLs) — the list endpoint omits them
+      const fullStream = await apiClient.get<Stream>(`/streams/id/${activeStream.id}`, true);
+      return fullStream;
     } catch (error) {
       // Return null if error fetching streams
       return null;
