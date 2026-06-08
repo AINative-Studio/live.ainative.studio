@@ -79,7 +79,7 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-3">
               <Button variant="outline" className="w-full" onClick={() => {
-                const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || 'Ov23li0zGXukHTHcQNrP';
+                const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
                 const redirectUri = `${window.location.origin}/login/callback`;
                 const state = `github:${Date.now()}`;
                 window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=read:user+user:email&state=${state}`;
@@ -88,7 +88,7 @@ export default function LoginPage() {
                 Continue with GitHub
               </Button>
               <Button variant="outline" className="w-full" onClick={() => {
-                const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '492547064086-7nrh4a2ub5qk7gkv8s5hqfp82nqn9bsq.apps.googleusercontent.com';
+                const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
                 const redirectUri = `${window.location.origin}/login/callback`;
                 const state = `google:${Date.now()}`;
                 window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid+email+profile&state=${state}&access_type=offline&prompt=consent`;
