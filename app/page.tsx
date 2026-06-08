@@ -28,14 +28,21 @@ export default function Home() {
       try {
         setIsLoadingStreams(true);
         const response = await streamsService.getTrending(12);
-        setTrendingStreams(response.streams);
+        let streams = response.streams || [];
+
+        // If no trending streams, fetch all currently live streams as fallback
+        if (streams.length === 0) {
+          try {
+            const liveResponse = await streamsService.getLive(12);
+            streams = liveResponse.streams || [];
+          } catch { /* ignore */ }
+        }
+
+        setTrendingStreams(streams);
         setError(null);
       } catch (err) {
-        console.warn('Failed to fetch trending streams from API, falling back to mock data:', err);
-        // Fallback to mock data
-        const mockStreams = streamsData as any[];
-        const liveStreams = mockStreams.filter((s: any) => s.live);
-        setTrendingStreams(liveStreams as any);
+        // Silent fallback
+        setTrendingStreams([]);
       } finally {
         setIsLoadingStreams(false);
       }

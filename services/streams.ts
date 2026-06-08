@@ -24,6 +24,11 @@ import type {
 export const streamsService = {
   // ==================== Discovery ====================
 
+  /** Get currently live streams */
+  async getLive(limit: number = 12): Promise<{ streams: Stream[] }> {
+    return apiClient.get(`/streams/?status_filter=live&limit=${limit}`);
+  },
+
   /** Get trending streams */
   async getTrending(limit: number = 20): Promise<TrendingStreamsResponse> {
     return apiClient.get(`/streams/trending?limit=${limit}`);
