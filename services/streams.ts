@@ -44,11 +44,6 @@ export const streamsService = {
     return apiClient.get(`/streams/recommended?limit=${limit}`, true);
   },
 
-  /** Get all live streams */
-  async getLive(): Promise<Stream[]> {
-    return apiClient.get('/streams/');
-  },
-
   // ==================== Stream CRUD ====================
 
   /** Get stream by ID */
