@@ -150,9 +150,24 @@ function GoLiveContent() {
   const handleBrowserStreamStart = async (mediaStream: MediaStream) => {
     if (!stream) return;
 
-    const webrtcUrl = stream.ingest?.webrtcUrl;
+    let webrtcUrl = stream.ingest?.webrtcUrl;
+
+    // If existing stream has no WHIP URL, end it and create a fresh one
     if (!webrtcUrl) {
-      setError('Browser streaming is not available for this stream. The WHIP endpoint was not provisioned. Try using RTMP software instead.');
+      try {
+        setError(null);
+        await streamsService.end(stream.id);
+        const freshStream = await streamsService.create({ title: stream.title || 'Live Stream' });
+        setStream(freshStream);
+        webrtcUrl = freshStream.ingest?.webrtcUrl;
+      } catch (err) {
+        setError('Failed to provision browser streaming. Please try creating a new stream.');
+        return;
+      }
+    }
+
+    if (!webrtcUrl) {
+      setError('Browser streaming could not be provisioned. Try using RTMP software instead.');
       return;
     }
 
