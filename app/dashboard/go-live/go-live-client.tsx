@@ -156,14 +156,28 @@ function GoLiveContent() {
     if (!webrtcUrl) {
       try {
         setError(null);
-        // Try to end the stale stream (may fail with 403 if not owned by us — that's OK)
+        // End the current stream first
         await streamsService.end(stream.id).catch(() => {});
+        // Small delay for backend to process
+        await new Promise(r => setTimeout(r, 500));
         const freshStream = await streamsService.create({ title: stream.title || 'Live Stream' });
         setStream(freshStream);
         webrtcUrl = freshStream.ingest?.webrtcUrl;
       } catch (err) {
-        setError('Failed to provision browser streaming. Please try creating a new stream.');
-        return;
+        // If create fails (still has active stream), try ending harder and retry
+        try {
+          const active = await streamsService.getActiveStream();
+          if (active) {
+            await streamsService.end(active.id).catch(() => {});
+            await new Promise(r => setTimeout(r, 500));
+          }
+          const retryStream = await streamsService.create({ title: stream.title || 'Live Stream' });
+          setStream(retryStream);
+          webrtcUrl = retryStream.ingest?.webrtcUrl;
+        } catch {
+          setError('Could not start browser streaming. Please end your current stream first and try again.');
+          return;
+        }
       }
     }
 
