@@ -84,13 +84,13 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoInputs = devices
-        .filter(device => device.kind === 'videoinput')
+        .filter(device => device.kind === 'videoinput' && device.deviceId)
         .map(device => ({
           deviceId: device.deviceId,
           label: device.label || `Camera ${device.deviceId.slice(0, 5)}`,
         }));
       const audioInputs = devices
-        .filter(device => device.kind === 'audioinput')
+        .filter(device => device.kind === 'audioinput' && device.deviceId)
         .map(device => ({
           deviceId: device.deviceId,
           label: device.label || `Microphone ${device.deviceId.slice(0, 5)}`,
