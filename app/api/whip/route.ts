@@ -24,11 +24,18 @@ export async function POST(request: NextRequest) {
   try {
     const sdpOffer = await request.text();
 
+    // Cloudflare WHIP requires the Stream API token for authentication
+    const cfToken = process.env.CLOUDFLARE_STREAM_API_TOKEN;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/sdp',
+    };
+    if (cfToken) {
+      headers['Authorization'] = `Bearer ${cfToken}`;
+    }
+
     const cfResponse = await fetch(whipUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/sdp',
-      },
+      headers,
       body: sdpOffer,
     });
 
