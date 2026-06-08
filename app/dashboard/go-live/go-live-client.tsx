@@ -192,7 +192,10 @@ function GoLiveContent() {
       setIsBrowserStreaming(true);
       setWhipStatus('connected');
 
-      // Stream goes live automatically via Cloudflare webhook (live_input.connected)
+      // Mark stream as live in the backend
+      if (stream) {
+        await streamsService.start(stream.id).catch(() => {});
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to start browser stream';
       setError(msg);

@@ -66,6 +66,10 @@ export const streamsService = {
    * Note: Streams go live automatically when RTMP connection is established via webhook.
    * This endpoint is only for manually ending a stream.
    */
+  async start(streamId: string): Promise<Stream> {
+    return apiClient.post(`/streams/id/${streamId}/start`, {}, true);
+  },
+
   async end(streamId: string): Promise<Stream> {
     return apiClient.post(`/streams/id/${streamId}/end`, {}, true);
   },
