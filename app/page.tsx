@@ -25,27 +25,25 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchTrendingStreams() {
+      setIsLoadingStreams(true);
+      let streams: Stream[] = [];
+
+      // Try trending first
       try {
-        setIsLoadingStreams(true);
         const response = await streamsService.getTrending(12);
-        let streams = response.streams || [];
+        streams = response.streams || [];
+      } catch { /* trending failed — that's OK */ }
 
-        // If no trending streams, fetch all currently live streams as fallback
-        if (streams.length === 0) {
-          try {
-            const liveResponse = await streamsService.getLive(12);
-            streams = liveResponse.streams || [];
-          } catch { /* ignore */ }
-        }
-
-        setTrendingStreams(streams);
-        setError(null);
-      } catch (err) {
-        // Silent fallback
-        setTrendingStreams([]);
-      } finally {
-        setIsLoadingStreams(false);
+      // If no trending, fetch all currently live streams
+      if (streams.length === 0) {
+        try {
+          const liveResponse = await streamsService.getLive(12);
+          streams = liveResponse.streams || [];
+        } catch { /* live fetch failed too */ }
       }
+
+      setTrendingStreams(streams);
+      setIsLoadingStreams(false);
     }
 
     async function fetchCategories() {
