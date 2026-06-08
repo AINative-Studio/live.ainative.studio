@@ -18,14 +18,26 @@ const firaCode = Fira_Code({
   display: 'swap',
 });
 
+const siteDescription =
+  'Watch AI-native developers stream live coding sessions, IDE workflows, multi-agent systems, and build-in-public projects in real time.';
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://live.ainative.studio'),
   title: {
-    default: 'AINative Studio Live - Developer Streaming Platform',
+    default: 'AINative Studio Live - Live Coding & AI Developer Streaming Platform',
     template: '%s | AINative Studio Live',
   },
-  description: 'The premier livestreaming platform for developers. Watch developers build in real-time, collaborate, and showcase cutting-edge development workflows.',
-  keywords: ['livestreaming', 'coding', 'developer streams', 'IDE streaming', 'programming', 'live coding'],
+  description: siteDescription,
+  keywords: [
+    'live coding',
+    'developer livestreams',
+    'AI developer streams',
+    'IDE streaming',
+    'build in public',
+    'programming streams',
+    'multi-agent workflows',
+    'AI-native development',
+  ],
   authors: [{ name: 'AINative Studio' }],
   icons: {
     icon: '/ainative-icon.svg',
@@ -35,8 +47,8 @@ export const metadata: Metadata = {
     canonical: 'https://live.ainative.studio',
   },
   openGraph: {
-    title: 'AINative Studio Live - Developer Streaming Platform',
-    description: 'Watch developers build in real-time, collaborate, and showcase cutting-edge development workflows.',
+    title: 'AINative Studio Live - Live Coding & AI Developer Streaming Platform',
+    description: siteDescription,
     type: 'website',
     url: 'https://live.ainative.studio',
     siteName: 'AINative Studio Live',
@@ -46,14 +58,14 @@ export const metadata: Metadata = {
         url: '/api/og',
         width: 1200,
         height: 630,
-        alt: 'AINative Studio Live - Developer Streaming Platform',
+        alt: 'AINative Studio Live - Live Coding & AI Developer Streaming Platform',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AINative Studio Live - Developer Streaming Platform',
-    description: 'Watch developers build in real-time, collaborate, and showcase cutting-edge development workflows.',
+    title: 'AINative Studio Live - Live Coding & AI Developer Streaming Platform',
+    description: siteDescription,
     images: ['/api/og'],
   },
 };
@@ -93,7 +105,7 @@ export default function RootLayout({
               '@type': 'WebSite',
               name: 'AINative Studio Live',
               url: 'https://live.ainative.studio',
-              description: 'Developer streaming platform for live coding and collaboration',
+              description: 'Live coding and AI-native developer streaming platform for real-time collaboration and build-in-public workflows',
               publisher: {
                 '@type': 'Organization',
                 name: 'AINative Studio',
