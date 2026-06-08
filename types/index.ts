@@ -51,6 +51,7 @@ export interface Stream {
   endedAt: string | null;
   createdAt: string;
   user: StreamUser;
+  streamer?: StreamUser;  // API returns streamer instead of user for stream list
   // Mock data fallback fields
   username?: string;
   displayName?: string;
