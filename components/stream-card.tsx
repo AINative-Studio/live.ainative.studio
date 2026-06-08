@@ -12,10 +12,11 @@ interface StreamCardProps {
 }
 
 export function StreamCard({ stream, priority = false }: StreamCardProps) {
-  // Support both mock data (stream.username) and API data (stream.user.username)
-  const username = stream.user?.username || stream.username || 'unknown';
-  const displayName = stream.user?.displayName || stream.displayName || username;
-  const avatar = stream.user?.avatar || stream.avatar;
+  // Support API data (stream.streamer or stream.user) and legacy mock data (stream.username)
+  const streamer = stream.streamer || stream.user;
+  const username = streamer?.username || stream.username || 'unknown';
+  const displayName = streamer?.displayName || streamer?.display_name || stream.displayName || username;
+  const avatar = streamer?.avatarUrl || streamer?.avatar_url || stream.user?.avatar || stream.avatar;
   const thumbnail = stream.thumbnailUrl || stream.thumbnail || '/placeholder-stream.jpg';
   const isLive = stream.status === 'live' || stream.live === true;
   const viewerCount = stream.viewerCount || stream.viewers || 0;
