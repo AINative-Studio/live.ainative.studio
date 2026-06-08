@@ -15,8 +15,8 @@ export function StreamCard({ stream, priority = false }: StreamCardProps) {
   // Support API data (stream.streamer or stream.user) and legacy mock data (stream.username)
   const streamer = stream.streamer || stream.user;
   const username = streamer?.username || stream.username || 'unknown';
-  const displayName = streamer?.displayName || streamer?.display_name || stream.displayName || username;
-  const avatar = streamer?.avatarUrl || streamer?.avatar_url || stream.user?.avatar || stream.avatar;
+  const displayName = streamer?.displayName || stream.displayName || username;
+  const avatar = streamer?.avatarUrl || stream.user?.avatar || stream.avatar;
   const thumbnail = stream.thumbnailUrl || stream.thumbnail || '/placeholder-stream.jpg';
   const isLive = stream.status === 'live' || stream.live === true;
   const viewerCount = stream.viewerCount || stream.viewers || 0;
