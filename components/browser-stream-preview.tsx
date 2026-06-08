@@ -174,6 +174,7 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
             const camera = createCameraRecorder({
               resolution: selectedQuality === '1440p' ? '4K' : selectedQuality === '1080p' ? '1080p' : '720p',
               audio: false,
+              deviceId: selectedVideoDevice || undefined,
             });
             videoStream = await camera.getStream();
             cameraRecorderRef.current = camera;
@@ -201,6 +202,7 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
             microphone: true,
             noiseCancellation: true,
             echoCancellation: true,
+            deviceId: selectedAudioDevice || undefined,
           });
           audioRecorderRef.current = audioRecorder;
         } catch (err) {
