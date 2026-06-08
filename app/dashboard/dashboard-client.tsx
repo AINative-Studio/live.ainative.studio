@@ -90,10 +90,10 @@ export default function DashboardPage() {
   }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       loadDashboardData();
     }
-  }, [isAuthenticated]);
+  }, [authLoading, isAuthenticated]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);

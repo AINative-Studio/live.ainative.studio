@@ -75,9 +75,9 @@ export default function AnalyticsPage() {
     }
   }, [isAuthenticated, authLoading, router]);
 
-  // Fetch analytics data
+  // Fetch analytics data — wait for auth to fully load before calling API
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (authLoading || !isAuthenticated) return;
 
     const fetchAnalytics = async () => {
       setIsLoadingData(true);
