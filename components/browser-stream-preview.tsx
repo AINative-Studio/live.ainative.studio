@@ -79,10 +79,33 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
 
-  // Enumerate devices without requesting permissions upfront
+  // Request camera permission first, then enumerate devices.
+  // Without a prior getUserMedia call, enumerateDevices() returns empty
+  // deviceId strings on most browsers — which means zero cameras detected
+  // and the webcam never starts.
   const loadDevices = useCallback(async () => {
     try {
+      // Request minimal camera+mic access to unlock device labels and IDs.
+      // This triggers the browser permission prompt on first visit.
+      let tempStream: MediaStream | null = null;
+      try {
+        tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      } catch {
+        // If camera denied, try audio-only to at least get mic devices
+        try {
+          tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch {
+          // Both denied — enumerate will return limited info but still works
+        }
+      }
+
       const devices = await navigator.mediaDevices.enumerateDevices();
+
+      // Stop the temporary stream — we only needed it to unlock device info
+      if (tempStream) {
+        tempStream.getTracks().forEach(track => track.stop());
+      }
+
       const videoInputs = devices
         .filter(device => device.kind === 'videoinput' && device.deviceId)
         .map(device => ({
@@ -99,6 +122,7 @@ export function BrowserStreamPreview({ onStartStreaming, onStopPreview }: Browse
       setVideoDevices(videoInputs);
       setAudioDevices(audioInputs);
 
+      // Default to the first (built-in) webcam
       if (videoInputs.length > 0 && !selectedVideoDevice) {
         setSelectedVideoDevice(videoInputs[0].deviceId);
       }
