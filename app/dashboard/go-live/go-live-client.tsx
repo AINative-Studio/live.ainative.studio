@@ -124,16 +124,26 @@ function GoLiveContent() {
       setStream(newStream);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create stream';
-      setError(errorMessage);
 
-      // If error is about existing active stream, try to fetch it
+      // If error is about existing active stream, end it automatically and retry
       if (errorMessage.includes('already have an active stream')) {
-        const activeStream = await streamsService.getActiveStream();
-        if (activeStream) {
-          setStream(activeStream);
+        try {
+          const activeStream = await streamsService.getActiveStream();
+          if (activeStream) {
+            await streamsService.end(activeStream.id);
+            // Small delay for the backend to process
+            await new Promise(r => setTimeout(r, 500));
+            // Retry creating the stream
+            const newStream = await streamsService.create(data);
+            setStream(newStream);
+            return; // Success — skip the error display
+          }
+        } catch {
+          // Auto-end failed — fall through to show the error with manual option
         }
       }
 
+      setError(errorMessage);
       throw err; // Re-throw to let form handle the error state
     } finally {
       setIsLoading(false);
@@ -268,11 +278,27 @@ function GoLiveContent() {
               <AlertDescription>
                 <div className="flex items-center justify-between">
                   <span>{error}</span>
-                  {error.includes('already have an active stream') && stream && (
+                  {error.includes('already have an active stream') && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleEndStream}
+                      onClick={async () => {
+                        try {
+                          setIsLoading(true);
+                          setError(null);
+                          // Try to find and end whatever stream is blocking
+                          const active = await streamsService.getActiveStream();
+                          if (active) {
+                            await streamsService.end(active.id);
+                          }
+                          setStream(null);
+                          setStreamMethod(null);
+                        } catch (err) {
+                          setError('Failed to end stream. Please try again.');
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
                       disabled={isLoading}
                       className="ml-4"
                     >
