@@ -238,10 +238,15 @@ test.describe('Webcam Fix Verification', () => {
     await page.getByText('Choose Your Streaming Method').waitFor({ timeout: 20_000 });
     await page.getByRole('button', { name: /Use Browser Streaming/i }).click();
 
-    // Wait for BrowserStreamPreview's loadDevices() to run on mount
-    await page.waitForTimeout(3000);
+    // Wait for BrowserStreamPreview's loadDevices() to run on mount —
+    // poll until both calls appear (may take a moment for async getUserMedia to resolve)
+    let calls: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      await page.waitForTimeout(1000);
+      calls = await page.evaluate(() => (window as any).__mediaApiCalls || []);
+      if (calls.includes('getUserMedia') && calls.includes('enumerateDevices')) break;
+    }
 
-    const calls: string[] = await page.evaluate(() => (window as any).__mediaApiCalls);
     console.log('API call order:', calls);
 
     const gumIndex = calls.indexOf('getUserMedia');
