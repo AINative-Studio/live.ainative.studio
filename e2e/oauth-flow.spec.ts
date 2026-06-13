@@ -41,7 +41,7 @@ test.describe('OAuth — Login Page', () => {
     console.log(`✓ GitHub OAuth configured — client_id: ${clientId.slice(0, 8)}...`);
   });
 
-  test('Google login button redirects to accounts.google.com (redirect_uri_mismatch — needs GCP fix)', async ({ page }) => {
+  test('Google login button redirects to accounts.google.com sign-in', async ({ page }) => {
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
 
@@ -54,10 +54,6 @@ test.describe('OAuth — Login Page', () => {
     await page.waitForTimeout(2000);
     const url = popup ? popup.url() : page.url();
 
-    // Google OAuth redirects but shows redirect_uri_mismatch error.
-    // The client_id IS configured, but https://live.ainative.studio/login/callback
-    // is not registered as an authorized redirect URI in Google Cloud Console.
-    // BUG: Fix by adding the URI in GCP > APIs & Services > Credentials.
     expect(url).toContain('google.com');
     expect(url).toContain('client_id=');
 
@@ -68,15 +64,11 @@ test.describe('OAuth — Login Page', () => {
     expect(clientId).not.toBe('undefined');
     expect(clientId.length).toBeGreaterThan(10);
 
-    // Flag the known redirect_uri_mismatch issue
-    if (url.includes('redirect_uri_mismatch') || url.includes('error')) {
-      console.log(`⚠ KNOWN BUG: Google OAuth returns redirect_uri_mismatch`);
-      console.log(`  Fix: Add https://live.ainative.studio/login/callback to GCP authorized redirect URIs`);
-      console.log(`  Client ID: ${clientId.slice(0, 20)}...`);
-    }
+    // Should NOT have redirect_uri_mismatch error
+    expect(url).not.toContain('redirect_uri_mismatch');
 
     await page.screenshot({ path: 'e2e/screenshots/oauth-google-login.png' });
-    console.log(`✓ Google OAuth client_id configured — but redirect URI needs GCP fix`);
+    console.log(`✓ Google OAuth working — client_id: ${clientId.slice(0, 20)}...`);
   });
 });
 
