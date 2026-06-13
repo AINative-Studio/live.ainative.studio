@@ -68,6 +68,24 @@ async function mockApi(page: Page, opts: {
     (window as any).__apiCalls = [];
   });
 
+  // Mock /end and /start FIRST (more specific routes must be registered first)
+  await page.route('**/api.ainative.studio/v1/streams/id/*/end', async (route) => {
+    await page.evaluate(() => (window as any).__apiCalls?.push('end'));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(makeStream({ status: 'ended' })),
+    });
+  });
+
+  await page.route('**/api.ainative.studio/v1/streams/id/*/start', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(makeStream({ status: 'live' })),
+    });
+  });
+
   // GET /streams/ — list
   await page.route('**/api.ainative.studio/v1/streams/*', async (route) => {
     const url = route.request().url();
@@ -99,27 +117,6 @@ async function mockApi(page: Page, opts: {
           body: JSON.stringify(makeStream({ id: 'new-stream-' + Date.now() })),
         });
       }
-      return;
-    }
-
-    // POST /streams/id/.../end
-    if (method === 'POST' && url.includes('/end')) {
-      await page.evaluate(() => (window as any).__apiCalls.push('end'));
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(makeStream({ status: 'ended' })),
-      });
-      return;
-    }
-
-    // POST /streams/id/.../start
-    if (method === 'POST' && url.includes('/start')) {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(makeStream({ status: 'live' })),
-      });
       return;
     }
 

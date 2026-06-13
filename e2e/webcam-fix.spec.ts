@@ -302,33 +302,28 @@ test.describe('Webcam Fix Verification', () => {
     console.log(`✓ No critical JS errors (${errors.length} non-critical filtered)`);
   });
 
-  test('9. BUG FIX: stale "live" stream does NOT show "YOU ARE LIVE" in RTMP view', async ({ page }) => {
+  test('9. BUG FIX: stale "live" stream shows End Stream button in RTMP view', async ({ page }) => {
     // The backend returns status: 'live' for a zombie stream.
-    // The fix should downgrade it to 'offline' on page load since
-    // there is no active WHIP/RTMP connection from this browser.
-    // The bug: user selects RTMP → sidebar shows "YOU ARE LIVE" for a stale stream.
+    // The fix: RTMP sidebar shows LIVE badge + "End Stream" button so users
+    // can kill zombie streams (cost protection).
     await setupAuthenticatedPage(page);
 
     await page.goto('/dashboard/go-live');
     await page.waitForLoadState('networkidle');
 
-    // Should show the method selector
+    // Should show the method selector with a warning
     await page.getByText('Choose Your Streaming Method').waitFor({ timeout: 20_000 });
 
-    // Select RTMP Software to go to the sidebar view where the bug appears
+    // Select RTMP Software
     await page.getByRole('button', { name: /Use RTMP Software/i }).click();
     await page.waitForTimeout(2000);
 
-    // "YOU ARE LIVE" badge must NOT appear — the stream is stale
-    const liveIndicator = page.getByText('YOU ARE LIVE');
-    await expect(liveIndicator).not.toBeVisible();
+    // "End Stream" button must be visible so users can kill the zombie
+    const endBtn = page.locator('.space-y-4 >> button', { hasText: /End Stream/i });
+    await expect(endBtn).toBeVisible();
 
-    // Instead, the "Stream is ready" message should be visible
-    const readyMessage = page.getByText('Stream is ready');
-    await expect(readyMessage).toBeVisible();
-
-    await page.screenshot({ path: 'e2e/screenshots/09-no-stale-live-rtmp.png' });
-    console.log('✓ Stale "live" stream correctly treated as offline in RTMP sidebar');
+    await page.screenshot({ path: 'e2e/screenshots/09-stale-live-end-button.png' });
+    console.log('✓ Stale "live" stream shows End Stream button in RTMP sidebar');
   });
 
   test('10. WHIP proxy endpoint is alive', async ({ page }) => {
