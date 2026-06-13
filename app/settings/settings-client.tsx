@@ -38,6 +38,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<UserType | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const {
     register,
@@ -205,12 +206,46 @@ export default function SettingsPage() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <Button type="button" variant="outline" disabled>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Avatar
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      id="avatar-upload"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 5 * 1024 * 1024) {
+                          alert('File must be under 5MB');
+                          return;
+                        }
+                        try {
+                          setIsUploadingAvatar(true);
+                          const result = await usersService.uploadAvatar(file);
+                          setProfile(prev => prev ? { ...prev, avatar: result.avatarUrl } : prev);
+                        } catch (err) {
+                          console.error('Avatar upload failed:', err);
+                          alert('Failed to upload avatar. Please try again.');
+                        } finally {
+                          setIsUploadingAvatar(false);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isUploadingAvatar}
+                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                    >
+                      {isUploadingAvatar ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
+                      {isUploadingAvatar ? 'Uploading...' : 'Upload Avatar'}
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2">
-                      PNG, JPG up to 5MB (Upload coming soon)
+                      PNG, JPG, WebP up to 5MB
                     </p>
                   </div>
                 </div>

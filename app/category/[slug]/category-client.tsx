@@ -55,6 +55,7 @@ export default function CategoryPage() {
   const [categoryStreams, setCategoryStreams] = useState<Stream[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [sortBy, setSortBy] = useState<string>('viewers');
 
   useEffect(() => {
     async function fetchData() {
@@ -164,9 +165,18 @@ export default function CategoryPage() {
   }
 
   // Support both mock data (live) and API data (status)
-  const liveStreams = categoryStreams.filter((s: any) =>
-    s.live === true || s.status === 'live'
-  );
+  const liveStreams = categoryStreams
+    .filter((s: any) => s.live === true || s.status === 'live')
+    .sort((a: any, b: any) => {
+      if (sortBy === 'viewers') {
+        return (b.viewerCount || b.viewers || 0) - (a.viewerCount || a.viewers || 0);
+      }
+      if (sortBy === 'recent') {
+        return new Date(b.startedAt || b.createdAt || 0).getTime() - new Date(a.startedAt || a.createdAt || 0).getTime();
+      }
+      // trending — sort by viewers as default
+      return (b.viewerCount || b.viewers || 0) - (a.viewerCount || a.viewers || 0);
+    });
 
   // Get icon from mock data or use default
   const Icon = category.icon ? iconMap[category.icon] || Code : Code;
@@ -212,7 +222,7 @@ export default function CategoryPage() {
             </h2>
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground">Sort by:</span>
-              <Select defaultValue="trending">
+              <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>

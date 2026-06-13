@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, Share2, UserPlus, Twitter, Github, Globe } from 'lucide-react';
+import { Heart, Share2, UserPlus, UserMinus, Twitter, Github, Globe, Loader2 } from 'lucide-react';
 import { usersService } from '@/services/users';
 import { useAuth } from '@/contexts/auth-context';
 import { useStreamChat } from '@/hooks/use-stream-chat';
@@ -30,6 +30,7 @@ const users = usersData as any;
 
 export default function StreamPage() {
   const params = useParams();
+  const router = useRouter();
   const username = params.username as string;
   const { user: currentUser, isAuthenticated } = useAuth();
 
@@ -39,6 +40,8 @@ export default function StreamPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   // Initialize chat hook only if stream exists (prevents empty streamId issue #64)
   const chat = useStreamChat({
@@ -64,6 +67,17 @@ export default function StreamPage() {
         if (liveStatus.isLive && liveStatus.stream) {
           setStream(liveStatus.stream);
         }
+
+        // Check if following (only if authenticated)
+        if (isAuthenticated) {
+          try {
+            const followStatus = await usersService.isFollowing(username);
+            setIsFollowing(followStatus.isFollowing);
+          } catch (followErr) {
+            console.error('Error checking follow status:', followErr);
+            setIsFollowing(false);
+          }
+        }
       } catch (err) {
         console.error('Failed to fetch stream data:', err);
         setError('Failed to load stream data');
@@ -85,7 +99,33 @@ export default function StreamPage() {
     };
 
     fetchData();
-  }, [username]);
+  }, [username, isAuthenticated]);
+
+  const handleFollowToggle = async () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    if (!userProfile) return;
+
+    setIsFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await usersService.unfollow(username);
+        setIsFollowing(false);
+        setUserProfile((prev) => prev ? { ...prev, followerCount: prev.followerCount - 1 } : null);
+      } else {
+        await usersService.follow(username);
+        setIsFollowing(true);
+        setUserProfile((prev) => prev ? { ...prev, followerCount: prev.followerCount + 1 } : null);
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -147,9 +187,20 @@ export default function StreamPage() {
               <Link href={`/user/${username}`}>
                 <Button variant="outline">View Profile</Button>
               </Link>
-              <Button className="bg-brand-primary hover:bg-primary-dark">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Follow
+              <Button
+                className="font-mono"
+                variant={isFollowing ? "outline" : "default"}
+                onClick={handleFollowToggle}
+                disabled={isFollowLoading}
+              >
+                {isFollowLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : isFollowing ? (
+                  <UserMinus className="w-4 h-4 mr-2" />
+                ) : (
+                  <UserPlus className="w-4 h-4 mr-2" />
+                )}
+                {isFollowing ? 'Following' : 'Follow'}
               </Button>
             </div>
           </div>
@@ -195,9 +246,21 @@ export default function StreamPage() {
                           </Link>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" className="font-mono">
-                            <UserPlus className="w-4 h-4 mr-2" />
-                            Follow
+                          <Button
+                            size="sm"
+                            className="font-mono"
+                            variant={isFollowing ? "outline" : "default"}
+                            onClick={handleFollowToggle}
+                            disabled={isFollowLoading}
+                          >
+                            {isFollowLoading ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : isFollowing ? (
+                              <UserMinus className="w-4 h-4 mr-2" />
+                            ) : (
+                              <UserPlus className="w-4 h-4 mr-2" />
+                            )}
+                            {isFollowing ? 'Following' : 'Follow'}
                           </Button>
                         </div>
                       </div>
@@ -237,7 +300,21 @@ export default function StreamPage() {
                       <Heart className="w-4 h-4 mr-2" />
                       Like
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await navigator.share({
+                            title: stream.title,
+                            text: `Watch ${userProfile.displayName || username} live on AINative Studio`,
+                            url: window.location.href,
+                          });
+                        } catch {
+                          await navigator.clipboard.writeText(window.location.href);
+                        }
+                      }}
+                    >
                       <Share2 className="w-4 h-4 mr-2" />
                       Share
                     </Button>
