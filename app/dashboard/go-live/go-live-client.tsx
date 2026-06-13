@@ -50,19 +50,11 @@ function GoLiveContent() {
       try {
         setIsLoading(true);
         setError(null);
-        // Get user's active stream if one exists
         const activeStream = await streamsService.getActiveStream();
         if (activeStream) {
-          // If the backend says "live" but we have no local WHIP/RTMP
-          // connection, the stream is stale — treat it as idle so the user
-          // doesn't see a misleading "YOU ARE LIVE" badge.
-          if (activeStream.status === 'live') {
-            activeStream.status = 'offline';
-          }
           setStream(activeStream);
         }
       } catch (err) {
-        // No active stream or error - this is fine, user can create new one
         console.log('No active stream found or error checking:', err);
       } finally {
         setIsLoading(false);
@@ -340,6 +332,34 @@ function GoLiveContent() {
             </div>
           ) : streamMethod === null ? (
             <div className="max-w-5xl mx-auto">
+              {stream.status === 'live' && (
+                <Alert className="mb-6 border-amber-500/50 bg-amber-500/10">
+                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <AlertDescription>
+                    <div className="flex items-center justify-between">
+                      <span className="text-amber-200">
+                        You have a stream marked as live. If you&apos;re not actively streaming, end it to avoid unnecessary costs.
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEndStream}
+                        disabled={isLoading}
+                        className="ml-4 border-amber-500/50 hover:bg-amber-500/20"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                            Ending...
+                          </>
+                        ) : (
+                          'End Stream'
+                        )}
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
               <StreamMethodSelector
                 onSelect={handleStreamMethodSelect}
                 selectedMethod={streamMethod || undefined}
@@ -365,8 +385,12 @@ function GoLiveContent() {
                     </Badge>
                     <Button variant="destructive" size="sm" onClick={async () => {
                       await stopStreaming();
-                      if (stream) await streamsService.end(stream.id);
+                      if (stream) {
+                        await streamsService.end(stream.id).catch(() => {});
+                      }
                       setStream(null);
+                      setStreamMethod(null);
+                      setShowBrowserPreview(false);
                     }}>
                       <WifiOff className="w-4 h-4 mr-2" />
                       End Stream
@@ -533,11 +557,11 @@ function GoLiveContent() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {stream.status === 'live' && isBrowserStreaming ? (
+                    {stream.status === 'live' ? (
                       <div className="space-y-3">
                         <Badge variant="destructive" className="w-full justify-center py-2 font-medium">
                           <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-2" />
-                          YOU ARE LIVE
+                          LIVE
                         </Badge>
                         <Button
                           variant="outline"
@@ -545,6 +569,21 @@ function GoLiveContent() {
                           onClick={handleNavigateToStream}
                         >
                           Go to Stream
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="w-full"
+                          onClick={handleEndStream}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Ending...
+                            </>
+                          ) : (
+                            'End Stream'
+                          )}
                         </Button>
                       </div>
                     ) : (
