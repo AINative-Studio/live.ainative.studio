@@ -85,6 +85,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@swc/core": "^1.15.8",
     "@swc/jest": "^0.2.39",
     "@testing-library/jest-dom": "^6.9.1",

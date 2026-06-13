@@ -53,6 +53,12 @@ function GoLiveContent() {
         // Get user's active stream if one exists
         const activeStream = await streamsService.getActiveStream();
         if (activeStream) {
+          // If the backend says "live" but we have no local WHIP/RTMP
+          // connection, the stream is stale — treat it as idle so the user
+          // doesn't see a misleading "YOU ARE LIVE" badge.
+          if (activeStream.status === 'live') {
+            activeStream.status = 'offline';
+          }
           setStream(activeStream);
         }
       } catch (err) {
@@ -96,7 +102,13 @@ function GoLiveContent() {
       setIsLoading(true);
       setError(null);
       await streamsService.end(stream.id);
-      setStream(null); // Clear the stream so user can create a new one
+
+      // Reset streaming state but keep the user in the flow —
+      // they can create a new stream from the setup form.
+      setStream(null);
+      setStreamMethod(null);
+      setShowBrowserPreview(false);
+      await stopStreaming();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to end stream');
     } finally {
@@ -495,7 +507,7 @@ function GoLiveContent() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {stream.status === 'live' ? (
+                    {stream.status === 'live' && isBrowserStreaming ? (
                       <div className="space-y-3">
                         <Badge variant="destructive" className="w-full justify-center py-2 font-medium">
                           <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-2" />
@@ -516,14 +528,28 @@ function GoLiveContent() {
                             Stream is ready. Start streaming in your software and your stream will go live automatically.
                           </p>
                         </div>
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={handleNavigateToStream}
-                          disabled={!stream.streamKey}
-                        >
-                          View Stream Page
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={handleNavigateToStream}
+                            disabled={!stream.streamKey}
+                          >
+                            View Stream Page
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={handleEndStream}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              'End & Start Over'
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </CardContent>

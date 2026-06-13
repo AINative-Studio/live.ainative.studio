@@ -24,8 +24,11 @@ export async function POST(request: NextRequest) {
   try {
     const sdpOffer = await request.text();
 
+    // Log for debugging
+    console.log('[WHIP Proxy] URL:', whipUrl);
+    console.log('[WHIP Proxy] SDP length:', sdpOffer.length);
+
     // Cloudflare WHIP uses URL-based auth (secret is in the URL path)
-    // No Authorization header needed — adding one causes 401
     const cfResponse = await fetch(whipUrl, {
       method: 'POST',
       headers: {
