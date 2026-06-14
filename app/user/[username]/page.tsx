@@ -10,10 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserPlus, UserMinus, Video, Twitter, Github, Globe, Youtube, Loader2 } from 'lucide-react';
+import { UserPlus, UserMinus, Video, Twitter, Github, Globe, Youtube, Loader2, Users, Calendar, Clock } from 'lucide-react';
 import { usersService } from '@/services/users';
 import { useAuth } from '@/contexts/auth-context';
-import type { User, Stream } from '@/types';
+import type { User, Stream, WeeklySchedule, Schedule } from '@/types';
+
+interface FollowUser {
+  id: string;
+  username: string;
+  avatar: string;
+}
 import usersData from '@/data/users.json';
 import streamsData from '@/data/streams.json';
 
@@ -32,6 +38,12 @@ export default function UserPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [followers, setFollowers] = useState<FollowUser[]>([]);
+  const [following, setFollowing] = useState<FollowUser[]>([]);
+  const [followersTotal, setFollowersTotal] = useState(0);
+  const [followingTotal, setFollowingTotal] = useState(0);
+  const [followListsLoading, setFollowListsLoading] = useState(false);
+  const [schedule, setSchedule] = useState<WeeklySchedule | null>(null);
 
   useEffect(() => {
     async function fetchUserData() {
@@ -46,6 +58,32 @@ export default function UserPage() {
         // Fetch user's streams
         const streamsData = await usersService.getStreams(username);
         setUserStreams(streamsData);
+
+        // Fetch user's schedule
+        try {
+          const scheduleData = await usersService.getSchedule(username);
+          setSchedule(scheduleData);
+        } catch (error) {
+          console.error('Error fetching schedule:', error);
+          setSchedule(null);
+        }
+
+        // Fetch followers and following lists
+        setFollowListsLoading(true);
+        try {
+          const [followersData, followingData] = await Promise.all([
+            usersService.getFollowers(username),
+            usersService.getFollowing(username),
+          ]);
+          setFollowers(followersData.followers || []);
+          setFollowersTotal(followersData.total || 0);
+          setFollowing(followingData.following || []);
+          setFollowingTotal(followingData.total || 0);
+        } catch (err) {
+          console.error('Error fetching follow lists:', err);
+        } finally {
+          setFollowListsLoading(false);
+        }
 
         // Check if following (only if authenticated)
         if (isAuthenticated) {
@@ -275,6 +313,10 @@ export default function UserPage() {
                     <span className="font-bold text-xl">{(user.followerCount ?? 0).toLocaleString()}</span>
                     <span className="text-muted-foreground">followers</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-xl">{(user.followingCount ?? 0).toLocaleString()}</span>
+                    <span className="text-muted-foreground">following</span>
+                  </div>
                   {user.isLive && (
                     <Badge variant="destructive" className="font-mono">
                       <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-2" />
@@ -332,9 +374,11 @@ export default function UserPage() {
 
         <div className="container mx-auto px-4 py-8">
           <Tabs defaultValue="about" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-lg grid-cols-4">
               <TabsTrigger value="about">About</TabsTrigger>
               <TabsTrigger value="past">Past Streams</TabsTrigger>
+              <TabsTrigger value="followers">Followers</TabsTrigger>
+              <TabsTrigger value="following">Following</TabsTrigger>
             </TabsList>
 
             <TabsContent value="about" className="mt-6">
@@ -342,6 +386,78 @@ export default function UserPage() {
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold mb-4">About {user.displayName || user.username}</h3>
                   <p className="text-muted-foreground leading-relaxed">{user.bio}</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="followers" className="mt-6">
+              <Card className="border-border">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold mb-4">
+                    Followers {followersTotal > 0 && <span className="text-muted-foreground text-base font-normal">({followersTotal})</span>}
+                  </h3>
+                  {followListsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-brand-primary" />
+                    </div>
+                  ) : followers.length > 0 ? (
+                    <div className="space-y-3">
+                      {followers.map((follower) => (
+                        <Link
+                          key={follower.id}
+                          href={`/user/${follower.username}`}
+                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+                        >
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={follower.avatar || undefined} alt={follower.username} />
+                            <AvatarFallback>{follower.username[0]?.toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">@{follower.username}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No followers yet</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="following" className="mt-6">
+              <Card className="border-border">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold mb-4">
+                    Following {followingTotal > 0 && <span className="text-muted-foreground text-base font-normal">({followingTotal})</span>}
+                  </h3>
+                  {followListsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-brand-primary" />
+                    </div>
+                  ) : following.length > 0 ? (
+                    <div className="space-y-3">
+                      {following.map((followed) => (
+                        <Link
+                          key={followed.id}
+                          href={`/user/${followed.username}`}
+                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+                        >
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={followed.avatar || undefined} alt={followed.username} />
+                            <AvatarFallback>{followed.username[0]?.toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">@{followed.username}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">Not following anyone yet</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -378,6 +494,66 @@ export default function UserPage() {
               )}
             </TabsContent>
           </Tabs>
+
+          {/* Upcoming Schedule */}
+          <div className="mt-8">
+            <Card className="border-border">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-xl font-bold">Upcoming Schedule</h3>
+                </div>
+                {(() => {
+                  // Collect all schedule entries sorted by day of week
+                  const entries: (Schedule & { dayName: string })[] = [];
+                  if (schedule) {
+                    schedule.schedule.forEach((day) => {
+                      day.schedules.forEach((entry) => {
+                        entries.push({ ...entry, dayName: day.dayName });
+                      });
+                    });
+                    entries.sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+                  }
+
+                  if (entries.length === 0) {
+                    return (
+                      <div className="text-center py-6">
+                        <Calendar className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground">No upcoming streams scheduled</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-3">
+                      {entries.map((entry) => (
+                        <div
+                          key={entry.id}
+                          className="flex items-start gap-3 p-3 bg-card/50 rounded-lg border border-border/50"
+                        >
+                          <Clock className="w-4 h-4 mt-1 text-brand-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{entry.title}</p>
+                            <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-muted-foreground">
+                              <span>{entry.dayName}</span>
+                              <span className="font-mono">
+                                {entry.startTime} - {entry.endTime}
+                              </span>
+                              {entry.category && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {entry.category.name}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
 

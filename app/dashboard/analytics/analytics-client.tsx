@@ -322,6 +322,25 @@ export default function AnalyticsPage() {
                       </div>
                     </div>
 
+                    {/* Mini bar chart */}
+                    {followerGrowth.timeline.length > 0 && (
+                      <div className="flex items-end gap-1 h-24 mb-4">
+                        {followerGrowth.timeline.slice(-14).map((day, idx) => {
+                          const max = Math.max(...followerGrowth.timeline.slice(-14).map(d => d.newFollowers || 0), 1);
+                          const height = Math.max(((day.newFollowers || 0) / max) * 100, 4);
+                          return (
+                            <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                              <div
+                                className="w-full bg-brand-primary/80 rounded-t hover:bg-brand-primary transition-colors"
+                                style={{ height: `${height}%` }}
+                                title={`${formatDate(day.date)}: +${day.newFollowers || 0}`}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Recent Activity</p>
                       <div className="max-h-[200px] overflow-y-auto space-y-1">
@@ -371,6 +390,25 @@ export default function AnalyticsPage() {
                         <p className="text-2xl font-bold text-brand-primary">{(viewerStats.totalUniqueViewers ?? 0).toLocaleString()}</p>
                       </div>
                     </div>
+
+                    {/* Mini bar chart */}
+                    {viewerStats.timeline.length > 0 && (
+                      <div className="flex items-end gap-1 h-24 mb-4">
+                        {viewerStats.timeline.slice(-14).map((day, idx) => {
+                          const max = Math.max(...viewerStats.timeline.slice(-14).map(d => d.totalViews || 0), 1);
+                          const height = Math.max(((day.totalViews || 0) / max) * 100, 4);
+                          return (
+                            <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                              <div
+                                className="w-full bg-green-500/80 rounded-t hover:bg-green-500 transition-colors"
+                                style={{ height: `${height}%` }}
+                                title={`${formatDate(day.date)}: ${day.totalViews} views, peak ${day.avgPeakViewers}`}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Daily Breakdown</p>

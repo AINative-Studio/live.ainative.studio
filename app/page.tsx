@@ -18,8 +18,11 @@ import categoriesData from '@/data/categories.json';
 
 export default function Home() {
   const [trendingStreams, setTrendingStreams] = useState<Stream[]>([]);
+  const [risingStreams, setRisingStreams] = useState<Stream[]>([]);
+  const [recommendedStreams, setRecommendedStreams] = useState<Stream[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingStreams, setIsLoadingStreams] = useState(true);
+  const [isLoadingRising, setIsLoadingRising] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,7 +72,25 @@ export default function Home() {
       }
     }
 
+    async function fetchRisingStreams() {
+      try {
+        setIsLoadingRising(true);
+        const response = await streamsService.getRising(8);
+        setRisingStreams(response.streams || []);
+      } catch { /* rising not available */ }
+      finally { setIsLoadingRising(false); }
+    }
+
+    async function fetchRecommendedStreams() {
+      try {
+        const response = await streamsService.getRecommended(8);
+        setRecommendedStreams(response.streams || []);
+      } catch { /* recommended requires auth or not available */ }
+    }
+
     fetchTrendingStreams();
+    fetchRisingStreams();
+    fetchRecommendedStreams();
     fetchCategories();
   }, []);
 
@@ -140,6 +161,41 @@ export default function Home() {
             )}
           </div>
         </section>
+
+        {risingStreams.length > 0 && (
+          <section className="py-12 px-4 bg-card/30">
+            <div className="container mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold flex items-center gap-2">
+                  <TrendingUp className="w-8 h-8 text-green-500" />
+                  Rising Streams
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {risingStreams.map((stream) => (
+                  <StreamCard key={stream.id} stream={stream} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {recommendedStreams.length > 0 && (
+          <section className="py-12 px-4">
+            <div className="container mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold flex items-center gap-2">
+                  Recommended For You
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {recommendedStreams.map((stream) => (
+                  <StreamCard key={stream.id} stream={stream} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="py-12 px-4 bg-card/50">
           <div className="container mx-auto">

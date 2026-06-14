@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { streamsService } from '@/services/streams';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +21,39 @@ export function Navbar() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  // Fetch search suggestions as user types
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const result = await streamsService.getSearchSuggestions(searchQuery);
+        setSuggestions(Array.isArray(result) ? result.slice(0, 5) : []);
+        setShowSuggestions(true);
+      } catch {
+        setSuggestions([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -91,16 +124,36 @@ export function Navbar() {
             </DropdownMenu>
           </div>
 
-          <form onSubmit={handleSearch} className="hidden md:block flex-1 max-w-md mx-4">
-            <div className="relative">
+          <form onSubmit={(e) => { handleSearch(e); setShowSuggestions(false); }} className="hidden md:block flex-1 max-w-md mx-4">
+            <div className="relative" ref={searchRef}>
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search streams, categories, or coders..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                 className="pl-10"
               />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-50 overflow-hidden">
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
+                      onClick={() => {
+                        setSearchQuery(s);
+                        setShowSuggestions(false);
+                        router.push(`/search?q=${encodeURIComponent(s)}`);
+                      }}
+                    >
+                      <Search className="w-3 h-3 text-muted-foreground" />
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </form>
 

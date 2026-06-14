@@ -8,12 +8,12 @@ import { StreamCard } from '@/components/stream-card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Loader2 } from 'lucide-react';
+import { Search, Filter, Loader2, Users } from 'lucide-react';
 import { streamsService } from '@/services/streams';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { Stream, Category } from '@/types';
 import streamsData from '@/data/streams.json';
 import categoriesData from '@/data/categories.json';
-import usersData from '@/data/users.json';
 
 function SearchPageFallback() {
   return (
@@ -48,7 +48,34 @@ function SearchPageFallback() {
 // Fallback mock data
 const mockStreams = streamsData as any;
 const mockCategories = categoriesData as any;
-const mockUsers = usersData as any;
+
+interface SearchUser {
+  username: string;
+  displayName: string;
+  avatar: string | null;
+  isLive: boolean;
+}
+
+/** Extract unique users from a list of streams */
+function extractUsersFromStreams(streams: Stream[]): SearchUser[] {
+  const seen = new Set<string>();
+  const users: SearchUser[] = [];
+
+  for (const stream of streams) {
+    const user = stream.user || stream.streamer;
+    const username = user?.username || (stream as any).username;
+    if (!username || seen.has(username)) continue;
+    seen.add(username);
+    users.push({
+      username,
+      displayName: user?.displayName || (stream as any).displayName || username,
+      avatar: user?.avatar || (stream as any).avatar || null,
+      isLive: stream.status === 'live' || !!(stream as any).live,
+    });
+  }
+
+  return users;
+}
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -58,9 +85,8 @@ function SearchContent() {
   const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<SearchUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [useFallback, setUseFallback] = useState(false);
 
   const filters = [
     { id: 'all', label: 'All' },
@@ -131,11 +157,10 @@ function SearchContent() {
         });
 
         setStreams(result.streams);
-        setUseFallback(false);
+        setUsers(extractUsersFromStreams(result.streams));
       } catch (error) {
         console.error('Search failed, using fallback data:', error);
         // Fallback to mock data filtering
-        setUseFallback(true);
         const searchQuery = debouncedQuery.toLowerCase();
         const filteredStreams = mockStreams.filter((stream: any) => {
           const matchesQuery =
@@ -149,9 +174,7 @@ function SearchContent() {
           return matchesQuery;
         });
         setStreams(filteredStreams);
-        setUsers(mockUsers.filter((user: any) =>
-          user.displayName.toLowerCase().includes(searchQuery)
-        ));
+        setUsers(extractUsersFromStreams(filteredStreams));
       } finally {
         setIsLoading(false);
       }
@@ -165,19 +188,11 @@ function SearchContent() {
     category.name.toLowerCase().includes(searchQuery)
   );
 
-  // Filter users from mock data when using fallback
-  const filteredUsers = useFallback
-    ? users
-    : mockUsers.filter((user: any) =>
-        user.displayName.toLowerCase().includes(searchQuery)
-      );
-
   const showCategories =
     (activeFilters.includes('all') || activeFilters.includes('categories')) &&
     filteredCategories.length > 0;
   const showUsers =
-    (activeFilters.includes('all') || activeFilters.includes('coders')) &&
-    filteredUsers.length > 0;
+    activeFilters.includes('all') || activeFilters.includes('coders');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -232,7 +247,7 @@ function SearchContent() {
               <p className="text-muted-foreground">
                 Found {streams.length} streams
                 {showCategories && `, ${filteredCategories.length} categories`}
-                {showUsers && `, ${filteredUsers.length} developers`}
+                {showUsers && users.length > 0 && `, ${users.length} developers`}
               </p>
             </div>
           )}
@@ -266,21 +281,41 @@ function SearchContent() {
             </div>
           )}
 
-          {showUsers && (
+          {showUsers && query && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold mb-4">AI-Native Developers</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {filteredUsers.map((user: any) => (
-                  <Button
-                    key={user.username}
-                    variant="outline"
-                    className="justify-start hover:border-brand-primary hover:text-brand-primary transition-colors"
-                    asChild
-                  >
-                    <a href={`/user/${user.username}`}>{user.displayName}</a>
-                  </Button>
-                ))}
-              </div>
+              {users.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {users.map((user) => (
+                    <a
+                      key={user.username}
+                      href={`/user/${user.username}`}
+                      className="flex items-center gap-3 p-4 rounded-lg border border-border bg-card hover:border-brand-primary/50 transition-colors"
+                    >
+                      <Avatar className="w-10 h-10">
+                        {user.avatar ? (
+                          <AvatarImage src={user.avatar} alt={user.displayName} />
+                        ) : null}
+                        <AvatarFallback className="bg-brand-primary/20 text-brand-primary text-sm">
+                          {(user.displayName || user.username).slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{user.displayName}</p>
+                        <p className="text-sm text-muted-foreground truncate">@{user.username}</p>
+                      </div>
+                      {user.isLive && (
+                        <Badge className="bg-red-500 text-white text-xs shrink-0">LIVE</Badge>
+                      )}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 border border-border rounded-lg bg-card/50">
+                  <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">No developers found for &ldquo;{query}&rdquo;</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -298,7 +333,7 @@ function SearchContent() {
             query &&
             streams.length === 0 &&
             filteredCategories.length === 0 &&
-            filteredUsers.length === 0 && (
+            users.length === 0 && (
               <div className="text-center py-20">
                 <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No results found</h3>
