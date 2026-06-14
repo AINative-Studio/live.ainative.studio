@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import apiClient from '@/lib/api-client';
+import { setAuthToken, setRefreshToken, setCurrentUser } from '@/lib/auth';
+import type { User } from '@/types';
 
 function CallbackHandler() {
   const router = useRouter();
@@ -32,14 +34,28 @@ function CallbackHandler() {
           redirect_uri: `${window.location.origin}/login/callback`,
         }, false);
 
-        // Store tokens
-        if (response.access_token) {
-          localStorage.setItem('ainative_access_token', response.access_token);
-          if (response.refresh_token) {
-            localStorage.setItem('ainative_refresh_token', response.refresh_token);
-          }
-          // Set cookie for middleware
-          document.cookie = `ainative_access_token=${response.access_token}; path=/; max-age=86400; SameSite=Lax`;
+        // apiClient.handleResponse() transforms snake_case keys to camelCase,
+        // so access_token becomes accessToken. Check both for safety.
+        const token = response.accessToken || response.access_token;
+        const refresh = response.refreshToken || response.refresh_token;
+
+        if (!token) {
+          setError('No access token received. Please try again.');
+          return;
+        }
+
+        // Store tokens using the shared auth helpers (sets localStorage + cookie)
+        setAuthToken(token);
+        if (refresh) {
+          setRefreshToken(refresh);
+        }
+
+        // Fetch and store user profile so auth context picks it up
+        try {
+          const user: User = await apiClient.get('/auth/me', true);
+          setCurrentUser(user);
+        } catch {
+          // Non-fatal — user can be fetched later
         }
 
         // Redirect to dashboard
