@@ -14,6 +14,7 @@ import { VODPlayer } from '@/components/vod-player';
 import { VODTranscriptPanel } from '@/components/vod-transcript-panel';
 import type { TranscriptSegment } from '@/components/vod-transcript-panel';
 import { vodService } from '@/services/vod';
+import { contentPipelineService } from '@/services/content-pipeline';
 import { NotFoundError } from '@/lib/api-client';
 import type { VODRecording, VODChapter } from '@/types';
 import {
@@ -22,7 +23,12 @@ import {
   Share2,
   Heart,
   UserPlus,
+  Scissors,
+  FileText,
+  Download,
+  Sparkles,
 } from 'lucide-react';
+import { CreateClipDialog } from '@/components/create-clip-dialog';
 
 function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
@@ -75,6 +81,9 @@ export default function VODViewerPage() {
 
   const [isGeneratingChapters, setIsGeneratingChapters] = useState(false);
   const [isGeneratingTranscript, setIsGeneratingTranscript] = useState(false);
+  const [isGeneratingBlog, setIsGeneratingBlog] = useState(false);
+  const [blogGenerated, setBlogGenerated] = useState(false);
+  const [isClipDialogOpen, setIsClipDialogOpen] = useState(false);
 
   useEffect(() => {
     async function fetchVODData() {
@@ -141,6 +150,39 @@ export default function VODViewerPage() {
       console.error('Failed to generate transcript:', err);
     } finally {
       setIsGeneratingTranscript(false);
+    }
+  };
+
+  const handleGenerateBlogDraft = async () => {
+    if (!vod) return;
+    setIsGeneratingBlog(true);
+    try {
+      await contentPipelineService.generateBlogDraft(vod.streamId);
+      setBlogGenerated(true);
+    } catch (err) {
+      console.error('Failed to generate blog draft:', err);
+    } finally {
+      setIsGeneratingBlog(false);
+    }
+  };
+
+  const handleExportContent = async (format: 'markdown' | 'html') => {
+    if (!vod) return;
+    try {
+      const data = await contentPipelineService.exportContent(vod.streamId, format);
+      const blob = new Blob([data], {
+        type: format === 'html' ? 'text/html' : 'text/markdown',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${vod.title.replace(/\s+/g, '-').toLowerCase()}.${format === 'html' ? 'html' : 'md'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export content:', err);
     }
   };
 
@@ -272,6 +314,41 @@ export default function VODViewerPage() {
                       <Share2 className="w-4 h-4 mr-2" />
                       Share
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsClipDialogOpen(true)}
+                    >
+                      <Scissors className="w-4 h-4 mr-2" />
+                      Clip
+                    </Button>
+                    <div className="ml-auto flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateBlogDraft}
+                        disabled={isGeneratingBlog || blogGenerated}
+                      >
+                        {isGeneratingBlog ? (
+                          <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
+                        ) : (
+                          <FileText className="w-4 h-4 mr-2" />
+                        )}
+                        {blogGenerated
+                          ? 'Blog Generated'
+                          : isGeneratingBlog
+                            ? 'Generating...'
+                            : 'Generate Blog Post'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExportContent('markdown')}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Export
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -317,6 +394,15 @@ export default function VODViewerPage() {
       </main>
 
       <Footer />
+
+      <CreateClipDialog
+        open={isClipDialogOpen}
+        onOpenChange={setIsClipDialogOpen}
+        streamId={vod.streamId}
+        streamTitle={vod.title}
+        totalDuration={vod.duration}
+        isLive={false}
+      />
     </div>
   );
 }

@@ -11,7 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, Share2, UserPlus, UserMinus, Twitter, Github, Globe, Loader2 } from 'lucide-react';
+import { Heart, Share2, UserPlus, UserMinus, Twitter, Github, Globe, Loader2, Scissors, ExternalLink, Code2 } from 'lucide-react';
+import { LanguageBadge, extractLanguages, extractGithubRepo } from '@/components/language-badge';
+import { CreateClipDialog } from '@/components/create-clip-dialog';
+import { AiSummaryCard } from '@/components/ai-summary-card';
 import { usersService } from '@/services/users';
 import { useAuth } from '@/contexts/auth-context';
 import { useStreamChat } from '@/hooks/use-stream-chat';
@@ -42,6 +45,7 @@ export default function StreamPage() {
   const [notFound, setNotFound] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [isClipDialogOpen, setIsClipDialogOpen] = useState(false);
 
   // Initialize chat hook only if stream exists (prevents empty streamId issue #64)
   const chat = useStreamChat({
@@ -287,10 +291,15 @@ export default function StreamPage() {
 
                   {stream.tags && stream.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {stream.tags.map((tag) => (
+                      {stream.tags
+                        .filter((tag) => !tag.name.startsWith('repo:') && !tag.name.startsWith('lang:'))
+                        .map((tag) => (
                         <Badge key={tag.id} variant="secondary" className="font-mono">
                           {tag.name}
                         </Badge>
+                      ))}
+                      {extractLanguages(stream.tags).map((lang) => (
+                        <LanguageBadge key={lang} language={lang} className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded-md" />
                       ))}
                     </div>
                   )}
@@ -317,6 +326,14 @@ export default function StreamPage() {
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       Share
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsClipDialogOpen(true)}
+                    >
+                      <Scissors className="w-4 h-4 mr-2" />
+                      Clip
                     </Button>
                     {userProfile.socials && (
                       <div className="flex gap-2 ml-auto">
@@ -355,6 +372,67 @@ export default function StreamPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Code Context Card */}
+              {stream.tags && stream.tags.length > 0 && (extractGithubRepo(stream.tags) || extractLanguages(stream.tags).length > 0) && (() => {
+                const repoSlug = extractGithubRepo(stream.tags);
+                const languages = extractLanguages(stream.tags);
+                return (
+                  <Card className="border-border">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Code2 className="w-4 h-4 text-brand-primary" />
+                        <h3 className="font-semibold text-sm">Code Context</h3>
+                      </div>
+
+                      {repoSlug && (
+                        <div className="flex items-center gap-3 mb-3">
+                          <Github className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <a
+                              href={`https://github.com/${repoSlug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-mono text-brand-primary hover:underline truncate block"
+                            >
+                              {repoSlug}
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {languages.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {languages.map((lang) => (
+                            <LanguageBadge
+                              key={lang}
+                              language={lang}
+                              className="bg-muted px-2 py-1 rounded-md"
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      {repoSlug && (
+                        <a
+                          href={`https://github.com/${repoSlug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="outline" size="sm" className="w-full">
+                            <Github className="w-4 h-4 mr-2" />
+                            View on GitHub
+                            <ExternalLink className="w-3 h-3 ml-2" />
+                          </Button>
+                        </a>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+
+              {/* AI Summary */}
+              <AiSummaryCard streamId={stream.id} />
             </div>
 
             <div className="lg:sticky lg:top-20 h-[calc(100vh-7rem)]">
@@ -364,6 +442,7 @@ export default function StreamPage() {
                 isConnected={chat.isConnected}
                 isAuthenticated={isAuthenticated}
                 currentUser={currentUser}
+                streamId={stream.id}
                 onLoadMore={chat.loadHistory}
                 isLoadingMore={chat.isLoadingHistory}
               />
@@ -373,6 +452,14 @@ export default function StreamPage() {
       </main>
 
       <Footer />
+
+      <CreateClipDialog
+        open={isClipDialogOpen}
+        onOpenChange={setIsClipDialogOpen}
+        streamId={stream.id}
+        streamTitle={stream.title}
+        isLive={true}
+      />
     </div>
   );
 }

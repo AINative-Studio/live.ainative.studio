@@ -4,6 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Eye } from 'lucide-react';
+import { LanguageBadge, extractLanguages } from '@/components/language-badge';
+import { isTechTag, techTagDisplayName, techTagType } from '@/lib/tech-stack';
 import type { Stream } from '@/types';
 
 interface StreamCardProps {
@@ -62,15 +64,37 @@ export function StreamCard({ stream, priority = false }: StreamCardProps) {
               <p className="text-xs text-muted-foreground">{categoryName}</p>
             </div>
           </div>
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {tags.slice(0, 3).map((tag: any, index: number) => (
-                <Badge key={tag.id || tag || index} variant="outline" className="text-[10px] px-1.5 py-0">
-                  {tag.name || tag}
-                </Badge>
-              ))}
-            </div>
-          )}
+          {tags.length > 0 && (() => {
+            const languages = extractLanguages(tags);
+            // Extract framework tags (fw:*)
+            const frameworks = tags
+              .map((tag: any) => {
+                const name = typeof tag === 'string' ? tag : tag.name;
+                return name.startsWith('fw:') ? name : null;
+              })
+              .filter((t): t is string => t !== null);
+            const visibleTags = tags.filter((tag: any) => {
+              const name = tag.name || tag;
+              return !name.startsWith('lang:') && !name.startsWith('fw:') && !name.startsWith('repo:');
+            });
+            return (
+              <div className="flex flex-wrap items-center gap-1 mt-2">
+                {languages.map((lang: string) => (
+                  <LanguageBadge key={lang} language={lang} size="sm" className="bg-muted px-1.5 py-0 rounded" />
+                ))}
+                {frameworks.slice(0, 2).map((fwTag: string) => (
+                  <Badge key={fwTag} variant="outline" className="text-[10px] px-1.5 py-0 border-secondary/40 text-secondary">
+                    {techTagDisplayName(fwTag) || fwTag.slice(3)}
+                  </Badge>
+                ))}
+                {visibleTags.slice(0, 3 - frameworks.length).map((tag: any, index: number) => (
+                  <Badge key={tag.id || tag || index} variant="outline" className="text-[10px] px-1.5 py-0">
+                    {tag.name || tag}
+                  </Badge>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </Card>
     </Link>

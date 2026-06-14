@@ -111,7 +111,7 @@ export interface CategoryWithStats extends Category {
 
 // ==================== Chat Types ====================
 
-export type MessageType = 'chat' | 'system' | 'subscription' | 'donation' | 'announcement';
+export type MessageType = 'chat' | 'system' | 'subscription' | 'donation' | 'announcement' | 'ai';
 
 export interface ChatMessage {
   id: string;
@@ -330,6 +330,64 @@ export interface DashboardQuickStats {
   avgStreamDuration: number;
   newFollowersToday: number;
   newFollowersWeek: number;
+}
+
+// ==================== Clip Types ====================
+
+export interface Clip {
+  id: string;
+  streamId: string;
+  userId: string;
+  title: string;
+  startTime: number;
+  endTime: number;
+  duration: number;
+  videoUrl: string | null;
+  thumbnailUrl: string | null;
+  viewCount: number;
+  user: { id: string; username: string; displayName: string | null; avatar: string | null };
+  stream: { id: string; title: string };
+  createdAt: string;
+}
+
+export interface ClipCreate {
+  title: string;
+  startTime: number;
+  endTime: number;
+}
+
+// ==================== Content Pipeline Types ====================
+
+export interface StreamContent {
+  id: string;
+  streamId: string;
+  blogDraft: string | null;
+  codeSnippets: CodeSnippet[];
+  transcript: TranscriptSegment[];
+  chapters: ContentChapter[];
+  summary: string | null;
+  generatedAt: string | null;
+}
+
+export interface CodeSnippet {
+  code: string;
+  language: string;
+  explanation: string;
+  timestamp: number;
+}
+
+export interface TranscriptSegment {
+  text: string;
+  startTime: number;
+  endTime: number;
+  speaker?: string;
+}
+
+export interface ContentChapter {
+  title: string;
+  startTime: number;
+  endTime: number;
+  summary: string;
 }
 
 // ==================== API Response Types ====================

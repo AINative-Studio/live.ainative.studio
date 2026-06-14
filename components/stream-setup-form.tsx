@@ -13,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { X, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { X, Plus, Loader2, AlertCircle, Check, ChevronsUpDown, Github } from 'lucide-react';
 import categoriesData from '@/data/categories.json';
 import { streamsService } from '@/services/streams';
+import { LANGUAGES, FRAMEWORKS, TechItem } from '@/lib/tech-stack';
 
 interface StreamSetupFormProps {
   initialData?: {
@@ -42,8 +43,24 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [categoryId, setCategoryId] = useState(initialData?.categoryId || '');
-  const [tags, setTags] = useState<string[]>(initialData?.tags || []);
+  // Filter out repo: and tech tags from display — managed by dedicated fields
+  const [tags, setTags] = useState<string[]>(
+    (initialData?.tags || []).filter(
+      (t) => !t.startsWith('repo:') && !t.startsWith('lang:') && !t.startsWith('fw:')
+    )
+  );
+  // Tech stack selection (lang:* and fw:* tags)
+  const initialTechTags = (initialData?.tags || []).filter(
+    (t) => t.startsWith('lang:') || t.startsWith('fw:')
+  );
+  const [selectedTech, setSelectedTech] = useState<string[]>(initialTechTags);
+  const [techDropdownOpen, setTechDropdownOpen] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  // Extract initial GitHub repo from tags (stored as repo:owner/name)
+  const initialRepo = (initialData?.tags || []).find((t) => t.startsWith('repo:'));
+  const [githubRepo, setGithubRepo] = useState(
+    initialRepo ? initialRepo.slice(5) : ''
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -78,6 +95,13 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
 
     if (tags.length > 5) {
       newErrors.tags = 'Maximum 5 tags allowed';
+    }
+
+    if (githubRepo.trim()) {
+      const repoPattern = /^(https?:\/\/github\.com\/)?[\w.-]+\/[\w.-]+\/?$/;
+      if (!repoPattern.test(githubRepo.trim())) {
+        newErrors.githubRepo = 'Enter a valid GitHub URL or owner/repo format';
+      }
     }
 
     setErrors(newErrors);
@@ -118,11 +142,20 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
     try {
       setIsSubmitting(true);
       setSubmitError(null);
+
+      // Build final tags list: regular tags + tech stack tags + repo tag
+      const finalTags = [...tags, ...selectedTech];
+      if (githubRepo.trim()) {
+        // Normalize: strip https://github.com/ prefix if provided
+        const repo = githubRepo.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
+        finalTags.push(`repo:${repo}`);
+      }
+
       await onSubmit({
         title: title.trim(),
         description: description.trim() || undefined,
         categoryId: categoryId || undefined,
-        tags: tags.length > 0 ? tags : undefined,
+        tags: finalTags.length > 0 ? finalTags : undefined,
       });
     } catch (err) {
       console.error('Failed to update stream:', err);
@@ -181,6 +214,32 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
         </p>
       </div>
 
+      {/* GitHub Repository */}
+      <div className="space-y-2">
+        <Label htmlFor="githubRepo">
+          <span className="flex items-center gap-1.5">
+            <Github className="h-4 w-4" />
+            GitHub Repository (optional)
+          </span>
+        </Label>
+        <Input
+          id="githubRepo"
+          placeholder="https://github.com/user/repo or user/repo"
+          value={githubRepo}
+          onChange={(e) => {
+            setGithubRepo(e.target.value);
+            setErrors({ ...errors, githubRepo: '' });
+          }}
+          className={errors.githubRepo ? 'border-destructive' : ''}
+        />
+        {errors.githubRepo && (
+          <p className="text-xs text-destructive">{errors.githubRepo}</p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Link a GitHub repo to show code context on your stream page
+        </p>
+      </div>
+
       {/* Category */}
       <div className="space-y-2">
         <Label htmlFor="category">
@@ -209,6 +268,103 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
         </Select>
         {errors.categoryId && (
           <p className="text-xs text-destructive">{errors.categoryId}</p>
+        )}
+      </div>
+
+      {/* Tech Stack */}
+      <div className="space-y-2">
+        <Label>Tech Stack (optional)</Label>
+        <p className="text-xs text-muted-foreground">
+          Select the languages and frameworks you are using
+        </p>
+        <div className="relative">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-between font-normal"
+            onClick={() => setTechDropdownOpen(!techDropdownOpen)}
+          >
+            {selectedTech.length > 0
+              ? `${selectedTech.length} selected`
+              : 'Select languages & frameworks...'}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+          {techDropdownOpen && (
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-64 overflow-y-auto">
+              <div className="p-2">
+                <p className="text-xs font-semibold text-muted-foreground px-2 py-1 uppercase tracking-wider">Languages</p>
+                {LANGUAGES.map((lang) => {
+                  const isSelected = selectedTech.includes(lang.tag);
+                  return (
+                    <button
+                      key={lang.tag}
+                      type="button"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors text-left"
+                      onClick={() => {
+                        setSelectedTech(
+                          isSelected
+                            ? selectedTech.filter((t) => t !== lang.tag)
+                            : [...selectedTech, lang.tag]
+                        );
+                      }}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${isSelected ? 'bg-brand-primary border-brand-primary' : 'border-muted-foreground/30'}`}>
+                        {isSelected && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      {lang.name}
+                    </button>
+                  );
+                })}
+                <p className="text-xs font-semibold text-muted-foreground px-2 py-1 mt-2 uppercase tracking-wider">Frameworks</p>
+                {FRAMEWORKS.map((fw) => {
+                  const isSelected = selectedTech.includes(fw.tag);
+                  return (
+                    <button
+                      key={fw.tag}
+                      type="button"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors text-left"
+                      onClick={() => {
+                        setSelectedTech(
+                          isSelected
+                            ? selectedTech.filter((t) => t !== fw.tag)
+                            : [...selectedTech, fw.tag]
+                        );
+                      }}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${isSelected ? 'bg-secondary border-secondary' : 'border-muted-foreground/30'}`}>
+                        {isSelected && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      {fw.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+        {selectedTech.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {selectedTech.map((techTag) => {
+              const item = [...LANGUAGES, ...FRAMEWORKS].find((t) => t.tag === techTag);
+              const isLang = techTag.startsWith('lang:');
+              return (
+                <Badge
+                  key={techTag}
+                  variant="secondary"
+                  className={`pl-3 pr-1 py-1 gap-1 ${isLang ? 'bg-brand-primary/10 text-brand-primary border-brand-primary/20' : 'bg-secondary/10 text-secondary border-secondary/20'}`}
+                >
+                  {item?.name || techTag}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTech(selectedTech.filter((t) => t !== techTag))}
+                    className="ml-1 hover:bg-muted rounded-sm p-0.5 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              );
+            })}
+          </div>
         )}
       </div>
 

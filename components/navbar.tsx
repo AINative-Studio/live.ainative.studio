@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Menu, Video, User, LogOut, Settings, Radio } from 'lucide-react';
+import { Search, Menu, Video, User, LogOut, Settings, Radio, Code } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { NotificationDropdown } from '@/components/notification-dropdown';
 import { useAuth } from '@/contexts/auth-context';
@@ -122,6 +122,13 @@ export function Navbar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button type="button" variant="ghost" className="font-mono hidden md:flex" asChild>
+              <Link href="/tech">
+                <Code className="w-4 h-4 mr-2" />
+                Tech
+              </Link>
+            </Button>
           </div>
 
           <form onSubmit={(e) => { handleSearch(e); setShowSuggestions(false); }} className="hidden md:block flex-1 max-w-md mx-4">
@@ -256,6 +263,7 @@ export function Navbar() {
               { href: '/category/devops', label: 'DevOps' },
               { href: '/category/game-dev', label: 'Game Dev' },
               { href: '/category/vibe-coding', label: 'Vibe Coding' },
+              { href: '/tech', label: 'Browse Tech' },
             ].map((cat) => (
               <Link
                 key={cat.href}
