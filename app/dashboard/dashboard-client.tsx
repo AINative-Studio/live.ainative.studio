@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { dashboardService } from '@/services/dashboard';
+import { streamsService } from '@/services/streams';
 import type { DashboardOverview, DashboardQuickStats } from '@/types';
 import {
   Video,
@@ -21,6 +22,7 @@ import {
   Calendar,
   Bell,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 
 // Mock data for fallback
@@ -80,6 +82,7 @@ export default function DashboardPage() {
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [quickStats, setQuickStats] = useState<DashboardQuickStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEndingStream, setIsEndingStream] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useMockData, setUseMockData] = useState(false);
 
@@ -252,8 +255,13 @@ export default function DashboardPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Radio className="w-5 h-5 text-red-500 animate-pulse" />
-                      You Are Live
+                      Stream Active
                     </CardTitle>
+                    <CardDescription>
+                      {overview.currentStream.viewerCount > 0
+                        ? 'You are currently live'
+                        : 'This stream is marked as active. If you are not streaming, end it to avoid costs.'}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
@@ -280,8 +288,40 @@ export default function DashboardPage() {
                         </p>
                       </div>
                     </div>
-                    <Button variant="destructive" className="w-full" asChild>
-                      <Link href="/dashboard/go-live">End Stream</Link>
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      disabled={isEndingStream}
+                      onClick={async () => {
+                        try {
+                          setIsEndingStream(true);
+                          await streamsService.end(overview.currentStream!.id);
+                          // Reload dashboard data
+                          setOverview({ ...overview, currentStream: null });
+                        } catch {
+                          // If direct end fails, try finding and ending via getActiveStream
+                          try {
+                            const active = await streamsService.getActiveStream();
+                            if (active) {
+                              await streamsService.end(active.id);
+                            }
+                            setOverview({ ...overview, currentStream: null });
+                          } catch {
+                            setError('Failed to end stream. Please try again.');
+                          }
+                        } finally {
+                          setIsEndingStream(false);
+                        }
+                      }}
+                    >
+                      {isEndingStream ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Ending Stream...
+                        </>
+                      ) : (
+                        'End Stream'
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
