@@ -160,8 +160,8 @@ After work:
 **URL**: live.ainative.studio
 **Tech Stack**: Next.js 13.5.1 + TypeScript 5.2.2 + Tailwind CSS 3.3.3
 **Framework**: Next.js App Router
-**Deployment**: Vercel or Netlify
-**Last Updated**: 2025-12-23
+**Deployment**: Railway (auto-deploy from main)
+**Last Updated**: 2026-06-17
 
 ---
 
@@ -172,31 +172,63 @@ After work:
 liveainativestudio/
 ├── app/                    # Next.js App Router pages
 │   ├── layout.tsx          # Root layout
-│   ├── page.tsx            # Homepage
-│   ├── login/              # Authentication
-│   ├── register/
+│   ├── page.tsx            # Homepage (trending, rising, recommended, categories)
+│   ├── login/              # Email + GitHub + Google OAuth login
+│   │   └── callback/       # OAuth callback handler
+│   ├── register/           # Registration with OAuth
 │   ├── dashboard/          # Streamer dashboard
-│   ├── stream/[username]/  # Stream viewer
-│   ├── user/[username]/    # User profile
-│   ├── category/[slug]/    # Category browse
-│   └── search/             # Search page
+│   │   ├── go-live/        # Stream creation + RTMP/WebRTC setup
+│   │   ├── analytics/      # Channel analytics with charts
+│   │   ├── content/        # AI content pipeline (blog, snippets, transcript)
+│   │   ├── moderators/     # Moderator management
+│   │   ├── notifications/  # Follow notifications
+│   │   └── schedule/       # Stream schedule CRUD
+│   ├── stream/[username]/  # Live stream viewer + chat + AI summary
+│   ├── user/[username]/    # User profile (followers, schedule, streams)
+│   ├── category/[slug]/    # Category browse with sort
+│   ├── search/             # Stream + user search
+│   ├── tech/               # Browse streams by language/framework
+│   │   └── [slug]/         # Streams using specific technology
+│   ├── clips/              # Browse popular clips
+│   ├── vod/[id]/           # VOD player with chapters + content export
+│   ├── settings/           # Profile settings + avatar upload
+│   └── api/whip/           # WHIP proxy for WebRTC streaming
 ├── components/             # Reusable components
 │   ├── ui/                 # shadcn/ui components
-│   ├── navbar.tsx
+│   ├── navbar.tsx          # Nav with categories, tech, clips, search typeahead
 │   ├── footer.tsx
-│   ├── stream-card.tsx
-│   ├── stream-player.tsx
-│   ├── chat-panel.tsx
-│   └── chat-message.tsx
-├── data/                   # Mock data (to be replaced with API)
-├── docs/                   # Documentation
-│   └── BRANDING_GUIDE.md   # Branding & design guide
-├── hooks/                  # Custom React hooks
+│   ├── stream-card.tsx     # Stream card with language badges
+│   ├── stream-player.tsx   # HLS/Cloudflare Stream player
+│   ├── chat-panel.tsx      # Real-time chat + AI assistant
+│   ├── chat-message.tsx    # Chat message (regular + AI styling)
+│   ├── ai-summary-card.tsx # AI stream summary with auto-refresh
+│   ├── clip-card.tsx       # Clip display card
+│   ├── create-clip-dialog.tsx # Clip creation dialog
+│   ├── language-badge.tsx  # Colored language indicator
+│   ├── stream-setup-form.tsx # Stream setup with tech stack + GitHub repo
+│   └── browser-stream-preview.tsx # WebRTC browser streaming
+├── services/               # API service layer
+│   ├── streams.ts          # Stream CRUD, categories, tags, search
+│   ├── users.ts            # Profiles, follow, schedule, avatars
+│   ├── chat.ts             # Chat messages (HTTP + WebSocket)
+│   ├── vod.ts              # VOD browsing and chapters
+│   ├── dashboard.ts        # Dashboard overview, analytics
+│   ├── moderator.ts        # Moderator management
+│   ├── clips.ts            # Clip creation and browsing
+│   ├── ai-chat.ts          # AI Q&A, summaries, code explanation
+│   └── content-pipeline.ts # Blog generation, transcripts, export
 ├── lib/                    # Utilities
-├── public/                 # Static assets
-│   └── ainative-icon.svg   # Logo
+│   ├── auth.ts             # Token management, login/register API
+│   ├── api-client.ts       # HTTP client with snake_case transform
+│   ├── websocket.ts        # WebSocket client for real-time chat
+│   ├── whip-client.ts      # WHIP/WebRTC client for browser streaming
+│   └── tech-stack.ts       # Language/framework definitions
+├── contexts/               # React contexts
+│   └── auth-context.tsx    # Auth provider with login/register/logout
+├── e2e/                    # Playwright E2E tests (96+ tests)
 ├── types/                  # TypeScript definitions
-└── CLAUDE.md               # This file
+├── public/                 # Static assets
+└── CLAUDE.md               # Project instructions
 ```
 
 ---
@@ -251,38 +283,54 @@ NEXT_PUBLIC_WS_URL=wss://api.ainative.studio
 
 ## Backend Integration
 
-### API Endpoints (To Be Implemented)
-- `GET /v1/streams` - List live streams
-- `POST /v1/streams` - Create stream (get ingest key)
-- `GET /v1/streams/{id}` - Stream details
-- `WS /v1/streams/{id}/chat/ws` - Live chat WebSocket
-- `GET /v1/users/{username}` - User profile
-- `POST /v1/users/{username}/follow` - Follow user
-- `GET /v1/categories` - List categories
-- `GET /v1/search` - Search streams/users
+### API Base
+- **REST**: `https://api.ainative.studio/v1`
+- **WebSocket**: `wss://api.ainative.studio/v1/streams/{id}/chat/ws`
+- **OpenAPI Spec**: `https://api.ainative.studio/v1/openapi.json`
 
-### Backend Issues
-See GitHub Issues #353-386 in AINative-Studio/core for backend implementation.
+### Key API Endpoints (60+ wired up)
+- Auth: login, register, OAuth (GitHub/Google), refresh, me
+- Streams: CRUD, start/end, categories, tags, search, trending, rising
+- Users: profiles, follow/unfollow, followers/following, schedule
+- Chat: WebSocket real-time + HTTP history
+- VODs: browse, chapters, AI chapter generation
+- Analytics: channel overview, growth, viewers, audience, export
+- Dashboard: overview, quick stats, notifications
+
+### Backend Notes
+- API returns snake_case; `apiClient` auto-transforms to camelCase
+- Stream end uses `/streams/{id}/end` (NOT `/streams/id/{id}/end`)
+- OAuth callback tokens come as `accessToken` (transformed from `access_token`)
 
 ---
 
 ## Current Status
 
-### Implemented (Frontend Only)
-- ✅ 11 pages with mock data
-- ✅ Stream cards and grid layout
-- ✅ Chat panel UI (mock messages)
-- ✅ User profiles
-- ✅ Category browsing
-- ✅ Search (client-side)
-- ✅ Authentication forms (no backend)
+### Implemented & Live
+- ✅ 30+ pages with real API integration
+- ✅ Authentication: email + GitHub OAuth + Google OAuth
+- ✅ Live streaming: RTMP (OBS) + WebRTC/WHIP (browser)
+- ✅ Real-time chat via WebSocket with reconnection
+- ✅ Stream viewer with follow, like, share, clip buttons
+- ✅ User profiles with followers, following, schedule
+- ✅ Category browsing with sort (viewers/recent/trending)
+- ✅ Search: streams + users + typeahead suggestions
+- ✅ Tech-stack discovery: browse by language/framework
+- ✅ Clips system: create from live/VOD, browse page
+- ✅ Code-aware stream pages: GitHub repo, language badges
+- ✅ AI chat assistant: Ask AI button, @ai trigger, AI summary card
+- ✅ Content pipeline: blog drafts, code snippets, transcripts, export
+- ✅ Dashboard: analytics with charts, moderators, schedule, notifications
+- ✅ VOD player with chapters, transcript, content export
+- ✅ Avatar upload in settings
+- ✅ Zombie stream detection + End Stream on dashboard
+- ✅ 96+ Playwright E2E tests
 
-### Pending
-- ⏳ Backend API integration
-- ⏳ Real-time chat (WebSocket)
-- ⏳ Live stream playback (Cloudflare Stream)
-- ⏳ Authentication flow
-- ⏳ Branding update (see BRANDING_GUIDE.md)
+### Pending (Backend)
+- ⏳ Clips backend endpoints (frontend ready)
+- ⏳ AI chat/summary backend endpoints (frontend ready)
+- ⏳ Content pipeline backend endpoints (frontend ready)
+- ⏳ Rich GitHub integration (core has APIs, not yet exposed)
 
 ---
 

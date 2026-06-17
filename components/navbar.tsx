@@ -129,6 +129,13 @@ export function Navbar() {
                 Tech
               </Link>
             </Button>
+
+            <Button type="button" variant="ghost" className="font-mono hidden md:flex" asChild>
+              <Link href="/clips">
+                <Video className="w-4 h-4 mr-2" />
+                Clips
+              </Link>
+            </Button>
           </div>
 
           <form onSubmit={(e) => { handleSearch(e); setShowSuggestions(false); }} className="hidden md:block flex-1 max-w-md mx-4">
@@ -264,6 +271,7 @@ export function Navbar() {
               { href: '/category/game-dev', label: 'Game Dev' },
               { href: '/category/vibe-coding', label: 'Vibe Coding' },
               { href: '/tech', label: 'Browse Tech' },
+              { href: '/clips', label: 'Clips' },
             ].map((cat) => (
               <Link
                 key={cat.href}

@@ -535,6 +535,39 @@ export default function DashboardPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Quick Links */}
+              <Card className="border-border">
+                <CardHeader>
+                  <CardTitle className="text-lg">Tools</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link href="/dashboard/analytics">
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Analytics
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link href="/dashboard/content">
+                      <Activity className="w-4 h-4 mr-2" />
+                      Content Pipeline
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link href="/dashboard/moderators">
+                      <Users className="w-4 h-4 mr-2" />
+                      Moderators
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link href="/settings">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Settings
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
