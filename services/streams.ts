@@ -71,7 +71,7 @@ export const streamsService = {
   },
 
   async end(streamId: string): Promise<Stream> {
-    return apiClient.post(`/streams/id/${streamId}/end`, {}, true);
+    return apiClient.post(`/streams/${streamId}/end`, {}, true);
   },
 
   /** Get user's active stream (requires auth) - returns first non-ended stream */
