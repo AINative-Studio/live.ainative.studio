@@ -69,7 +69,7 @@ async function mockApi(page: Page, opts: {
   });
 
   // Mock /end and /start FIRST (more specific routes must be registered first)
-  await page.route('**/api.ainative.studio/v1/streams/id/*/end', async (route) => {
+  await page.route('**/api.ainative.studio/v1/streams/*/end', async (route) => {
     await page.evaluate(() => (window as any).__apiCalls?.push('end'));
     await route.fulfill({
       status: 200,
@@ -195,7 +195,7 @@ test.describe('Stream Lifecycle — Stale Stream Bugs', () => {
     await mockApi(page, { activeStream: makeStream({ status: 'live' }) });
 
     // Override the end endpoint to also clear the active stream for subsequent GETs
-    await page.route('**/api.ainative.studio/v1/streams/id/*/end', async (route) => {
+    await page.route('**/api.ainative.studio/v1/streams/*/end', async (route) => {
       streamEnded = true;
       await route.fulfill({
         status: 200,

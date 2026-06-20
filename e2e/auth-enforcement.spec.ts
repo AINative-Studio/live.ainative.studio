@@ -79,9 +79,9 @@ test.describe('Auth Enforcement — Login Page UI', () => {
     await expect(page.getByRole('button', { name: /Google/i })).toBeVisible();
 
     // Email/password form
-    await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/password/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /Sign In/i })).toBeVisible();
+    await expect(page.locator('#email')).toBeVisible();
+    await expect(page.locator('#password')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign In' })).toBeVisible();
 
     // Sign up link
     await expect(page.getByText("Don't have an account?")).toBeVisible();
@@ -99,11 +99,11 @@ test.describe('Auth Enforcement — Login Page UI', () => {
     await page.waitForLoadState('networkidle');
 
     // Fill in bad credentials
-    await page.getByLabel(/email/i).fill('fake@doesnotexist.com');
-    await page.getByLabel(/password/i).fill('wrongpassword123');
+    await page.locator('#email').fill('fake@doesnotexist.com');
+    await page.locator('#password').fill('wrongpassword123');
 
     // Submit
-    await page.getByRole('button', { name: /Sign In/i }).click();
+    await page.getByRole('button', { name: 'Sign In' }).click();
     await page.waitForTimeout(3000);
 
     // Should show error — NOT redirect to dashboard
