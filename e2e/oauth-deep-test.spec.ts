@@ -464,7 +464,7 @@ test.describe('OAuth UX Edge Cases', () => {
     await page.waitForLoadState('networkidle');
 
     // Try to submit with empty fields
-    await page.getByRole('button', { name: /Sign In/i }).click();
+    await page.locator('button[type="submit"]', { hasText: 'Sign In' }).click();
     await page.waitForTimeout(2000);
 
     // Should still be on login page
@@ -478,9 +478,9 @@ test.describe('OAuth UX Edge Cases', () => {
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
 
-    await page.getByLabel(/email/i).fill('notanemail');
-    await page.getByLabel(/password/i).fill('password123');
-    await page.getByRole('button', { name: /Sign In/i }).click();
+    await page.locator('#email').fill('notanemail');
+    await page.locator('#password').fill('password123');
+    await page.locator('button[type="submit"]', { hasText: 'Sign In' }).click();
     await page.waitForTimeout(3000);
 
     // Should show error or stay on login

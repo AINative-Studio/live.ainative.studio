@@ -81,7 +81,7 @@ test.describe('Auth Enforcement — Login Page UI', () => {
     // Email/password form
     await expect(page.locator('#email')).toBeVisible();
     await expect(page.locator('#password')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Sign In' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign In', exact: true })).toBeVisible();
 
     // Sign up link
     await expect(page.getByText("Don't have an account?")).toBeVisible();
@@ -103,7 +103,7 @@ test.describe('Auth Enforcement — Login Page UI', () => {
     await page.locator('#password').fill('wrongpassword123');
 
     // Submit
-    await page.getByRole('button', { name: 'Sign In' }).click();
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     await page.waitForTimeout(3000);
 
     // Should show error — NOT redirect to dashboard
