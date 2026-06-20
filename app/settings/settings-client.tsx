@@ -13,10 +13,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { User, Settings, Loader2, Upload } from 'lucide-react';
+import { User, Settings, Loader2, Upload, Download, Trash2, Shield, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { usersService } from '@/services/users';
+import { setupMFA, verifyMFA } from '@/lib/auth';
 import type { User as UserType } from '@/types';
 
 const profileSchema = z.object({
@@ -39,6 +49,19 @@ export default function SettingsPage() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  // GDPR
+  const [isExportingData, setIsExportingData] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // MFA
+  const [mfaSetupData, setMfaSetupData] = useState<{ secret: string; qrCodeUrl: string; backupCodes: string[] } | null>(null);
+  const [isSettingUpMfa, setIsSettingUpMfa] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
+  const [isVerifyingMfa, setIsVerifyingMfa] = useState(false);
+  const [mfaVerified, setMfaVerified] = useState(false);
 
   const {
     register,
@@ -101,6 +124,78 @@ export default function SettingsPage() {
 
     fetchProfile();
   }, [isAuthenticated, reset]);
+
+  const handleExportData = async () => {
+    setIsExportingData(true);
+    try {
+      const blob = await usersService.exportMyData();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'my-data-export.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Data exported successfully!');
+    } catch (error) {
+      console.error('Data export failed:', error);
+      toast.error('Failed to export data. Please try again.');
+    } finally {
+      setIsExportingData(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return;
+    setIsDeletingAccount(true);
+    try {
+      await usersService.deleteMyAccount();
+      toast.success('Account deleted. Redirecting...');
+      setShowDeleteDialog(false);
+      // Clear auth and redirect
+      const { clearAuth } = await import('@/lib/auth');
+      clearAuth();
+      router.replace('/');
+    } catch (error) {
+      console.error('Account deletion failed:', error);
+      toast.error('Failed to delete account. Please try again.');
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
+  const handleSetupMfa = async () => {
+    setIsSettingUpMfa(true);
+    try {
+      const data = await setupMFA();
+      setMfaSetupData(data);
+    } catch (error) {
+      console.error('MFA setup failed:', error);
+      toast.error('Failed to set up MFA. Please try again.');
+    } finally {
+      setIsSettingUpMfa(false);
+    }
+  };
+
+  const handleVerifyMfa = async () => {
+    if (!mfaCode || mfaCode.length < 6) return;
+    setIsVerifyingMfa(true);
+    try {
+      const result = await verifyMFA(mfaCode);
+      if (result.verified) {
+        setMfaVerified(true);
+        toast.success('MFA enabled successfully!');
+      } else {
+        toast.error('Invalid code. Please try again.');
+      }
+    } catch (error) {
+      console.error('MFA verification failed:', error);
+      toast.error('Invalid code. Please try again.');
+    } finally {
+      setIsVerifyingMfa(false);
+    }
+  };
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsSubmitting(true);
@@ -324,6 +419,213 @@ export default function SettingsPage() {
                   {errors.socials?.website && (
                     <p className="text-sm text-destructive">{errors.socials.website.message}</p>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* MFA Section */}
+            <Card className="border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  Two-Factor Authentication
+                </CardTitle>
+                <CardDescription>Add an extra layer of security to your account</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {mfaVerified ? (
+                  <div className="flex items-center gap-2 p-3 rounded-md bg-green-500/10 border border-green-500/20">
+                    <Shield className="h-5 w-5 text-green-500" />
+                    <p className="text-sm font-medium text-green-500">MFA is enabled</p>
+                  </div>
+                ) : !mfaSetupData ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSetupMfa}
+                    disabled={isSettingUpMfa}
+                  >
+                    {isSettingUpMfa ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Shield className="w-4 h-4 mr-2" />
+                    )}
+                    {isSettingUpMfa ? 'Setting up...' : 'Enable MFA'}
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">
+                        Scan this QR code with your authenticator app:
+                      </p>
+                      <div className="flex justify-center p-4 bg-white rounded-lg w-fit mx-auto">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={mfaSetupData.qrCodeUrl}
+                          alt="MFA QR Code"
+                          className="w-48 h-48"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Or enter this secret manually:
+                      </p>
+                      <code className="block p-2 bg-muted rounded text-sm font-mono break-all">
+                        {mfaSetupData.secret}
+                      </code>
+                    </div>
+
+                    {mfaSetupData.backupCodes.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Backup codes (save these):</p>
+                        <div className="grid grid-cols-2 gap-1 p-3 bg-muted rounded">
+                          {mfaSetupData.backupCodes.map((code, i) => (
+                            <code key={i} className="text-sm font-mono">{code}</code>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="mfa-code">Enter verification code</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="mfa-code"
+                          type="text"
+                          placeholder="123456"
+                          value={mfaCode}
+                          onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          maxLength={6}
+                          className="max-w-[200px] font-mono"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleVerifyMfa}
+                          disabled={isVerifyingMfa || mfaCode.length < 6}
+                          className="bg-brand-primary hover:bg-primary-dark"
+                        >
+                          {isVerifyingMfa ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            'Verify'
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Data & Privacy Section */}
+            <Card className="border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="w-5 h-5" />
+                  Data & Privacy
+                </CardTitle>
+                <CardDescription>Manage your data and account</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Download My Data */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Download My Data</p>
+                    <p className="text-sm text-muted-foreground">
+                      Export all your account data as a JSON file
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleExportData}
+                    disabled={isExportingData}
+                  >
+                    {isExportingData ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    {isExportingData ? 'Exporting...' : 'Download'}
+                  </Button>
+                </div>
+
+                {/* Delete Account */}
+                <div className="border-t border-border pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-destructive">Delete Account</p>
+                      <p className="text-sm text-muted-foreground">
+                        Permanently delete your account and all associated data
+                      </p>
+                    </div>
+                    <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                      <DialogTrigger asChild>
+                        <Button type="button" variant="destructive">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete Account
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle className="w-5 h-5" />
+                            Delete Account
+                          </DialogTitle>
+                          <DialogDescription>
+                            This action is permanent and cannot be undone. All your data,
+                            streams, followers, and settings will be permanently deleted.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="delete-confirm">
+                              Type <span className="font-mono font-bold">DELETE</span> to confirm
+                            </Label>
+                            <Input
+                              id="delete-confirm"
+                              value={deleteConfirmText}
+                              onChange={(e) => setDeleteConfirmText(e.target.value)}
+                              placeholder="DELETE"
+                              className="font-mono"
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setShowDeleteDialog(false);
+                              setDeleteConfirmText('');
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={handleDeleteAccount}
+                            disabled={deleteConfirmText !== 'DELETE' || isDeletingAccount}
+                          >
+                            {isDeletingAccount ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Permanently Delete
+                              </>
+                            )}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               </CardContent>
             </Card>

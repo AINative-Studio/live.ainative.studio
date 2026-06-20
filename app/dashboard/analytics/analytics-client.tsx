@@ -28,6 +28,7 @@ import {
   BarChart3,
   Loader2,
   AlertCircle,
+  Download,
 } from 'lucide-react';
 
 type DateRange = 7 | 30 | 90;
@@ -66,6 +67,7 @@ export default function AnalyticsPage() {
   } | null>(null);
 
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Redirect if not authenticated
@@ -138,6 +140,27 @@ export default function AnalyticsPage() {
     fetchAnalytics();
   }, [isAuthenticated, dateRange, topStreamMetric]);
 
+  // Export analytics data
+  const handleExport = async (format: 'csv' | 'json') => {
+    setIsExporting(true);
+    try {
+      const blob = await dashboardService.exportChannelAnalytics(format);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics-export.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+      setError('Failed to export analytics data. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Helper function to format duration
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -197,9 +220,39 @@ export default function AnalyticsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Analytics</h1>
-            <p className="text-muted-foreground">Track your streaming performance and growth</p>
+          <div className="mb-8 flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Analytics</h1>
+              <p className="text-muted-foreground">Track your streaming performance and growth</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExport('csv')}
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                Export CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExport('json')}
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                Export JSON
+              </Button>
+            </div>
           </div>
 
           {/* Date Range Selector */}

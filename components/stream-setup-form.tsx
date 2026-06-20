@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { X, Plus, Loader2, AlertCircle, Check, ChevronsUpDown, Github } from 'lucide-react';
+import { X, Plus, Loader2, AlertCircle, Check, ChevronsUpDown, Github, Sparkles, ImageIcon } from 'lucide-react';
 import categoriesData from '@/data/categories.json';
 import { streamsService } from '@/services/streams';
 import { LANGUAGES, FRAMEWORKS, TechItem } from '@/lib/tech-stack';
@@ -65,6 +65,9 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>(categoriesData as Category[]);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState<string | null>(null);
 
   // Fetch real categories from API
   useEffect(() => {
@@ -173,6 +176,51 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
     }
   };
 
+  const handleGenerateThumbnail = async () => {
+    if (!title.trim()) {
+      setErrors({ ...errors, title: 'Enter a title first to generate a thumbnail' });
+      return;
+    }
+
+    setIsGeneratingThumbnail(true);
+    setThumbnailError(null);
+
+    try {
+      // Derive language from selected tech tags
+      const langTag = selectedTech.find((t) => t.startsWith('lang:'));
+      const language = langTag ? langTag.slice(5) : undefined;
+
+      const res = await fetch('/api/ai/thumbnail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim() || undefined,
+          language,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setThumbnailError(data.error || 'Failed to generate thumbnail');
+        return;
+      }
+
+      if (data.imageUrl) {
+        setThumbnailUrl(data.imageUrl);
+      } else if (data.base64) {
+        setThumbnailUrl(`data:image/png;base64,${data.base64}`);
+      } else {
+        setThumbnailError('No image returned from service');
+      }
+    } catch (err) {
+      setThumbnailError('Failed to connect to thumbnail service');
+    } finally {
+      setIsGeneratingThumbnail(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Title */}
@@ -196,6 +244,55 @@ export function StreamSetupForm({ initialData, onSubmit }: StreamSetupFormProps)
         <p className="text-xs text-muted-foreground">
           {title.length}/100 characters
         </p>
+
+        {/* Generate Thumbnail */}
+        <div className="flex items-center gap-2 mt-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateThumbnail}
+            disabled={isGeneratingThumbnail || !title.trim()}
+            className="gap-1.5"
+          >
+            {isGeneratingThumbnail ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                Generate Thumbnail
+              </>
+            )}
+          </Button>
+          {thumbnailUrl && (
+            <button
+              type="button"
+              onClick={() => { setThumbnailUrl(null); setThumbnailError(null); }}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        {thumbnailError && (
+          <p className="text-xs text-destructive mt-1">{thumbnailError}</p>
+        )}
+        {thumbnailUrl && (
+          <div className="mt-3 relative rounded-lg overflow-hidden border border-border bg-dark-2">
+            <img
+              src={thumbnailUrl}
+              alt="Generated stream thumbnail"
+              className="w-full aspect-video object-cover"
+            />
+            <div className="absolute top-2 right-2 bg-dark-1/70 rounded px-2 py-0.5 text-xs text-muted-foreground flex items-center gap-1">
+              <ImageIcon className="w-3 h-3" />
+              1280 x 720
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Description */}

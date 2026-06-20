@@ -114,4 +114,27 @@ export const usersService = {
   async isFollowing(username: string): Promise<{ isFollowing: boolean }> {
     return apiClient.get(`/streams/users/${username}/follow`, true);
   },
+
+  // ==================== GDPR / Account Management ====================
+
+  /** Export all user data (GDPR) (requires auth) */
+  async exportMyData(): Promise<Blob> {
+    const { getAuthToken } = await import('@/lib/auth');
+    const token = getAuthToken();
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.ainative.studio/v1';
+    const response = await fetch(`${API_BASE_URL}/users/me/export`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Data export failed: ${response.status}`);
+    }
+    return response.blob();
+  },
+
+  /** Delete current user account (requires auth) */
+  async deleteMyAccount(): Promise<void> {
+    return apiClient.delete('/users/me', true);
+  },
 };

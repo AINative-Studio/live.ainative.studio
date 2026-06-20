@@ -146,4 +146,49 @@ export const dashboardService = {
   }> {
     return apiClient.get('/streams/analytics/channel/revenue', true);
   },
+
+  // ==================== Per-Stream Analytics ====================
+
+  /** Get geographic analytics for a specific stream (requires auth) */
+  async getStreamGeography(streamId: string): Promise<{
+    geographicBreakdown: { countryCode: string; viewerCount: number; percentage: number }[];
+  }> {
+    return apiClient.get(`/streams/${streamId}/analytics/geography`, true);
+  },
+
+  /** Export analytics data for a specific stream (requires auth) */
+  async exportStreamAnalytics(streamId: string, format: 'csv' | 'json' = 'csv'): Promise<Blob> {
+    const token = (await import('@/lib/auth')).getAuthToken();
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.ainative.studio/v1';
+    const response = await fetch(
+      `${API_BASE_URL}/streams/${streamId}/analytics/export?format=${format}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Export failed: ${response.status}`);
+    }
+    return response.blob();
+  },
+
+  /** Export channel analytics (requires auth) */
+  async exportChannelAnalytics(format: 'csv' | 'json' = 'csv'): Promise<Blob> {
+    const token = (await import('@/lib/auth')).getAuthToken();
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.ainative.studio/v1';
+    const response = await fetch(
+      `${API_BASE_URL}/streams/analytics/channel/export?format=${format}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Export failed: ${response.status}`);
+    }
+    return response.blob();
+  },
 };

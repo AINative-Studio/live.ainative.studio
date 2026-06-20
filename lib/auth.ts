@@ -237,6 +237,101 @@ export async function refreshToken(): Promise<boolean> {
   }
 }
 
+// Magic Link
+export async function sendMagicLink(email: string): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/auth/magic-link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to send magic link';
+    try {
+      const error = await response.json();
+      errorMessage = error.detail || errorMessage;
+    } catch {}
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
+export async function verifyMagicLink(token: string): Promise<AuthResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/magic-link/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Magic link verification failed';
+    try {
+      const error = await response.json();
+      errorMessage = error.detail || errorMessage;
+    } catch {}
+    throw new Error(errorMessage);
+  }
+
+  const data: AuthResponse = await response.json();
+  setAuthToken(data.access_token);
+  if (data.refresh_token) {
+    setRefreshToken(data.refresh_token);
+  }
+
+  try {
+    await fetchAndStoreUser();
+  } catch {}
+
+  return data;
+}
+
+// MFA
+export async function setupMFA(): Promise<{ secret: string; qrCodeUrl: string; backupCodes: string[] }> {
+  const token = getAuthToken();
+  const response = await fetch(`${API_BASE_URL}/auth/mfa/setup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to set up MFA';
+    try {
+      const error = await response.json();
+      errorMessage = error.detail || errorMessage;
+    } catch {}
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
+export async function verifyMFA(code: string): Promise<{ verified: boolean }> {
+  const token = getAuthToken();
+  const response = await fetch(`${API_BASE_URL}/auth/mfa/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ code }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'MFA verification failed';
+    try {
+      const error = await response.json();
+      errorMessage = error.detail || errorMessage;
+    } catch {}
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
 async function fetchAndStoreUser(): Promise<void> {
   const token = getAuthToken();
   if (!token) return;

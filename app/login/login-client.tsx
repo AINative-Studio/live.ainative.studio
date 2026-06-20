@@ -8,15 +8,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Video, Github, Loader2, AlertCircle } from 'lucide-react';
+import { Video, Github, Loader2, AlertCircle, Mail, CheckCircle2 } from 'lucide-react';
 import { TerminalHeader } from '@/components/terminal-header';
 import { useAuth } from '@/contexts/auth-context';
+import { sendMagicLink } from '@/lib/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState('');
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
 
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -29,6 +34,21 @@ export default function LoginPage() {
       router.replace(redirectTo);
     }
   }, [isAuthenticated, router]);
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!magicLinkEmail) return;
+    setError(null);
+    setIsSendingMagicLink(true);
+    try {
+      await sendMagicLink(magicLinkEmail);
+      setMagicLinkSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send magic link.');
+    } finally {
+      setIsSendingMagicLink(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,6 +210,71 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            {!showMagicLink ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-muted-foreground hover:text-foreground"
+                onClick={() => setShowMagicLink(true)}
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Sign in with email link
+              </Button>
+            ) : magicLinkSent ? (
+              <div className="flex items-center gap-2 p-4 rounded-md bg-green-500/10 border border-green-500/20">
+                <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-green-500">Magic link sent!</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Check your email at {magicLinkEmail} for a sign-in link.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleMagicLink} className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="magic-link-email">Email for magic link</Label>
+                  <Input
+                    id="magic-link-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={magicLinkEmail}
+                    onChange={(e) => setMagicLinkEmail(e.target.value)}
+                    disabled={isSendingMagicLink}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  className="w-full"
+                  disabled={isSendingMagicLink || !magicLinkEmail}
+                >
+                  {isSendingMagicLink ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Send Magic Link
+                    </>
+                  )}
+                </Button>
+              </form>
+            )}
 
             <div className="text-center text-sm">
               <span className="text-muted-foreground">Don't have an account? </span>

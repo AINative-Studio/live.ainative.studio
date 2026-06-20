@@ -6,15 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { aiChatService } from '@/services/ai-chat';
-import { NotFoundError } from '@/lib/api-client';
 
 interface AiSummaryCardProps {
   streamId: string;
+  streamTitle?: string;
+  streamLanguage?: string;
+  streamDescription?: string;
 }
 
 const REFRESH_INTERVAL_MS = 2.5 * 60 * 1000; // 2.5 minutes
 
-export function AiSummaryCard({ streamId }: AiSummaryCardProps) {
+export function AiSummaryCard({ streamId, streamTitle, streamLanguage, streamDescription }: AiSummaryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,16 +30,16 @@ export function AiSummaryCard({ streamId }: AiSummaryCardProps) {
     setError(null);
 
     try {
-      const data = await aiChatService.getStreamSummary(streamId);
+      const data = await aiChatService.getStreamSummary(streamId, {
+        streamTitle,
+        streamLanguage,
+        streamDescription: streamDescription || undefined,
+      });
       setSummary(data.summary);
       setTopics(data.topics);
       setCurrentActivity(data.currentActivity);
-    } catch (err) {
-      if (err instanceof NotFoundError) {
-        setError('AI summary coming soon! This feature is not available yet.');
-      } else {
-        setError('Unable to load AI summary right now.');
-      }
+    } catch {
+      setError('Unable to load AI summary right now.');
     } finally {
       setIsLoading(false);
     }

@@ -5,10 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Smile, Sparkles } from 'lucide-react';
+import { Send, Smile, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { ChatMessage } from './chat-message';
 import { aiChatService } from '@/services/ai-chat';
-import { NotFoundError } from '@/lib/api-client';
 import type { ChatMessage as ChatMessageType } from '@/types';
 
 // Minimal user type for auth context compatibility
@@ -26,6 +25,9 @@ interface ChatPanelProps {
   isAuthenticated: boolean;
   currentUser: AuthUser | null;
   streamId?: string;
+  streamTitle?: string;
+  streamLanguage?: string;
+  streamDescription?: string;
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
 }
@@ -37,6 +39,9 @@ export function ChatPanel({
   isAuthenticated,
   currentUser,
   streamId,
+  streamTitle,
+  streamLanguage,
+  streamDescription,
   onLoadMore,
   isLoadingMore = false,
 }: ChatPanelProps) {
@@ -44,6 +49,9 @@ export function ChatPanel({
   const [isAiMode, setIsAiMode] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiMessages, setAiMessages] = useState<ChatMessageType[]>([]);
+  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [ttsPlaying, setTtsPlaying] = useState<string | null>(null);
+  const lastMessageCountRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -51,6 +59,55 @@ export function ChatPanel({
   const allMessages = [...messages, ...aiMessages].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
+
+  // Play TTS for a given text
+  const playTts = useCallback(async (text: string, messageId: string) => {
+    try {
+      setTtsPlaying(messageId);
+      const res = await fetch('/api/ai/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!res.ok) {
+        console.warn('TTS request failed');
+        setTtsPlaying(null);
+        return;
+      }
+
+      const data = await res.json();
+      if (!data.audio) {
+        setTtsPlaying(null);
+        return;
+      }
+
+      const audioSrc = `data:audio/mp3;base64,${data.audio}`;
+      const audio = new Audio(audioSrc);
+      audio.onended = () => setTtsPlaying(null);
+      audio.onerror = () => setTtsPlaying(null);
+      await audio.play();
+    } catch {
+      setTtsPlaying(null);
+    }
+  }, []);
+
+  // Auto-TTS for new messages when enabled
+  useEffect(() => {
+    if (!ttsEnabled) {
+      lastMessageCountRef.current = allMessages.length;
+      return;
+    }
+
+    if (allMessages.length > lastMessageCountRef.current && lastMessageCountRef.current > 0) {
+      const newMsg = allMessages[allMessages.length - 1];
+      if (newMsg && newMsg.content && !ttsPlaying) {
+        playTts(newMsg.content, newMsg.id);
+      }
+    }
+
+    lastMessageCountRef.current = allMessages.length;
+  }, [allMessages.length, ttsEnabled, ttsPlaying, allMessages, playTts]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -81,21 +138,23 @@ export function ChatPanel({
     setIsAiLoading(true);
 
     try {
-      const response = await aiChatService.askQuestion(streamId, question);
+      const response = await aiChatService.askQuestion(streamId, question, {
+        streamTitle,
+        streamLanguage,
+        streamDescription: streamDescription || undefined,
+      });
       const aiMsg = createAiMessage(response.answer);
       setAiMessages((prev) => [...prev, aiMsg]);
-    } catch (err) {
-      const isNotFound = err instanceof NotFoundError;
-      const fallbackText = isNotFound
-        ? 'AI assistant coming soon! This feature is not available yet.'
-        : 'Sorry, I could not process your question right now. Please try again later.';
-      const aiMsg = createAiMessage(fallbackText);
+    } catch {
+      const aiMsg = createAiMessage(
+        'Sorry, I could not process your question right now. Please try again later.'
+      );
       setAiMessages((prev) => [...prev, aiMsg]);
     } finally {
       setIsAiLoading(false);
       setIsAiMode(false);
     }
-  }, [streamId, createAiMessage]);
+  }, [streamId, streamTitle, streamLanguage, streamDescription, createAiMessage]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +222,18 @@ export function ChatPanel({
               </div>
             )}
             {allMessages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
+              <div key={message.id} className="group relative">
+                <ChatMessage message={message} />
+                <button
+                  type="button"
+                  onClick={() => playTts(message.content, message.id)}
+                  disabled={ttsPlaying === message.id}
+                  className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
+                  title="Read aloud"
+                >
+                  <Volume2 className={`w-3.5 h-3.5 ${ttsPlaying === message.id ? 'text-brand-primary animate-pulse' : 'text-muted-foreground'}`} />
+                </button>
+              </div>
             ))}
             {isAiLoading && (
               <div className="flex gap-2 px-3 py-2 bg-brand-primary/10 border-l-2 border-brand-primary/40 animate-pulse">
@@ -178,6 +248,22 @@ export function ChatPanel({
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
+
+        {/* TTS mode indicator */}
+        {ttsEnabled && (
+          <div className="px-3 py-1.5 bg-secondary/10 border-t border-secondary/20 flex items-center gap-2">
+            <Volume2 className="w-3.5 h-3.5 text-secondary" />
+            <span className="text-xs text-secondary font-medium">
+              Text-to-speech enabled — new messages will be read aloud
+            </span>
+            <button
+              onClick={() => setTtsEnabled(false)}
+              className="ml-auto text-xs text-secondary/60 hover:text-secondary"
+            >
+              Disable
+            </button>
+          </div>
+        )}
 
         {/* AI mode indicator */}
         {isAiMode && (
@@ -226,6 +312,18 @@ export function ChatPanel({
                 title="Ask AI"
               >
                 <Sparkles className="w-5 h-5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                type="button"
+                onClick={() => setTtsEnabled((prev) => !prev)}
+                className={`hover:bg-secondary/10 hover:text-secondary disabled:opacity-50 ${
+                  ttsEnabled ? 'bg-secondary/10 text-secondary' : ''
+                }`}
+                title={ttsEnabled ? 'Disable text-to-speech' : 'Enable text-to-speech'}
+              >
+                {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
               </Button>
               <Button
                 size="icon"

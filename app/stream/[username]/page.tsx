@@ -432,7 +432,12 @@ export default function StreamPage() {
               })()}
 
               {/* AI Summary */}
-              <AiSummaryCard streamId={stream.id} />
+              <AiSummaryCard
+                streamId={stream.id}
+                streamTitle={stream.title}
+                streamLanguage={stream.tags?.map((t: any) => typeof t === 'string' ? t : t.name).join(', ')}
+                streamDescription={stream.description || undefined}
+              />
             </div>
 
             <div className="lg:sticky lg:top-20 h-[calc(100vh-7rem)]">
@@ -443,6 +448,9 @@ export default function StreamPage() {
                 isAuthenticated={isAuthenticated}
                 currentUser={currentUser}
                 streamId={stream.id}
+                streamTitle={stream.title}
+                streamLanguage={stream.tags?.map((t: any) => typeof t === 'string' ? t : t.name).join(', ')}
+                streamDescription={stream.description || undefined}
                 onLoadMore={chat.loadHistory}
                 isLoadingMore={chat.isLoadingHistory}
               />

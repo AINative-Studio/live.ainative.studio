@@ -48,4 +48,9 @@ export const vodService = {
   async delete(vodId: string): Promise<void> {
     return apiClient.delete(`/streams/vods/${vodId}`, true);
   },
+
+  /** Search VODs */
+  async search(query: string, page: number = 1, perPage: number = 20): Promise<PaginatedResponse<VODRecording>> {
+    return apiClient.get(`/streams/vods/search?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`);
+  },
 };

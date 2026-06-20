@@ -8,10 +8,12 @@ import { StreamCard } from '@/components/stream-card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Loader2, Users } from 'lucide-react';
+import { Search, Filter, Loader2, Users, PlayCircle } from 'lucide-react';
 import { streamsService } from '@/services/streams';
+import { vodService } from '@/services/vod';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import type { Stream, Category } from '@/types';
+import { Card, CardContent } from '@/components/ui/card';
+import type { Stream, Category, VODRecording } from '@/types';
 import streamsData from '@/data/streams.json';
 import categoriesData from '@/data/categories.json';
 
@@ -86,6 +88,7 @@ function SearchContent() {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<SearchUser[]>([]);
+  const [vods, setVods] = useState<VODRecording[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const filters = [
@@ -93,6 +96,7 @@ function SearchContent() {
     { id: 'live', label: 'Live Now' },
     { id: 'categories', label: 'Categories' },
     { id: 'coders', label: 'Developers' },
+    { id: 'vods', label: 'VODs' },
   ];
 
   const toggleFilter = (filterId: string) => {
@@ -136,6 +140,7 @@ function SearchContent() {
       if (!debouncedQuery) {
         setStreams([]);
         setUsers([]);
+        setVods([]);
         return;
       }
 
@@ -150,14 +155,20 @@ function SearchContent() {
           statusFilter = 'all';
         }
 
-        // Call API
-        const result = await streamsService.search({
-          query: debouncedQuery,
-          status: statusFilter,
-        });
+        // Call APIs in parallel
+        const [streamResult, vodResult] = await Promise.all([
+          streamsService.search({
+            query: debouncedQuery,
+            status: statusFilter,
+          }),
+          (activeFilters.includes('all') || activeFilters.includes('vods'))
+            ? vodService.search(debouncedQuery).catch(() => ({ items: [], total: 0 }))
+            : Promise.resolve({ items: [], total: 0 }),
+        ]);
 
-        setStreams(result.streams);
-        setUsers(extractUsersFromStreams(result.streams));
+        setStreams(streamResult.streams);
+        setUsers(extractUsersFromStreams(streamResult.streams));
+        setVods((vodResult as any).items || []);
       } catch (error) {
         console.error('Search failed, using fallback data:', error);
         // Fallback to mock data filtering
@@ -193,6 +204,9 @@ function SearchContent() {
     filteredCategories.length > 0;
   const showUsers =
     activeFilters.includes('all') || activeFilters.includes('coders');
+  const showVods =
+    (activeFilters.includes('all') || activeFilters.includes('vods')) &&
+    vods.length > 0;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -246,6 +260,7 @@ function SearchContent() {
             <div className="mb-4">
               <p className="text-muted-foreground">
                 Found {streams.length} streams
+                {showVods && `, ${vods.length} VODs`}
                 {showCategories && `, ${filteredCategories.length} categories`}
                 {showUsers && users.length > 0 && `, ${users.length} developers`}
               </p>
@@ -258,6 +273,36 @@ function SearchContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {streams.map((stream: any) => (
                   <StreamCard key={stream.id} stream={stream} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showVods && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold mb-4">VODs</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {vods.map((vod: VODRecording) => (
+                  <a key={vod.id} href={`/vod/${vod.id}`}>
+                    <Card className="border-border hover:border-brand-primary/50 transition-colors cursor-pointer">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <PlayCircle className="w-10 h-10 text-brand-primary flex-shrink-0 mt-1" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{vod.title || 'Untitled VOD'}</p>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {vod.description || 'No description'}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {vod.duration
+                                ? `${Math.floor(vod.duration / 60)}m`
+                                : 'Unknown duration'}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </a>
                 ))}
               </div>
             </div>
@@ -332,6 +377,7 @@ function SearchContent() {
           {!isLoading &&
             query &&
             streams.length === 0 &&
+            vods.length === 0 &&
             filteredCategories.length === 0 &&
             users.length === 0 && (
               <div className="text-center py-20">
