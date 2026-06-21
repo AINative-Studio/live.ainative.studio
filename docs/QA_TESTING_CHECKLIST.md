@@ -8,30 +8,53 @@
 
 ## Test Status
 
-- **Last tested**: [DATE]
-- **Tested by**: [NAME]
-- **Build version**: [VERSION]
-- **Environment**: [Production/Staging]
+- **Last tested**: 2026-06-20
+- **Build version**: latest (main)
+- **Environment**: Production
+
+## Automated E2E Test Coverage
+
+**183 Playwright E2E tests** across 10 test suites:
+
+| Test Suite | File | Tests | Coverage |
+|-----------|------|-------|----------|
+| Auth Enforcement | `e2e/auth-enforcement.spec.ts` | Auth flows, protected routes, session | All pages |
+| OAuth Flow | `e2e/oauth-flow.spec.ts` | GitHub + Google OAuth | Login + callback |
+| OAuth Deep Test | `e2e/oauth-deep-test.spec.ts` | OAuth edge cases | Error handling |
+| Stream Lifecycle | `e2e/stream-lifecycle.spec.ts` | Create, start, end stream | Full CRUD |
+| Webcam Fix | `e2e/webcam-fix.spec.ts` | WebRTC browser streaming | Go-live page |
+| Tier-3 Features | `e2e/tier3-features.spec.ts` | Clips, AI chat, content pipeline, tips | All feature pages |
+| Zombie Streams | `e2e/zombie-stream-dashboard.spec.ts` | Dashboard zombie detection, end stream | Dashboard |
+| Stress Test Interactions | `e2e/stress-test-interactions.spec.ts` | Button clicks, form submissions, navigation | All interactive elements |
+| Stress Test All Pages | `e2e/stress-test-all-pages.spec.ts` | Page load, rendering, edge cases | All 30+ pages |
+| Real GitHub Login | `e2e/real-github-login.spec.ts` | Live GitHub OAuth integration | Production OAuth |
+
+**Running tests:**
+```bash
+npx playwright test                    # Run all 183 tests
+npx playwright test e2e/auth-enforcement.spec.ts  # Run specific suite
+npx playwright test --reporter=html    # Generate HTML report
+```
 
 ---
 
-## Authentication Tests
+## Manual Authentication Tests
 
 - [ ] **Login with valid credentials**
   - Navigate to /login
-  - Enter valid email/username and password
+  - Enter valid email and password
   - Click Login button
   - **Expected**: User redirected to dashboard, session created successfully
 
 - [ ] **Login with invalid credentials**
   - Navigate to /login
-  - Enter invalid email/username or password
+  - Enter invalid email or password
   - Click Login button
   - **Expected**: Error message displayed ("Invalid credentials"), no redirect, no session created
 
 - [ ] **Register new account**
   - Navigate to /register
-  - Fill in all required fields (username, email, password, display name)
+  - Fill in all required fields (username, email, password)
   - Click Register button
   - **Expected**: Account created, user logged in, redirected to dashboard
 
@@ -46,6 +69,18 @@
   - Enter username that already exists in database
   - Fill other fields and submit
   - **Expected**: Error message displayed ("Username already taken")
+
+- [ ] **GitHub OAuth login**
+  - Navigate to /login
+  - Click "Sign in with GitHub" button
+  - Complete GitHub authorization
+  - **Expected**: Redirected back to app, session created, user profile loaded
+
+- [ ] **Google OAuth login**
+  - Navigate to /login
+  - Click "Sign in with Google" button
+  - Complete Google authorization
+  - **Expected**: Redirected back to app, session created, user profile loaded
 
 - [ ] **Logout clears session**
   - While logged in, click Logout button
@@ -323,12 +358,55 @@
 
 ---
 
+## AI Features Tests
+
+- [ ] **AI Chat assistant responds**
+  - On stream page, click "Ask AI" button or type @ai in chat
+  - **Expected**: AI response appears in chat with distinct AI styling
+
+- [ ] **AI Summary card renders**
+  - On a live stream page, check for AI summary card
+  - **Expected**: Summary card shows auto-refreshing stream summary
+
+- [ ] **Chat moderation triggers**
+  - Send a message that should be flagged
+  - **Expected**: Moderation system processes message via /api/ai/moderate
+
+- [ ] **Social post generation**
+  - From content pipeline, click generate social post
+  - **Expected**: Social post generated for stream via /api/ai/social-post
+
+- [ ] **TTS works**
+  - Trigger text-to-speech on a chat message or summary
+  - **Expected**: Audio generated via /api/ai/tts
+
+---
+
+## Semantic Search & Recommendations Tests
+
+- [ ] **Semantic search returns results**
+  - Use search with natural language query
+  - **Expected**: Results ranked by semantic relevance via /api/search/semantic
+
+- [ ] **GraphRAG recommendations load**
+  - On stream page, check related streams section
+  - **Expected**: Related streams loaded via /api/recommendations
+
+---
+
+## Tips & Monetization Tests
+
+- [ ] **Tip dialog opens**
+  - On stream page, click tip/donate button
+  - **Expected**: Tip dialog opens with amount selection
+
+---
+
 ## Notes & Issues Found
 
 **Add any bugs, issues, or observations during testing here:**
 
 - [Date] [Tester Name]: [Description of issue]
-- Example: 2025-12-24 John Doe: Chat scroll jumps when new messages arrive
 
 ---
 

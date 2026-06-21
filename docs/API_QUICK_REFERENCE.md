@@ -8,17 +8,83 @@
 
 ### Login
 ```bash
-curl -X POST "https://api.ainative.studio/v1/public/auth/login" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=user@example.com&password=yourpassword"
+curl -X POST "https://api.ainative.studio/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "yourpassword"}'
 ```
 **Response:**
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIs...",
   "token_type": "bearer",
-  "expires_in": 1800
+  "expires_in": 1800,
+  "refresh_token": "..."
 }
+```
+
+### Register
+```bash
+curl -X POST "https://api.ainative.studio/v1/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "username": "myuser", "password": "yourpassword"}'
+```
+
+### Logout
+```bash
+curl -X POST "https://api.ainative.studio/v1/auth/logout" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Refresh Token
+```bash
+curl -X POST "https://api.ainative.studio/v1/auth/refresh" \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token": "your_refresh_token"}'
+```
+
+### Get Current User
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  "https://api.ainative.studio/v1/auth/me"
+```
+
+### OAuth Callbacks
+```bash
+# GitHub OAuth
+curl -X POST "https://api.ainative.studio/v1/auth/github/callback" \
+  -H "Content-Type: application/json" \
+  -d '{"code": "github_oauth_code", "redirect_uri": "https://live.ainative.studio/login/callback"}'
+
+# Google OAuth
+curl -X POST "https://api.ainative.studio/v1/auth/google/callback" \
+  -H "Content-Type: application/json" \
+  -d '{"code": "google_oauth_code", "redirect_uri": "https://live.ainative.studio/login/callback"}'
+```
+
+### Magic Link
+```bash
+# Request magic link
+curl -X POST "https://api.ainative.studio/v1/auth/magic-link" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com"}'
+
+# Verify magic link
+curl -X POST "https://api.ainative.studio/v1/auth/magic-link/verify" \
+  -H "Content-Type: application/json" \
+  -d '{"token": "magic_link_token"}'
+```
+
+### MFA (Multi-Factor Authentication)
+```bash
+# Setup MFA
+curl -X POST "https://api.ainative.studio/v1/auth/mfa/setup" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Verify MFA code
+curl -X POST "https://api.ainative.studio/v1/auth/mfa/verify" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"code": "123456"}'
 ```
 
 ### Using Auth Token
@@ -30,6 +96,49 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 ---
 
 ## Streams
+
+### List Streams
+```
+GET /streams/
+```
+
+### Create Stream (Auth Required)
+```
+POST /streams/
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+  "title": "My Stream",
+  "description": "Building cool stuff",
+  "categoryId": "uuid-here",
+  "tags": ["react", "typescript"]
+}
+```
+
+### Get Stream by ID
+```
+GET /streams/id/{stream_id}
+```
+
+### Update Stream (Auth Required)
+```
+PUT /streams/id/{stream_id}
+Authorization: Bearer TOKEN
+```
+
+### Start Stream (Auth Required)
+```
+POST /streams/id/{id}/start
+Authorization: Bearer TOKEN
+```
+
+### End Stream (Auth Required)
+**NOTE:** The end stream path does NOT have the `/id/` prefix!
+```
+POST /streams/{stream_id}/end
+Authorization: Bearer TOKEN
+```
 
 ### Get Trending Streams
 ```
@@ -47,14 +156,14 @@ GET /streams/recommended?limit=20
 Authorization: Bearer TOKEN
 ```
 
-### Get Stream by ID
-```
-GET /streams/id/{stream_id}
-```
-
 ### Search Streams
 ```
 GET /streams/search?query=gaming&status_filter=live&page=1&per_page=20
+```
+
+### Search Suggestions
+```
+GET /streams/search/suggestions?query=gam
 ```
 
 ---
@@ -69,6 +178,11 @@ GET /streams/categories
 ### Get Popular Categories
 ```
 GET /streams/categories/popular?limit=10
+```
+
+### Get Category Tree
+```
+GET /streams/categories/tree
 ```
 
 ### Get Category by Slug
@@ -282,6 +396,11 @@ wss://api.ainative.studio/v1/streams/{stream_id}/chat/ws?token=YOUR_TOKEN
 GET /streams/vods?page=1&per_page=20
 ```
 
+### Search VODs
+```
+GET /streams/vods/search?query=react&page=1&per_page=20
+```
+
 ### Get VOD by ID (Auth Required)
 ```
 GET /streams/vods/{vod_id}
@@ -371,13 +490,19 @@ Authorization: Bearer TOKEN
 
 ### Dashboard Overview
 ```
-GET /dashboard/overview
+GET /dashboard/streamer/overview
 Authorization: Bearer TOKEN
 ```
 
 ### Quick Stats
 ```
-GET /dashboard/quick-stats
+GET /dashboard/streamer/quick-stats
+Authorization: Bearer TOKEN
+```
+
+### Activity
+```
+GET /dashboard/streamer/activity
 Authorization: Bearer TOKEN
 ```
 
@@ -397,6 +522,31 @@ Authorization: Bearer TOKEN
 ```
 POST /streams/notifications/follows/{notification_id}/read
 Authorization: Bearer TOKEN
+```
+
+---
+
+## Frontend API Routes (Next.js)
+
+These are server-side API routes in the Next.js frontend that proxy to internal services:
+
+### AI Endpoints
+```
+POST /api/ai/chat        — LLM chat with viewer context
+POST /api/ai/summary     — Stream summary generation
+POST /api/ai/thumbnail   — Thumbnail generation
+POST /api/ai/tts         — Text-to-speech
+POST /api/ai/captions    — VOD caption generation
+POST /api/ai/moderate    — Chat moderation
+POST /api/ai/social-post — Social media post generation
+```
+
+### Data Endpoints
+```
+POST /api/memory           — ZeroMemory proxy (viewer context persistence)
+POST /api/recommendations  — GraphRAG related stream recommendations
+POST /api/search/semantic  — Semantic vector search across streams
+POST /api/whip             — WHIP proxy for WebRTC browser streaming
 ```
 
 ---
@@ -515,4 +665,4 @@ interface ChatMessage {
 
 ---
 
-**Last Updated:** 2025-12-24
+**Last Updated:** 2026-06-20

@@ -161,7 +161,7 @@ After work:
 **Tech Stack**: Next.js 13.5.1 + TypeScript 5.2.2 + Tailwind CSS 3.3.3
 **Framework**: Next.js App Router
 **Deployment**: Railway (auto-deploy from main)
-**Last Updated**: 2026-06-17
+**Last Updated**: 2026-06-20
 
 ---
 
@@ -192,7 +192,18 @@ liveainativestudio/
 │   ├── clips/              # Browse popular clips
 │   ├── vod/[id]/           # VOD player with chapters + content export
 │   ├── settings/           # Profile settings + avatar upload
-│   └── api/whip/           # WHIP proxy for WebRTC streaming
+│   └── api/                # Next.js API routes
+│       ├── whip/           # WHIP proxy for WebRTC streaming
+│       ├── ai/chat/        # LLM chat with viewer context
+│       ├── ai/summary/     # Stream summary generation
+│       ├── ai/thumbnail/   # Thumbnail generation
+│       ├── ai/tts/         # Text-to-speech
+│       ├── ai/captions/    # VOD caption generation
+│       ├── ai/moderate/    # Chat moderation
+│       ├── ai/social-post/ # Social media post generation
+│       ├── memory/         # ZeroMemory proxy
+│       ├── recommendations/# GraphRAG related streams
+│       └── search/semantic/# Semantic vector search
 ├── components/             # Reusable components
 │   ├── ui/                 # shadcn/ui components
 │   ├── navbar.tsx          # Nav with categories, tech, clips, search typeahead
@@ -202,11 +213,24 @@ liveainativestudio/
 │   ├── chat-panel.tsx      # Real-time chat + AI assistant
 │   ├── chat-message.tsx    # Chat message (regular + AI styling)
 │   ├── ai-summary-card.tsx # AI stream summary with auto-refresh
+│   ├── ai-moderation-card.tsx # AI chat moderation display
 │   ├── clip-card.tsx       # Clip display card
 │   ├── create-clip-dialog.tsx # Clip creation dialog
 │   ├── language-badge.tsx  # Colored language indicator
 │   ├── stream-setup-form.tsx # Stream setup with tech stack + GitHub repo
-│   └── browser-stream-preview.tsx # WebRTC browser streaming
+│   ├── browser-stream-preview.tsx # WebRTC browser streaming
+│   ├── tip-dialog.tsx      # Viewer tip/donation dialog
+│   ├── social-share-dialog.tsx # Social sharing dialog
+│   ├── viewer-count-badge.tsx # Live viewer count indicator
+│   ├── vod-player.tsx      # VOD playback component
+│   ├── vod-quality-selector.tsx # VOD quality selection
+│   ├── vod-transcript-panel.tsx # VOD transcript display
+│   ├── notification-dropdown.tsx # Notification bell dropdown
+│   ├── moderator-management.tsx # Moderator management panel
+│   ├── schedule-editor.tsx # Schedule editing component
+│   ├── stream-method-selector.tsx # RTMP vs WebRTC selection
+│   ├── protected-route.tsx # Auth-protected route wrapper
+│   └── error-boundary.tsx  # Error boundary component
 ├── services/               # API service layer
 │   ├── streams.ts          # Stream CRUD, categories, tags, search
 │   ├── users.ts            # Profiles, follow, schedule, avatars
@@ -216,7 +240,11 @@ liveainativestudio/
 │   ├── moderator.ts        # Moderator management
 │   ├── clips.ts            # Clip creation and browsing
 │   ├── ai-chat.ts          # AI Q&A, summaries, code explanation
-│   └── content-pipeline.ts # Blog generation, transcripts, export
+│   ├── content-pipeline.ts # Blog generation, transcripts, export
+│   ├── viewer-memory.ts    # ZeroMemory viewer context persistence
+│   ├── semantic-search.ts  # Semantic vector search
+│   ├── recommendations.ts  # GraphRAG related stream recommendations
+│   └── moderation.ts       # AI chat moderation
 ├── lib/                    # Utilities
 │   ├── auth.ts             # Token management, login/register API
 │   ├── api-client.ts       # HTTP client with snake_case transform
@@ -225,7 +253,7 @@ liveainativestudio/
 │   └── tech-stack.ts       # Language/framework definitions
 ├── contexts/               # React contexts
 │   └── auth-context.tsx    # Auth provider with login/register/logout
-├── e2e/                    # Playwright E2E tests (96+ tests)
+├── e2e/                    # Playwright E2E tests (183 tests, 10 suites)
 ├── types/                  # TypeScript definitions
 ├── public/                 # Static assets
 └── CLAUDE.md               # Project instructions
@@ -288,14 +316,17 @@ NEXT_PUBLIC_WS_URL=wss://api.ainative.studio
 - **WebSocket**: `wss://api.ainative.studio/v1/streams/{id}/chat/ws`
 - **OpenAPI Spec**: `https://api.ainative.studio/v1/openapi.json`
 
-### Key API Endpoints (60+ wired up)
-- Auth: login, register, OAuth (GitHub/Google), refresh, me
+### Key API Endpoints (70+ wired up)
+- Auth: login, register, OAuth (GitHub/Google), magic link, MFA, refresh, me
 - Streams: CRUD, start/end, categories, tags, search, trending, rising
 - Users: profiles, follow/unfollow, followers/following, schedule
 - Chat: WebSocket real-time + HTTP history
-- VODs: browse, chapters, AI chapter generation
+- VODs: browse, search, chapters, AI chapter generation
 - Analytics: channel overview, growth, viewers, audience, export
-- Dashboard: overview, quick stats, notifications
+- Dashboard: streamer overview, quick stats, activity, notifications
+- AI: chat, summary, thumbnail, TTS, captions, moderation, social posts
+- Memory: ZeroMemory viewer context persistence
+- Search: semantic vector search, recommendations (GraphRAG)
 
 ### Backend Notes
 - API returns snake_case; `apiClient` auto-transforms to camelCase
@@ -308,28 +339,49 @@ NEXT_PUBLIC_WS_URL=wss://api.ainative.studio
 
 ### Implemented & Live
 - ✅ 30+ pages with real API integration
-- ✅ Authentication: email + GitHub OAuth + Google OAuth
+- ✅ Authentication: email + GitHub OAuth + Google OAuth + magic link + MFA
 - ✅ Live streaming: RTMP (OBS) + WebRTC/WHIP (browser)
 - ✅ Real-time chat via WebSocket with reconnection
-- ✅ Stream viewer with follow, like, share, clip buttons
+- ✅ Stream viewer with follow, like, share, clip, tip buttons
 - ✅ User profiles with followers, following, schedule
 - ✅ Category browsing with sort (viewers/recent/trending)
 - ✅ Search: streams + users + typeahead suggestions
+- ✅ Semantic vector search via /api/search/semantic
 - ✅ Tech-stack discovery: browse by language/framework
 - ✅ Clips system: create from live/VOD, browse page
 - ✅ Code-aware stream pages: GitHub repo, language badges
 - ✅ AI chat assistant: Ask AI button, @ai trigger, AI summary card
+- ✅ AI moderation: automated chat moderation via /api/ai/moderate
+- ✅ AI captions: VOD caption generation via /api/ai/captions
+- ✅ AI thumbnails: auto-generated thumbnails via /api/ai/thumbnail
+- ✅ AI TTS: text-to-speech via /api/ai/tts
+- ✅ AI social posts: social media post generation via /api/ai/social-post
 - ✅ Content pipeline: blog drafts, code snippets, transcripts, export
+- ✅ ZeroMemory integration: viewer context persistence via /api/memory
+- ✅ GraphRAG recommendations: related streams via /api/recommendations
+- ✅ Tips/donations: tip dialog for viewer monetization
+- ✅ Social sharing: share dialog for streams
 - ✅ Dashboard: analytics with charts, moderators, schedule, notifications
-- ✅ VOD player with chapters, transcript, content export
+- ✅ VOD player with chapters, transcript, quality selector, content export
 - ✅ Avatar upload in settings
 - ✅ Zombie stream detection + End Stream on dashboard
-- ✅ 96+ Playwright E2E tests
+- ✅ 183 Playwright E2E tests across 10 test suites
+
+### Frontend API Routes
+- `/api/ai/chat` - LLM chat with viewer context
+- `/api/ai/summary` - Stream summary generation
+- `/api/ai/thumbnail` - Thumbnail generation
+- `/api/ai/tts` - Text-to-speech
+- `/api/ai/captions` - VOD caption generation
+- `/api/ai/moderate` - Chat moderation
+- `/api/ai/social-post` - Social media post generation
+- `/api/memory` - ZeroMemory proxy
+- `/api/recommendations` - GraphRAG related streams
+- `/api/search/semantic` - Semantic vector search
+- `/api/whip` - WHIP proxy for WebRTC
 
 ### Pending (Backend)
 - ⏳ Clips backend endpoints (frontend ready)
-- ⏳ AI chat/summary backend endpoints (frontend ready)
-- ⏳ Content pipeline backend endpoints (frontend ready)
 - ⏳ Rich GitHub integration (core has APIs, not yet exposed)
 
 ---
@@ -357,5 +409,5 @@ NEXT_PUBLIC_WS_URL=wss://api.ainative.studio
 
 ---
 
-**Last Updated**: 2025-12-23
-**Status**: Frontend complete, awaiting backend integration
+**Last Updated**: 2026-06-20
+**Status**: Frontend complete with AI integrations, 183 E2E tests passing

@@ -1,7 +1,7 @@
 # AINative Studio Live - Frontend Backend Integration Guide
 
-**Version:** 1.0.0
-**Date:** 2025-12-24
+**Version:** 2.0.0
+**Date:** 2026-06-20
 **Backend API:** https://api.ainative.studio/v1
 **Frontend:** Next.js 13.5.1 App Router
 
@@ -41,7 +41,7 @@ Development: http://localhost:8000/v1
 | User profile | `GET /streams/users/{username}/profile` | Ready |
 | Search | `GET /streams/search?query=` | Ready |
 | Dashboard | `GET /dashboard/overview` | Ready |
-| Authentication | `POST /public/auth/login` | Ready |
+| Authentication | `POST /auth/login` | Ready |
 
 ---
 
@@ -313,16 +313,16 @@ export function isAuthenticated(): boolean {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.ainative.studio/v1';
 
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
-  const formData = new URLSearchParams();
-  formData.append('username', credentials.username);
-  formData.append('password', credentials.password);
-
-  const response = await fetch(`${API_BASE_URL}/public/auth/login`, {
+  // NOTE: Auth uses JSON body, NOT form-urlencoded
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
     },
-    body: formData,
+    body: JSON.stringify({
+      email: credentials.username,
+      password: credentials.password,
+    }),
   });
 
   if (!response.ok) {
@@ -345,7 +345,7 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
 }
 
 export async function register(data: RegisterData): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/public/auth/register`, {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -374,7 +374,7 @@ export async function logout(): Promise<void> {
   try {
     const token = getAuthToken();
     if (token) {
-      await fetch(`${API_BASE_URL}/public/auth/logout`, {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -393,7 +393,7 @@ export async function refreshToken(): Promise<boolean> {
   if (!refresh) return false;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/public/auth/refresh`, {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -424,7 +424,7 @@ async function fetchAndStoreUser(): Promise<void> {
   if (!token) return;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/public/users/me`, {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -936,9 +936,9 @@ export const streamsService = {
     return apiClient.post(`/streams/id/${streamId}/start`, {}, true);
   },
 
-  /** End stream (requires auth) */
+  /** End stream (requires auth) — NOTE: no /id/ prefix in end path! */
   async end(streamId: string): Promise<Stream> {
-    return apiClient.post(`/streams/id/${streamId}/end`, {}, true);
+    return apiClient.post(`/streams/${streamId}/end`, {}, true);
   },
 
   // ==================== Categories ====================
@@ -2357,23 +2357,66 @@ GET  /streams/analytics/channel/top-streams # Top streams
 GET  /streams/analytics/channel/best-times  # Best streaming times
 GET  /streams/analytics/channel/categories  # Category breakdown
 GET  /streams/analytics/channel/revenue     # Revenue analytics
-GET  /dashboard/overview                    # Dashboard overview
-GET  /dashboard/quick-stats                 # Quick stats
-GET  /dashboard/recent-activity             # Recent activity
+GET  /dashboard/streamer/overview            # Dashboard overview
+GET  /dashboard/streamer/quick-stats        # Quick stats
+GET  /dashboard/streamer/activity           # Recent activity
 GET  /dashboard/notifications               # Dashboard notifications
 ```
 
 ### Authentication Endpoints
 ```
-POST /public/auth/login                     # Login (form-urlencoded)
-POST /public/auth/register                  # Register
-POST /public/auth/logout                    # Logout
-POST /public/auth/refresh                   # Refresh token
-GET  /public/users/me                       # Get current user
+POST /auth/login                            # Login (JSON body: { email, password })
+POST /auth/register                         # Register (JSON body: { email, username, password })
+POST /auth/logout                           # Logout (Bearer token)
+POST /auth/refresh                          # Refresh token (JSON body: { refresh_token })
+GET  /auth/me                               # Get current user (Bearer token)
+POST /auth/github/callback                  # GitHub OAuth (JSON body: { code, redirect_uri })
+POST /auth/google/callback                  # Google OAuth (JSON body: { code, redirect_uri })
+POST /auth/magic-link                       # Request magic link (JSON body: { email })
+POST /auth/magic-link/verify                # Verify magic link (JSON body: { token })
+POST /auth/mfa/setup                        # Setup MFA (Bearer token)
+POST /auth/mfa/verify                       # Verify MFA (JSON body: { code }, Bearer token)
+```
+
+### Frontend API Routes (Next.js)
+```
+POST /api/ai/chat                           # LLM chat with viewer context
+POST /api/ai/summary                        # Stream summary generation
+POST /api/ai/thumbnail                      # Thumbnail generation
+POST /api/ai/tts                            # Text-to-speech
+POST /api/ai/captions                       # VOD caption generation
+POST /api/ai/moderate                       # Chat moderation
+POST /api/ai/social-post                    # Social media post generation
+POST /api/memory                            # ZeroMemory proxy
+POST /api/recommendations                   # GraphRAG related streams
+POST /api/search/semantic                   # Semantic vector search
+POST /api/whip                              # WHIP proxy for WebRTC
 ```
 
 ---
 
-**Document Version:** 1.0.0
-**Last Updated:** 2025-12-24
+## Important Integration Notes
+
+### snake_case to camelCase Transform
+The backend API returns all fields in `snake_case` format. The frontend `apiClient` (in `lib/api-client.ts`) automatically transforms responses to `camelCase` for use in TypeScript/React code. For example:
+- `access_token` -> `accessToken`
+- `viewer_count` -> `viewerCount`
+- `display_name` -> `displayName`
+
+When sending data TO the API, the client transforms `camelCase` back to `snake_case`.
+
+### OAuth Callback Token Handling
+When handling OAuth callbacks (GitHub/Google), the response tokens arrive as `access_token` from the API but are transformed by the API client to `accessToken` in frontend code. Always use the camelCase version (`accessToken`) when reading from the response in TypeScript.
+
+### Stream End Path
+The stream end endpoint does NOT follow the same pattern as other stream endpoints:
+- Start: `POST /streams/id/{id}/start` (has `/id/` prefix)
+- End: `POST /streams/{stream_id}/end` (NO `/id/` prefix)
+
+This is a known API inconsistency. The frontend `services/streams.ts` handles this correctly.
+
+---
+
+**Document Version:** 2.0.0
+**Last Updated:** 2026-06-20
 **Author:** AI Native Studio Engineering Team
