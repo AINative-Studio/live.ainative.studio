@@ -62,6 +62,11 @@ export function Footer() {
                   Search Streams
                 </Link>
               </li>
+              <li>
+                <Link href="/compare" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Compare Platforms
+                </Link>
+              </li>
             </ul>
           </div>
 

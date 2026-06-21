@@ -108,11 +108,11 @@ export default function Home() {
               <TerminalHeader text="> AINative Live" typingSpeed={100} />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Stream Your IDE. <span className="text-primary">Build in Public.</span>
+              Live Coding Streams. <span className="text-primary">Build in Public.</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Watch the future of development unfold in real-time. AI-native developers streaming AI-native workflows,
-              multi-agent systems, and cutting-edge IDE sessions.
+              The developer streaming platform for live coding, vibe coding, and AI-native development.
+              Watch real-time IDE sessions, multi-agent workflows, and build-in-public projects.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button size="lg" className="font-mono" asChild>
@@ -124,6 +124,17 @@ export default function Home() {
                 <Link href="/vibe-coding">What is AI-Native Development?</Link>
               </Button>
             </div>
+          </div>
+        </section>
+
+        <section className="py-8 px-4">
+          <div className="container mx-auto max-w-3xl text-center">
+            <p className="text-muted-foreground leading-relaxed">
+              AINative Studio Live is the developer streaming platform purpose-built for live coding
+              and vibe coding sessions. Whether you are pair-programming with AI agents, building
+              open-source projects, or exploring new frameworks, stream your IDE to a community of
+              developers who learn by watching. Free to watch, free to stream.
+            </p>
           </div>
         </section>
 
@@ -285,6 +296,43 @@ export default function Home() {
       </main>
 
       <Footer />
+
+      {/* FAQ structured data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'What is AINative Studio Live?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'AINative Studio Live is the developer streaming platform for live coding, vibe coding, and AI-native development. Watch developers build projects in real time, or go live and share your own IDE sessions with the community.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Is AINative Studio Live free?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Yes, AINative Studio Live is completely free to watch and free to stream. Create an account, go live, and start sharing your development workflow at no cost.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'How do I start streaming code on AINative Studio Live?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Sign up for a free account, navigate to your Dashboard, and click Go Live. You can stream directly from your browser using WebRTC or connect OBS Studio via RTMP for a more advanced setup.',
+                },
+              },
+            ],
+          }),
+        }}
+      />
     </div>
   );
 }

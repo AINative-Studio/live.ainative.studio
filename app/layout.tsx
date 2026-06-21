@@ -30,10 +30,12 @@ export const metadata: Metadata = {
   description: siteDescription,
   keywords: [
     'live coding',
+    'developer streaming',
     'developer livestreams',
     'AI developer streams',
     'IDE streaming',
     'build in public',
+    'vibe coding',
     'programming streams',
     'multi-agent workflows',
     'AI-native development',
@@ -97,6 +99,23 @@ export default function RootLayout({
           </StreamsProvider>
         </AuthProvider>
         <Toaster />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'AINative Studio Live',
+              url: 'https://live.ainative.studio',
+              logo: 'https://live.ainative.studio/ainative-icon.svg',
+              sameAs: [
+                'https://github.com/AINative-Studio',
+                'https://www.ainative.studio',
+              ],
+              description: 'The developer streaming platform with AI-native tools for live coding',
+            }),
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

@@ -26,6 +26,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { SocialShareDialog } from '@/components/social-share-dialog';
+import { ReferralCard } from '@/components/referral-card';
 
 // Mock data for fallback
 const mockOverview: DashboardOverview = {
@@ -585,6 +586,9 @@ export default function DashboardPage() {
                   </Button>
                 </CardContent>
               </Card>
+
+              {/* Referral Program */}
+              <ReferralCard />
             </div>
           </div>
         </div>

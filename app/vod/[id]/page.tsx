@@ -284,9 +284,34 @@ export default function VODViewerPage() {
     );
   }
 
+  const videoObjectJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: vod.title,
+    description: vod.description || `Watch ${vod.title} on AINative Studio Live`,
+    thumbnailUrl: vod.thumbnailUrl || 'https://live.ainative.studio/placeholder-stream.jpg',
+    uploadDate: vod.createdAt,
+    ...(vod.duration ? { duration: `PT${Math.floor(vod.duration / 60)}M${vod.duration % 60}S` } : {}),
+    contentUrl: `https://live.ainative.studio/vod/${vod.id}`,
+    embedUrl: `https://live.ainative.studio/vod/${vod.id}`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'AINative Studio Live',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://live.ainative.studio/ainative-icon.svg',
+      },
+    },
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(videoObjectJsonLd) }}
+      />
 
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6">

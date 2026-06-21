@@ -11,9 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, Share2, UserPlus, UserMinus, Twitter, Github, Globe, Loader2, Scissors, ExternalLink, Code2, DollarSign } from 'lucide-react';
+import { Heart, Share2, UserPlus, UserMinus, Twitter, Github, Globe, Loader2, Scissors, ExternalLink, Code2, Code, DollarSign } from 'lucide-react';
 import { LanguageBadge, extractLanguages, extractGithubRepo } from '@/components/language-badge';
 import { CreateClipDialog } from '@/components/create-clip-dialog';
+import { EmbedDialog } from '@/components/embed-dialog';
 import { AiSummaryCard } from '@/components/ai-summary-card';
 import { TipDialog } from '@/components/tip-dialog';
 import { usersService } from '@/services/users';
@@ -49,6 +50,7 @@ export default function StreamPage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [isClipDialogOpen, setIsClipDialogOpen] = useState(false);
+  const [isEmbedDialogOpen, setIsEmbedDialogOpen] = useState(false);
   const [isTipDialogOpen, setIsTipDialogOpen] = useState(false);
   const [relatedStreams, setRelatedStreams] = useState<StreamRecommendation[]>([]);
 
@@ -230,9 +232,38 @@ export default function StreamPage() {
     );
   }
 
+  const broadcastJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: stream.title,
+    description: stream.description || `Watch ${userProfile.displayName || username} live on AINative Studio Live`,
+    thumbnailUrl: stream.thumbnailUrl || 'https://live.ainative.studio/placeholder-stream.jpg',
+    uploadDate: stream.startedAt || stream.createdAt,
+    contentUrl: `https://live.ainative.studio/stream/${username}`,
+    embedUrl: `https://live.ainative.studio/stream/${username}`,
+    publication: {
+      '@type': 'BroadcastEvent',
+      isLiveBroadcast: true,
+      startDate: stream.startedAt || stream.createdAt,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'AINative Studio Live',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://live.ainative.studio/ainative-icon.svg',
+      },
+    },
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(broadcastJsonLd) }}
+      />
 
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6">
@@ -350,6 +381,14 @@ export default function StreamPage() {
                     >
                       <Scissors className="w-4 h-4 mr-2" />
                       Clip
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsEmbedDialogOpen(true)}
+                    >
+                      <Code className="w-4 h-4 mr-2" />
+                      Embed
                     </Button>
                     <Button
                       variant="ghost"
@@ -530,6 +569,12 @@ export default function StreamPage() {
         onOpenChange={setIsTipDialogOpen}
         streamerName={userProfile.displayName || username}
         streamerUsername={userProfile.username || username}
+      />
+
+      <EmbedDialog
+        open={isEmbedDialogOpen}
+        onOpenChange={setIsEmbedDialogOpen}
+        username={userProfile.username || username}
       />
     </div>
   );

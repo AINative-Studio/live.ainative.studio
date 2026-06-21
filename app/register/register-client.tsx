@@ -2,20 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Video, Github, AlertCircle, Loader2 } from 'lucide-react';
+import { Video, Github, AlertCircle, Loader2, UserPlus } from 'lucide-react';
 import { TerminalHeader } from '@/components/terminal-header';
 import { useAuth } from '@/contexts/auth-context';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { register, isAuthenticated } = useAuth();
+
+  const referrer = searchParams.get('ref') || '';
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -71,7 +74,8 @@ export default function RegisterPage() {
         email,
         username,
         password,
-      });
+        ...(referrer ? { referredBy: referrer } : {}),
+      } as any);
 
       // Redirect to verify-email page with success message
       router.push(`/verify-email?registered=true&email=${encodeURIComponent(email)}`);
@@ -114,6 +118,14 @@ export default function RegisterPage() {
             <CardDescription className="text-center">
               Start streaming your AI-native development sessions today
             </CardDescription>
+            {referrer && (
+              <div className="flex items-center justify-center gap-2 p-3 bg-brand-primary/10 border border-brand-primary/20 rounded-lg">
+                <UserPlus className="w-4 h-4 text-brand-primary flex-shrink-0" />
+                <p className="text-sm text-brand-primary font-medium">
+                  Invited by @{referrer}
+                </p>
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3">

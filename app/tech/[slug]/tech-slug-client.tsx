@@ -92,9 +92,24 @@ export default function TechSlugClient() {
     return total + (s.viewerCount || s.viewers || 0);
   }, 0);
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://live.ainative.studio/' },
+      { '@type': 'ListItem', position: 2, name: 'Tech Stack', item: 'https://live.ainative.studio/tech' },
+      { '@type': 'ListItem', position: 3, name: tech.name },
+    ],
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
 
       <main className="flex-1">
         <div className="border-b border-border bg-card/50">
