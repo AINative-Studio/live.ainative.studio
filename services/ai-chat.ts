@@ -17,6 +17,7 @@ export interface StreamContext {
   streamTitle?: string;
   streamLanguage?: string;
   streamDescription?: string;
+  userId?: string;
 }
 
 export const aiChatService = {
@@ -36,6 +37,7 @@ export const aiChatService = {
         streamTitle: context?.streamTitle,
         streamLanguage: context?.streamLanguage,
         streamDescription: context?.streamDescription,
+        userId: context?.userId,
       }),
     });
 
@@ -89,6 +91,7 @@ export const aiChatService = {
         streamTitle: context?.streamTitle,
         streamLanguage: language || context?.streamLanguage,
         streamDescription: context?.streamDescription,
+        userId: context?.userId,
       }),
     });
 

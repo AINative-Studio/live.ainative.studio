@@ -27,6 +27,9 @@ import {
   FileText,
   Download,
   Sparkles,
+  Captions,
+  CaptionsOff,
+  Loader2,
 } from 'lucide-react';
 import { CreateClipDialog } from '@/components/create-clip-dialog';
 
@@ -84,6 +87,12 @@ export default function VODViewerPage() {
   const [isGeneratingBlog, setIsGeneratingBlog] = useState(false);
   const [blogGenerated, setBlogGenerated] = useState(false);
   const [isClipDialogOpen, setIsClipDialogOpen] = useState(false);
+
+  // Captions state
+  const [captions, setCaptions] = useState<{ startTime: number; endTime: number; text: string }[]>([]);
+  const [isGeneratingCaptions, setIsGeneratingCaptions] = useState(false);
+  const [captionsVisible, setCaptionsVisible] = useState(true);
+  const [captionsError, setCaptionsError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchVODData() {
@@ -186,6 +195,41 @@ export default function VODViewerPage() {
     }
   };
 
+  const handleGenerateCaptions = async () => {
+    if (!vodId) return;
+    setIsGeneratingCaptions(true);
+    setCaptionsError(null);
+    try {
+      const res = await fetch('/api/ai/captions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vodId,
+          videoUrl: vod?.videoUrl || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Request failed' }));
+        throw new Error(err.error || 'Failed to generate captions');
+      }
+
+      const data = await res.json();
+      setCaptions(data.captions || []);
+      setCaptionsVisible(true);
+    } catch (err: any) {
+      console.error('Failed to generate captions:', err);
+      setCaptionsError(err?.message || 'Failed to generate captions');
+    } finally {
+      setIsGeneratingCaptions(false);
+    }
+  };
+
+  // Get the current caption based on playback time
+  const activeCaption = captions.find(
+    (c) => currentTime >= c.startTime && currentTime < c.endTime
+  );
+
   const handleTranscriptSeek = (time: number) => {
     setSeekTarget(time);
     // Reset after a tick so subsequent clicks to the same timestamp still fire
@@ -250,18 +294,29 @@ export default function VODViewerPage() {
             {/* Main Content */}
             <div className="space-y-4">
               {/* Video Player with chapters */}
-              <VODPlayer
-                title={vod.title}
-                duration={vod.duration}
-                videoUrl={vod.videoUrl ?? undefined}
-                thumbnailUrl={vod.thumbnailUrl ?? undefined}
-                chapters={chapters}
-                vodId={vodId}
-                currentTime={seekTarget}
-                onTimeUpdate={setCurrentTime}
-                onGenerateChapters={handleGenerateChapters}
-                isGeneratingChapters={isGeneratingChapters}
-              />
+              <div className="relative">
+                <VODPlayer
+                  title={vod.title}
+                  duration={vod.duration}
+                  videoUrl={vod.videoUrl ?? undefined}
+                  thumbnailUrl={vod.thumbnailUrl ?? undefined}
+                  chapters={chapters}
+                  vodId={vodId}
+                  currentTime={seekTarget}
+                  onTimeUpdate={setCurrentTime}
+                  onGenerateChapters={handleGenerateChapters}
+                  isGeneratingChapters={isGeneratingChapters}
+                />
+
+                {/* Caption overlay */}
+                {captionsVisible && activeCaption && (
+                  <div className="absolute bottom-16 left-1/2 -translate-x-1/2 max-w-[80%] pointer-events-none z-10">
+                    <div className="bg-black/80 text-white text-sm md:text-base px-4 py-2 rounded-md text-center leading-relaxed">
+                      {activeCaption.text}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* VOD Info Card */}
               <Card className="border-border">
@@ -322,6 +377,34 @@ export default function VODViewerPage() {
                       <Scissors className="w-4 h-4 mr-2" />
                       Clip
                     </Button>
+                    {captions.length === 0 ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleGenerateCaptions}
+                        disabled={isGeneratingCaptions}
+                      >
+                        {isGeneratingCaptions ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Captions className="w-4 h-4 mr-2" />
+                        )}
+                        {isGeneratingCaptions ? 'Generating...' : 'Generate Captions'}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCaptionsVisible(!captionsVisible)}
+                      >
+                        {captionsVisible ? (
+                          <CaptionsOff className="w-4 h-4 mr-2" />
+                        ) : (
+                          <Captions className="w-4 h-4 mr-2" />
+                        )}
+                        {captionsVisible ? 'Hide Captions' : 'Show Captions'}
+                      </Button>
+                    )}
                     <div className="ml-auto flex items-center gap-2">
                       <Button
                         variant="outline"
@@ -352,6 +435,43 @@ export default function VODViewerPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Captions error */}
+              {captionsError && (
+                <div className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-md px-4 py-2">
+                  {captionsError}
+                </div>
+              )}
+
+              {/* Captions sidebar panel (when generated) */}
+              {captions.length > 0 && (
+                <Card className="border-border">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Captions className="w-4 h-4" />
+                      Captions ({captions.length} segments)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="max-h-48 overflow-y-auto space-y-1">
+                    {captions.map((caption, idx) => (
+                      <button
+                        key={idx}
+                        className={`w-full text-left text-xs px-2 py-1.5 rounded transition-colors ${
+                          activeCaption === caption
+                            ? 'bg-brand-primary/20 text-brand-primary'
+                            : 'text-muted-foreground hover:bg-card hover:text-foreground'
+                        }`}
+                        onClick={() => handleTranscriptSeek(caption.startTime)}
+                      >
+                        <span className="font-mono text-[10px] mr-2">
+                          {formatDuration(caption.startTime)}
+                        </span>
+                        {caption.text}
+                      </button>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Streamer Info Card */}
               <Card className="border-border">

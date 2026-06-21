@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { ModeratorManagement } from '@/components/moderator-management';
+import { AiModerationCard } from '@/components/ai-moderation-card';
 import { streamsService } from '@/services/streams';
 
 export default function ModeratorsPage() {
@@ -111,7 +112,12 @@ export default function ModeratorsPage() {
       )}
 
       {!streamLoading && !streamError && streamId && (
-        <ModeratorManagement streamId={streamId} />
+        <>
+          <AiModerationCard />
+          <div className="mt-8">
+            <ModeratorManagement streamId={streamId} />
+          </div>
+        </>
       )}
     </div>
   );

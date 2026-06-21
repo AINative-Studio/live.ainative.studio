@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserPlus, UserMinus, Video, Twitter, Github, Globe, Youtube, Loader2, Users, Calendar, Clock } from 'lucide-react';
+import { UserPlus, UserMinus, Video, Twitter, Github, Globe, Youtube, Loader2, Users, Calendar, Clock, Sparkles } from 'lucide-react';
 import { usersService } from '@/services/users';
+import { viewerMemoryService } from '@/services/viewer-memory';
 import { useAuth } from '@/contexts/auth-context';
 import type { User, Stream, WeeklySchedule, Schedule } from '@/types';
 
@@ -44,6 +45,11 @@ export default function UserPage() {
   const [followingTotal, setFollowingTotal] = useState(0);
   const [followListsLoading, setFollowListsLoading] = useState(false);
   const [schedule, setSchedule] = useState<WeeklySchedule | null>(null);
+  const [viewerProfile, setViewerProfile] = useState<{
+    summary?: string;
+    interests?: string[];
+    topics?: string[];
+  } | null>(null);
 
   useEffect(() => {
     async function fetchUserData() {
@@ -85,7 +91,7 @@ export default function UserPage() {
           setFollowListsLoading(false);
         }
 
-        // Check if following (only if authenticated)
+        // Fetch viewer profile from ZeroMemory (only for authenticated users viewing their own profile)
         if (isAuthenticated) {
           try {
             const followStatus = await usersService.isFollowing(username);
@@ -93,6 +99,14 @@ export default function UserPage() {
           } catch (error) {
             console.error('Error checking follow status:', error);
             setIsFollowing(false);
+          }
+
+          // Load viewer interests from memory
+          try {
+            const profile = await viewerMemoryService.getViewerProfile(profileData.id);
+            setViewerProfile(profile);
+          } catch (error) {
+            console.error('Error fetching viewer profile:', error);
           }
         }
       } catch (error: any) {
@@ -381,13 +395,36 @@ export default function UserPage() {
               <TabsTrigger value="following">Following</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="about" className="mt-6">
+            <TabsContent value="about" className="mt-6 space-y-4">
               <Card className="border-border">
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold mb-4">About {user.displayName || user.username}</h3>
                   <p className="text-muted-foreground leading-relaxed">{user.bio}</p>
                 </CardContent>
               </Card>
+
+              {viewerProfile && (viewerProfile.interests?.length || viewerProfile.topics?.length || viewerProfile.summary) && (
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Sparkles className="w-5 h-5 text-brand-primary" />
+                      <h3 className="text-xl font-bold">Your Interests</h3>
+                    </div>
+                    {viewerProfile.summary && (
+                      <p className="text-muted-foreground leading-relaxed mb-4">{viewerProfile.summary}</p>
+                    )}
+                    {(viewerProfile.interests?.length || viewerProfile.topics?.length) && (
+                      <div className="flex flex-wrap gap-2">
+                        {(viewerProfile.interests || viewerProfile.topics || []).map((interest) => (
+                          <Badge key={interest} variant="secondary" className="font-mono text-sm">
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="followers" className="mt-6">

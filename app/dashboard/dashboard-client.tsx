@@ -23,7 +23,9 @@ import {
   Bell,
   AlertCircle,
   Loader2,
+  Share2,
 } from 'lucide-react';
+import { SocialShareDialog } from '@/components/social-share-dialog';
 
 // Mock data for fallback
 const mockOverview: DashboardOverview = {
@@ -85,6 +87,8 @@ export default function DashboardPage() {
   const [isEndingStream, setIsEndingStream] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useMockData, setUseMockData] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareStream, setShareStream] = useState<any>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -143,6 +147,7 @@ export default function DashboardPage() {
   };
 
   return (
+    <>
     <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
@@ -387,7 +392,7 @@ export default function DashboardPage() {
                             <p className="text-sm text-muted-foreground">
                               {stream.startedAt && formatDate(stream.startedAt)}
                             </p>
-                            <div className="flex gap-2 mt-2">
+                            <div className="flex gap-2 mt-2 items-center">
                               <Badge variant="secondary" className="text-xs">
                                 <Eye className="w-3 h-3 mr-1" />
                                 {stream.peakViewers} peak
@@ -397,6 +402,18 @@ export default function DashboardPage() {
                                   {stream.category.name}
                                 </Badge>
                               )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="ml-auto h-7 px-2 text-xs text-muted-foreground hover:text-brand-primary"
+                                onClick={() => {
+                                  setShareStream(stream);
+                                  setShareDialogOpen(true);
+                                }}
+                              >
+                                <Share2 className="w-3 h-3 mr-1" />
+                                Share
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -571,5 +588,26 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {shareStream && (
+          <SocialShareDialog
+            open={shareDialogOpen}
+            onOpenChange={setShareDialogOpen}
+            streamTitle={shareStream.title}
+            streamDescription={shareStream.description}
+            language={shareStream.category?.name}
+            duration={
+              shareStream.startedAt && shareStream.endedAt
+                ? Math.floor(
+                    (new Date(shareStream.endedAt).getTime() -
+                      new Date(shareStream.startedAt).getTime()) /
+                      1000
+                  )
+                : undefined
+            }
+            viewerCount={shareStream.peakViewers}
+          />
+        )}
+      </>
   );
 }

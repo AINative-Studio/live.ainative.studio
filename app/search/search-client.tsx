@@ -8,9 +8,11 @@ import { StreamCard } from '@/components/stream-card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Loader2, Users, PlayCircle } from 'lucide-react';
+import { Search, Filter, Loader2, Users, PlayCircle, Sparkles } from 'lucide-react';
 import { streamsService } from '@/services/streams';
 import { vodService } from '@/services/vod';
+import { semanticSearchService } from '@/services/semantic-search';
+import type { SemanticSearchResult } from '@/services/semantic-search';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Stream, Category, VODRecording } from '@/types';
@@ -90,6 +92,9 @@ function SearchContent() {
   const [users, setUsers] = useState<SearchUser[]>([]);
   const [vods, setVods] = useState<VODRecording[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [semanticEnabled, setSemanticEnabled] = useState(false);
+  const [semanticResults, setSemanticResults] = useState<SemanticSearchResult[]>([]);
+  const [semanticInterpretation, setSemanticInterpretation] = useState<string | null>(null);
 
   const filters = [
     { id: 'all', label: 'All' },
@@ -141,36 +146,68 @@ function SearchContent() {
         setStreams([]);
         setUsers([]);
         setVods([]);
+        setSemanticResults([]);
+        setSemanticInterpretation(null);
         return;
       }
 
       setIsLoading(true);
 
       try {
-        // Determine status filter
-        let statusFilter: 'live' | 'ended' | 'all' | undefined;
-        if (activeFilters.includes('live')) {
-          statusFilter = 'live';
-        } else if (activeFilters.includes('all')) {
-          statusFilter = 'all';
+        if (semanticEnabled) {
+          // Semantic search mode — use AI-powered search with text search fallback
+          const [semanticResponse, streamResult, vodResult] = await Promise.all([
+            semanticSearchService.searchStreams(debouncedQuery).catch(() => ({
+              results: [],
+              interpretation: null,
+              fallback: true,
+            })),
+            streamsService.search({
+              query: debouncedQuery,
+              status: activeFilters.includes('live') ? 'live' : 'all',
+            }),
+            (activeFilters.includes('all') || activeFilters.includes('vods'))
+              ? vodService.search(debouncedQuery).catch(() => ({ items: [], total: 0 }))
+              : Promise.resolve({ items: [], total: 0 }),
+          ]);
+
+          setSemanticResults(semanticResponse.results || []);
+          setSemanticInterpretation(semanticResponse.interpretation || null);
+          setStreams(streamResult.streams);
+          setUsers(extractUsersFromStreams(streamResult.streams));
+          setVods((vodResult as any).items || []);
+        } else {
+          // Regular text search
+          setSemanticResults([]);
+          setSemanticInterpretation(null);
+
+          // Determine status filter
+          let statusFilter: 'live' | 'ended' | 'all' | undefined;
+          if (activeFilters.includes('live')) {
+            statusFilter = 'live';
+          } else if (activeFilters.includes('all')) {
+            statusFilter = 'all';
+          }
+
+          // Call APIs in parallel
+          const [streamResult, vodResult] = await Promise.all([
+            streamsService.search({
+              query: debouncedQuery,
+              status: statusFilter,
+            }),
+            (activeFilters.includes('all') || activeFilters.includes('vods'))
+              ? vodService.search(debouncedQuery).catch(() => ({ items: [], total: 0 }))
+              : Promise.resolve({ items: [], total: 0 }),
+          ]);
+
+          setStreams(streamResult.streams);
+          setUsers(extractUsersFromStreams(streamResult.streams));
+          setVods((vodResult as any).items || []);
         }
-
-        // Call APIs in parallel
-        const [streamResult, vodResult] = await Promise.all([
-          streamsService.search({
-            query: debouncedQuery,
-            status: statusFilter,
-          }),
-          (activeFilters.includes('all') || activeFilters.includes('vods'))
-            ? vodService.search(debouncedQuery).catch(() => ({ items: [], total: 0 }))
-            : Promise.resolve({ items: [], total: 0 }),
-        ]);
-
-        setStreams(streamResult.streams);
-        setUsers(extractUsersFromStreams(streamResult.streams));
-        setVods((vodResult as any).items || []);
       } catch (error) {
         console.error('Search failed, using fallback data:', error);
+        setSemanticResults([]);
+        setSemanticInterpretation(null);
         // Fallback to mock data filtering
         const searchQuery = debouncedQuery.toLowerCase();
         const filteredStreams = mockStreams.filter((stream: any) => {
@@ -192,7 +229,7 @@ function SearchContent() {
     };
 
     performSearch();
-  }, [debouncedQuery, activeFilters]);
+  }, [debouncedQuery, activeFilters, semanticEnabled]);
 
   const searchQuery = debouncedQuery.toLowerCase();
   const filteredCategories = categories.filter((category: Category) =>
@@ -220,11 +257,24 @@ function SearchContent() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search streams, categories, or developers..."
+                placeholder={semanticEnabled ? 'Describe what you\'re looking for...' : 'Search streams, categories, or developers...'}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="pl-12 h-12 text-lg focus-visible:ring-brand-primary"
+                className="pl-12 pr-44 h-12 text-lg focus-visible:ring-brand-primary"
               />
+              <Button
+                variant={semanticEnabled ? 'default' : 'outline'}
+                size="sm"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 text-xs ${
+                  semanticEnabled
+                    ? 'bg-brand-primary hover:bg-brand-primary/90'
+                    : 'hover:border-brand-primary/50'
+                }`}
+                onClick={() => setSemanticEnabled(!semanticEnabled)}
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                Semantic Search
+              </Button>
             </div>
           </div>
         </div>
@@ -264,6 +314,48 @@ function SearchContent() {
                 {showCategories && `, ${filteredCategories.length} categories`}
                 {showUsers && users.length > 0 && `, ${users.length} developers`}
               </p>
+            </div>
+          )}
+
+          {!isLoading && semanticEnabled && semanticInterpretation && (
+            <div className="mb-4 flex items-start gap-2 text-sm text-muted-foreground bg-brand-primary/5 border border-brand-primary/20 rounded-md px-4 py-3">
+              <Sparkles className="w-4 h-4 text-brand-primary mt-0.5 shrink-0" />
+              <span>{semanticInterpretation}</span>
+            </div>
+          )}
+
+          {!isLoading && semanticEnabled && semanticResults.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-brand-primary" />
+                Semantic Matches
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {semanticResults.map((result) => (
+                  <Card
+                    key={result.streamId}
+                    className="border-border hover:border-brand-primary/50 transition-colors cursor-pointer"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <p className="font-medium truncate">{result.title}</p>
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] shrink-0 border-brand-primary/30 text-brand-primary"
+                        >
+                          {Math.round(result.relevanceScore * 100)}%
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                        {result.description}
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 italic">
+                        {result.matchReason}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
 

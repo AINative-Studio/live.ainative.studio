@@ -11,11 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, Share2, UserPlus, UserMinus, Twitter, Github, Globe, Loader2, Scissors, ExternalLink, Code2 } from 'lucide-react';
+import { Heart, Share2, UserPlus, UserMinus, Twitter, Github, Globe, Loader2, Scissors, ExternalLink, Code2, DollarSign } from 'lucide-react';
 import { LanguageBadge, extractLanguages, extractGithubRepo } from '@/components/language-badge';
 import { CreateClipDialog } from '@/components/create-clip-dialog';
 import { AiSummaryCard } from '@/components/ai-summary-card';
+import { TipDialog } from '@/components/tip-dialog';
 import { usersService } from '@/services/users';
+import { recommendationsService } from '@/services/recommendations';
+import type { StreamRecommendation } from '@/services/recommendations';
 import { useAuth } from '@/contexts/auth-context';
 import { useStreamChat } from '@/hooks/use-stream-chat';
 import type { User, Stream } from '@/types';
@@ -46,6 +49,8 @@ export default function StreamPage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [isClipDialogOpen, setIsClipDialogOpen] = useState(false);
+  const [isTipDialogOpen, setIsTipDialogOpen] = useState(false);
+  const [relatedStreams, setRelatedStreams] = useState<StreamRecommendation[]>([]);
 
   // Initialize chat hook only if stream exists (prevents empty streamId issue #64)
   const chat = useStreamChat({
@@ -104,6 +109,17 @@ export default function StreamPage() {
 
     fetchData();
   }, [username, isAuthenticated]);
+
+  // Fetch related streams when stream data is available
+  useEffect(() => {
+    if (!stream?.id || !stream?.tags?.length) return;
+
+    const tags = stream.tags.map((t: any) => (typeof t === 'string' ? t : t.name));
+    recommendationsService
+      .getRelatedStreams(stream.id, tags)
+      .then((data) => setRelatedStreams(data.suggestions.slice(0, 4)))
+      .catch(() => setRelatedStreams([]));
+  }, [stream?.id, stream?.tags]);
 
   const handleFollowToggle = async () => {
     if (!isAuthenticated) {
@@ -335,6 +351,15 @@ export default function StreamPage() {
                       <Scissors className="w-4 h-4 mr-2" />
                       Clip
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsTipDialogOpen(true)}
+                      className="text-accent hover:text-accent"
+                    >
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      Tip
+                    </Button>
                     {userProfile.socials && (
                       <div className="flex gap-2 ml-auto">
                         {userProfile.socials.twitter && (
@@ -438,6 +463,37 @@ export default function StreamPage() {
                 streamLanguage={stream.tags?.map((t: any) => typeof t === 'string' ? t : t.name).join(', ')}
                 streamDescription={stream.description || undefined}
               />
+
+              {/* Related Streams */}
+              {relatedStreams.length > 0 && (
+                <Card className="border-border">
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-sm mb-3">You Might Also Like</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {relatedStreams.map((rec) => (
+                        <div
+                          key={rec.id}
+                          className="p-3 rounded-lg border border-border hover:border-brand-primary/50 transition-colors"
+                        >
+                          <h4 className="font-medium text-sm line-clamp-2 mb-1">{rec.title}</h4>
+                          <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                            {rec.description}
+                          </p>
+                          {rec.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {rec.tags.slice(0, 3).map((tag, i) => (
+                                <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
+                                  {typeof tag === 'string' ? tag : (tag as any).name}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <div className="lg:sticky lg:top-20 h-[calc(100vh-7rem)]">
@@ -467,6 +523,13 @@ export default function StreamPage() {
         streamId={stream.id}
         streamTitle={stream.title}
         isLive={true}
+      />
+
+      <TipDialog
+        open={isTipDialogOpen}
+        onOpenChange={setIsTipDialogOpen}
+        streamerName={userProfile.displayName || username}
+        streamerUsername={userProfile.username || username}
       />
     </div>
   );
