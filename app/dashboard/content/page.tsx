@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     description:
       'Turn your streams into blog posts, code snippets, and searchable transcripts.',
     url: '/dashboard/content',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

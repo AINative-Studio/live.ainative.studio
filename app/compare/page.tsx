@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     description:
       'See how AINative Studio Live compares to Twitch, YouTube, and Kick for developer live coding streams.',
     url: 'https://live.ainative.studio/compare',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

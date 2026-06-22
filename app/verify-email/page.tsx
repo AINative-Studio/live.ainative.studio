@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     title: 'Verify Email | AINative Studio Live',
     description: 'Verify your email address to activate your AINative Studio Live account.',
     url: '/verify-email',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

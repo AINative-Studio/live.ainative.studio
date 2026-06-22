@@ -41,6 +41,7 @@ export const metadata: Metadata = {
     description:
       'Watch the future of programming unfold. Developers building software with AI assistants, multi-agent systems, and AI-native IDE workflows — live.',
     url: '/vibe-coding',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     title: 'Notifications | AINative Studio Live',
     description: 'View your follow notifications and live stream alerts.',
     url: '/dashboard/notifications',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

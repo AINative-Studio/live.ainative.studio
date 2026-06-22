@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     title: 'Analytics | AINative Studio Live',
     description: 'View detailed analytics for your streams.',
     url: '/dashboard/analytics',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

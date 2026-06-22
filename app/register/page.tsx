@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     title: 'Sign Up | AINative Studio Live',
     description: 'Create your AINative Studio Live account and start sharing your AI-native development workflow.',
     url: '/register',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

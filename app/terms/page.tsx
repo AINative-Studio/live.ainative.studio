@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     title: 'Terms of Service | AINative Studio Live',
     description: 'Terms of Service for AINative Studio Live.',
     url: '/terms',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     description:
       'Learn about AINative Studio Live - the livestreaming platform built for developers who want to share their AI-native workflows.',
     url: '/about',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

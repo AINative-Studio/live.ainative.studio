@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     title: 'Forgot Password | AINative Studio Live',
     description: 'Reset your AINative Studio Live password.',
     url: '/forgot-password',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

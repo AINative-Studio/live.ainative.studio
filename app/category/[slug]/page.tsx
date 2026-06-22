@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `${category.name} | AINative Studio Live`,
       description: category.description,
       url: `/category/${params.slug}`,
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
     },
   };
 }

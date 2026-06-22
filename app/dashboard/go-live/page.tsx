@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     title: 'Go Live | AINative Studio Live',
     description: 'Start your live coding stream and share your AI-native workflow.',
     url: '/dashboard/go-live',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

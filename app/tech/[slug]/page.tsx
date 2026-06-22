@@ -22,6 +22,7 @@ export function generateMetadata({ params }: Props): Metadata {
       title: `${title} | AINative Studio Live`,
       description,
       url: `/tech/${params.slug}`,
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
     },
   };
 }

@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     title: 'Privacy Policy | AINative Studio Live',
     description: 'Privacy Policy for AINative Studio Live - How we collect, use, and protect your data.',
     url: '/privacy',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

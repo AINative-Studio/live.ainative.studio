@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     title: 'Log In | AINative Studio Live',
     description: 'Sign in to your AINative Studio Live account.',
     url: '/login',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

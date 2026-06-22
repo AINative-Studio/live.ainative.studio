@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     description:
       'Compare AINative Studio Live and YouTube for live coding. AI chat, code-aware streams, and content pipelines vs general-purpose video hosting.',
     url: 'https://live.ainative.studio/compare/youtube',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 

@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     title: 'Popular Clips | AINative Studio Live',
     description: 'Watch the most popular clips from live developer streams on AINative Studio Live.',
     url: '/clips',
+    images: [{ url: "https://live.ainative.studio/og-image.png", width: 1200, height: 630 }],
   },
 };
 
