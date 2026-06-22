@@ -42,8 +42,13 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'AINative Studio' }],
   icons: {
-    icon: '/ainative-icon.svg',
-    apple: '/ainative-icon.svg',
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/ainative-icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
   alternates: {
     canonical: 'https://live.ainative.studio',
@@ -56,8 +61,7 @@ export const metadata: Metadata = {
     siteName: 'AINative Studio Live',
     images: [
       {
-        // Dynamic OG image via /api/og — replace with a static /og-image.png (1200x630) when final brand asset is available
-        url: '/api/og',
+        url: 'https://live.ainative.studio/og-image.png',
         width: 1200,
         height: 630,
         alt: 'AINative Studio Live - Live Coding & AI Developer Streaming Platform',
@@ -68,7 +72,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'AINative Studio Live - Live Coding & AI Developer Streaming Platform',
     description: siteDescription,
-    images: ['/api/og'],
+    images: ['https://live.ainative.studio/og-image.png'],
   },
 };
 
