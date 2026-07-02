@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/dashboard/', '/settings/', '/api/', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email'],
       },
       {
-        userAgent: ['GPTBot', 'CCBot', 'Google-Extended'],
+        userAgent: ['GPTBot', 'CCBot', 'Google-Extended', 'anthropic-ai', 'Claude-Web'],
         allow: '/',
         disallow: ['/dashboard/', '/settings/', '/api/'],
       },
